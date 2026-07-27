@@ -201,6 +201,16 @@
   nav.tabs button.on::before{content:"";position:absolute;top:0;width:34px;height:3px;
     background:var(--lime);border-radius:0 0 4px 4px}
   nav.tabs button{position:relative}
+  .fbtn{display:inline-block;margin-top:10px;border:1px solid var(--ink);border-radius:20px;padding:6px 16px;font-size:12px;color:var(--ink);background:var(--card);cursor:pointer;font-family:var(--sans);font-weight:600}
+  .modal-bg{position:fixed;inset:0;background:rgba(10,20,18,.55);z-index:100;display:none;align-items:flex-end;justify-content:center}
+  .modal-bg.on{display:flex}
+  .modal{background:var(--card);width:100%;max-width:480px;border-radius:18px 18px 0 0;padding:18px 18px calc(20px + env(safe-area-inset-bottom,0));max-height:88vh;overflow:auto;animation:slideup .2s ease}
+  @keyframes slideup{from{transform:translateY(30px)}to{transform:none}}
+  .modal h3{font-size:17px;font-weight:800;margin-bottom:3px}
+  .modal .msub{font-size:12px;color:var(--muted);margin-bottom:8px}
+  .modal label{font-size:12px;color:var(--muted);display:block;margin:11px 0 4px}
+  .modal .row{display:flex;gap:8px;margin-top:14px}
+  .fbclose{float:right;border:none;background:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1}
 </style>
 </head>
 <body>
@@ -928,8 +938,28 @@
     4.0 冲击宝典 · Pickleball 4.0 Playbook<br>
     整理 by Kevin Ma　|　所有记录仅保存在本设备浏览器 · 请定期"导出备份"<br>
     规则依据 The Dink MiLP 官方手册 2025-10-21
+    <button class="fbtn" onclick="openFeedback()">💬 反馈 Feedback</button>
   </footer>
 </main>
+
+  <div class="modal-bg" id="fb-bg">
+    <div class="modal">
+      <button class="fbclose" onclick="closeFeedback()">×</button>
+      <h3>反馈 Feedback</h3>
+      <div class="msub">你的建议帮助我们完善系统，谢谢！</div>
+      <label>评价 Rating</label>
+      <div id="fb-rate" class="seg"></div>
+      <label>想说的 Message</label>
+      <textarea class="fld" id="fb-msg" style="min-height:80px" placeholder="遇到的问题 / 建议 / 想要的功能…"></textarea>
+      <label>联系方式（可选）Contact</label>
+      <input class="fld" id="fb-contact" placeholder="邮箱 / 微信 / 名字（方便回复）">
+      <div class="row">
+        <button class="btn solid" onclick="submitFeedback()" style="flex:1">提交 Submit</button>
+        <button class="btn" onclick="closeFeedback()">取消</button>
+      </div>
+      <div id="fb-status" style="font-size:12px;color:var(--muted);margin-top:8px;min-height:16px"></div>
+    </div>
+  </div>
 
 <nav class="tabs">
   <button class="on" data-t="home" onclick="go('home')"><span class="ti">总览</span><span class="te">Home</span></button>
@@ -1323,6 +1353,36 @@ function renderCoach(rows){
   h+='</tbody></table>';cm.innerHTML=h;
 }
 
+
+
+/* ============ 反馈 Feedback ============ */
+let FB_RATE=0;
+function renderFbRate(){
+  const opts=[['👍 好',5],['😐 一般',3],['👎 差',1]];
+  document.getElementById('fb-rate').innerHTML=opts.map(o=>
+    '<button data-v="done" class="'+(FB_RATE===o[1]?'on':'')+'" onclick="FB_RATE='+o[1]+';renderFbRate()">'+o[0]+'</button>').join('');
+}
+function openFeedback(){document.getElementById('fb-bg').classList.add('on');renderFbRate();
+  document.getElementById('fb-status').textContent='';}
+function closeFeedback(){document.getElementById('fb-bg').classList.remove('on');}
+async function submitFeedback(){
+  const msg=(document.getElementById('fb-msg').value||'').trim();
+  const st=document.getElementById('fb-status');
+  if(!msg){st.textContent='请先写点内容 :)';return;}
+  if(!sbReady()){st.textContent='⚠️ 反馈通道未配置（需管理员在「队 · 连接设置」填入连接）。';return;}
+  st.textContent='提交中…';
+  try{
+    const body=[{rating:FB_RATE||null,message:msg,
+      contact:(document.getElementById('fb-contact').value||'').trim()||null,
+      context:'view:'+((document.querySelector('nav.tabs button.on')||{}).dataset||{}).t+' team:'+(CFG.team||''),
+      ua:navigator.userAgent.slice(0,180)}];
+    const r=await fetch(CFG.url+'/rest/v1/feedback',{method:'POST',headers:sbHeaders({'Prefer':'return=minimal'}),body:JSON.stringify(body)});
+    if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,100));
+    st.textContent='✅ 已提交，谢谢！';
+    document.getElementById('fb-msg').value='';document.getElementById('fb-contact').value='';FB_RATE=0;
+    setTimeout(closeFeedback,900);
+  }catch(e){st.textContent='⚠️ 提交失败：'+e.message;}
+}
 
 load();loadCfg();renderStatic();initAll();renderTeam();
 </script>
