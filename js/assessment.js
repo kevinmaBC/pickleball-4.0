@@ -86,7 +86,9 @@
           if(s){
             right='<button class="btn solid" data-act="record" data-sid="'+s.test_session_id+'">记录</button> '+
                   '<button class="btn" data-act="del-session" data-sid="'+s.test_session_id+'" style="color:var(--fail)">删</button>';
-            second='<div class="a1-mut" style="padding:2px 0 0">'+FEED_LABEL[s.feed_mode]+' · '+metricLine(m)+'</div>';
+            var comp='';
+            if(m && m.sample_target){ comp=' · 抽样 '+m.n_valid+'/'+m.sample_target+(m.sample_complete?' ✓':''); }
+            second='<div class="a1-mut" style="padding:2px 0 0">'+FEED_LABEL[s.feed_mode]+' · '+metricLine(m)+comp+'</div>';
           } else {
             right='<button class="btn" data-act="new-session" data-tid="'+tid+'">创建 Session</button>';
           }
@@ -94,7 +96,7 @@
         }).join('');
         h('<div class="a1-h"><button class="btn" data-act="home" style="padding:4px 10px">‹ 返回</button> &nbsp; '+esc(a?a.assessment_tier:'')+' · 目标 '+(a?a.target_training_level.toFixed(1):'')+'</div>'+
           '<div class="a1-sub">'+aid+'</div>'+ rows +
-          '<div class="a1-mut" style="margin-top:10px">显示为各项 ball-quality 原始百分比（加权成功/有效试验）；不含判级与综合分。</div>'+
+          '<div class="a1-mut" style="margin-top:10px">各项显示"原始主指标%（加权成功/有效试验）+ 抽样完整度（已录/目标）"。含 T08 决策 / T09 抗压；仍不判级、不算综合分、不设门槛。</div>'+
           '<div class="a1-row" style="border:none;margin-top:12px"><span></span>'+
             '<button class="btn solid" data-act="export" data-id="'+aid+'">导出完整 Assessment JSON</button></div>');
       });

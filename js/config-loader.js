@@ -12,8 +12,10 @@
   // 版本基线（硬编码为唯一真值，与 /data/versions.json 一致，加载后做一致性校验）
   var VERSIONS = { schema_version: '2.3.1', benchmark_version: '2.1.1', protocol_version: '2.2.1' };
 
-  // 本 Sprint 范围内的测试：T01–T07（T08 决策 / T09 抗压 / T10 视频 禁止开发）
-  var S1_TEST_IDS = ['T01', 'T02', 'T03', 'T04', 'T05', 'T06', 'T07'];
+  // 可评测试：T01–T09（T10 视频/实战本轮不做）。T08 决策 / T09 抗压 于 S3-A 加入
+  var S1_TEST_IDS = ['T01', 'T02', 'T03', 'T04', 'T05', 'T06', 'T07', 'T08', 'T09'];
+  // 判定型测试（如 T08）在 V2.3.1 未列 outcome_weights：用标准决策口径 S=对/F=错/I=无效，无 P
+  var FALLBACK_WEIGHTS = { S: 1.0, F: 0.0, I: null };
   var FEED_MODES = ['machine', 'calibrated_human', 'partner', 'live_match'];
   var TIER_IDS = ['lite', 'standard', 'full'];
 
@@ -74,9 +76,9 @@
 
   function scoreWeight(testId, outcome) {
     var t = _state.tests[testId];
-    if (!t || !t.outcome_weights) return null;
-    var w = t.outcome_weights[outcome];
-    return (w === undefined ? null : w); // I -> null
+    if (!t) return null;
+    var w = (t.outcome_weights || FALLBACK_WEIGHTS)[outcome];
+    return (w === undefined ? null : w); // I -> null；未定义结果 -> null
   }
   function partialAllowed(testId) {
     var t = _state.tests[testId];

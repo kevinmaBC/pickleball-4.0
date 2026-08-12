@@ -21,7 +21,9 @@
     T04: 'drop_ball_quality_pct',
     T05: 'reset_ball_quality_pct',
     T06: 'dink_unattackable_pct',
-    T07: 'volley_control_pct'
+    T07: 'volley_control_pct',
+    T08: 'shot_selection_pct',
+    T09: 'pressure_success_pct'
   };
 
   function round1(x) { return Math.round(x * 10) / 10; }
@@ -43,10 +45,14 @@
     };
   }
 
-  // 汇总一次 Assessment 下每项测试的主指标（跨该测试的所有 session 合并 trial）
+  // 汇总一次 Assessment 下每项测试的主指标 + 抽样完整度（跨该测试的所有 session 合并 trial）
   function computeAssessment(assessment_id) {
     if (typeof PBStore === 'undefined') return Promise.resolve({ per_test: {} });
-    return PBStore.sessionsByAssessment(assessment_id).then(function (sessions) {
+    var tier = null;
+    return PBStore.get('assessments', assessment_id).then(function (a) {
+      tier = a ? a.assessment_tier : null;
+      return PBStore.sessionsByAssessment(assessment_id);
+    }).then(function (sessions) {
       var byTest = {};
       sessions.forEach(function (s) { (byTest[s.test_id] = byTest[s.test_id] || []).push(s.test_session_id); });
       var testIds = Object.keys(byTest);
@@ -57,7 +63,10 @@
             var m = computeTrials(all);
             m.test_id = tid;
             m.metric_key = PRIMARY[tid] || (tid.toLowerCase() + '_ball_quality_pct');
-            m.metric_type = 'ball_quality';
+            // 抽样完整度（raw，仅提示，不作判级依据）
+            var target = (typeof PBConfig !== 'undefined' && tier) ? PBConfig.sampleTarget(tid, tier) : null;
+            m.sample_target = target;
+            m.sample_complete = (target != null) ? (m.n_valid >= target) : null;
             return m;
           });
       })).then(function (results) {
@@ -65,7 +74,8 @@
         results.forEach(function (r) { per_test[r.test_id] = r; });
         return {
           generated_at: new Date().toISOString(),
-          note: 'raw ball_quality percentages only; other metric families (opponent_response/movement/decision) not captured this build; no level judgment / no capability score / no gates',
+          assessment_tier: tier,
+          note: 'raw primary percentages + sampling completeness only; no level judgment / no capability score / no gates. UE & match_transfer belong to T10 (match) — not captured this build.',
           per_test: per_test
         };
       });
