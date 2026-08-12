@@ -165,6 +165,20 @@
     });
   }
 
+  // 删除单个 Session（级联删其 trial_events）
+  function deleteSession(test_session_id) {
+    return trialsBySession(test_session_id).then(function (trials) {
+      return Promise.all(trials.map(function (t) { return del('trial_events', t.trial_event_id); }));
+    }).then(function () { return del('test_sessions', test_session_id); });
+  }
+
+  // 删除整份 Assessment（级联删其所有 session 及 trial_events）
+  function deleteAssessment(assessment_id) {
+    return sessionsByAssessment(assessment_id).then(function (sessions) {
+      return Promise.all(sessions.map(function (s) { return deleteSession(s.test_session_id); }));
+    }).then(function () { return del('assessments', assessment_id); });
+  }
+
   function clearAll() {
     return open().then(function (db) {
       return Promise.all(Object.keys(STORES).map(function (name) {
@@ -181,6 +195,7 @@
     listPlayers: listPlayers, listAssessments: listAssessments,
     assessmentsByPlayer: assessmentsByPlayer, sessionsByAssessment: sessionsByAssessment, trialsBySession: trialsBySession,
     exportAssessment: exportAssessment,
+    deleteSession: deleteSession, deleteAssessment: deleteAssessment,
     _uid: uid
   };
 });
