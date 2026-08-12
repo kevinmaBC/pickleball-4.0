@@ -1,0 +1,26 @@
+{
+  "schema_version": "2.3.1",
+  "tiers": {
+    "lite": {
+      "purpose": "weekly quick check",
+      "duration_minutes": "10-20",
+      "frequency": "weekly",
+      "raw_event_requirement": "summary + selected raw events",
+      "level_change_allowed": false
+    },
+    "standard": {
+      "purpose": "level check",
+      "duration_minutes": "45-60",
+      "frequency": "every 4-6 weeks",
+      "raw_event_requirement": "all tested trials",
+      "level_change_allowed": "up to 4.0/4.5 with required evidence"
+    },
+    "full": {
+      "purpose": "quarterly or promotion assessment",
+      "duration_minutes": "multi-session",
+      "frequency": "quarterly/promotion",
+      "raw_event_requirement": "full raw trials + T10 video",
+      "level_change_allowed": true
+    }
+  }
+}

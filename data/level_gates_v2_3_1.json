@@ -1,0 +1,194 @@
+{
+  "schema_version": "2.3.1",
+  "benchmark_version": "2.1.1",
+  "level_model": {
+    "validated_levels": [
+      3.0,
+      3.5,
+      4.0,
+      4.5,
+      5.0
+    ],
+    "continuous_training_level_prohibited": true,
+    "display_fields": [
+      "validated_training_level",
+      "capability_score_0_100",
+      "evidence_confidence"
+    ],
+    "note": "Do not convert capability score to 3.x/4.x decimals."
+  },
+  "capability_weights": {
+    "technical_score": 0.45,
+    "decision_score": 0.3,
+    "pressure_score": 0.25
+  },
+  "levels": {
+    "3.0": {
+      "capability_min": 60,
+      "evidence_min": "C2",
+      "hard_gates": {
+        "serve_in_pct": {
+          "threshold": 85,
+          "min_trials": 40,
+          "min_sessions": 2
+        },
+        "return_in_pct": {
+          "threshold": 80,
+          "min_trials": 40,
+          "min_sessions": 2
+        },
+        "ue_per_game_max": {
+          "threshold": 9,
+          "min_games": 2
+        }
+      }
+    },
+    "3.5": {
+      "capability_min": 68,
+      "evidence_min": "C2",
+      "hard_gates": {
+        "serve_in_pct": {
+          "threshold": 90,
+          "min_trials": 40,
+          "min_sessions": 2
+        },
+        "return_quality_pct": {
+          "threshold": 65,
+          "min_trials": 40,
+          "min_sessions": 2
+        },
+        "drop_ball_quality_pct": {
+          "threshold": 55,
+          "min_trials": 40,
+          "min_sessions": 2
+        },
+        "reset_ball_quality_pct": {
+          "threshold": 50,
+          "min_trials": 40,
+          "min_sessions": 2
+        },
+        "shot_selection_pct": {
+          "threshold": 65,
+          "min_scenarios": 20,
+          "min_sessions": 2
+        },
+        "ue_per_game_max": {
+          "threshold": 7,
+          "min_games": 2
+        }
+      }
+    },
+    "4.0": {
+      "capability_min": 76,
+      "evidence_min": "C3",
+      "hard_gates": {
+        "serve_in_pct": {
+          "threshold": 95,
+          "min_trials": 80,
+          "min_sessions": 2
+        },
+        "return_quality_pct": {
+          "threshold": 75,
+          "min_trials": 80,
+          "min_sessions": 2
+        },
+        "drop_ball_quality_pct": {
+          "threshold": 70,
+          "min_trials": 80,
+          "min_sessions": 2
+        },
+        "reset_ball_quality_pct": {
+          "threshold": 65,
+          "min_trials": 80,
+          "min_sessions": 2
+        },
+        "shot_selection_pct": {
+          "threshold": 80,
+          "min_scenarios": 40,
+          "min_sessions": 2
+        },
+        "pressure_success_pct": {
+          "threshold": 70,
+          "min_rallies": 30,
+          "min_sessions": 2
+        },
+        "ue_per_game_max": {
+          "threshold": 5,
+          "min_games": 3
+        }
+      },
+      "match_validation": {
+        "required": true,
+        "min_match_transfer_score": 70
+      }
+    },
+    "4.5": {
+      "capability_min": 82,
+      "evidence_min": "C3",
+      "status": "provisional",
+      "hard_gates": {
+        "pattern_success_pct": {
+          "threshold": 65,
+          "min_opportunities": 30
+        },
+        "attack_conversion_pct": {
+          "threshold": 60,
+          "min_opportunities": 30
+        },
+        "transition_nvz_gain_pct": {
+          "threshold": 70,
+          "min_rallies": 30
+        },
+        "wrong_attack_pct_max": {
+          "threshold": 15,
+          "min_opportunities": 30
+        },
+        "ue_per_game_max": {
+          "threshold": 4,
+          "min_games": 4
+        }
+      },
+      "source_tests": [
+        "T09",
+        "T10"
+      ]
+    },
+    "5.0": {
+      "capability_min": 87,
+      "evidence_min": "C4",
+      "status": "provisional",
+      "hard_gates": {
+        "rally_control_pct": {
+          "threshold": 70,
+          "min_eligible_rallies": 60
+        },
+        "pattern_adaptation_pct": {
+          "threshold": 70,
+          "min_opportunities": 20
+        },
+        "neutralize_under_pressure_pct": {
+          "threshold": 75,
+          "min_opportunities": 30
+        },
+        "attack_conversion_pct": {
+          "threshold": 70,
+          "min_opportunities": 30
+        },
+        "ue_per_game_max": {
+          "threshold": 3,
+          "min_games": 5
+        }
+      },
+      "source_tests": [
+        "T10"
+      ]
+    }
+  },
+  "statistical_policy": {
+    "single_session_is_diagnostic_only": true,
+    "borderline_band_pp": 5,
+    "adjacent_level_claims_require_repeatability": true,
+    "confidence_interval_method": "pilot_pending_wilson_recommended",
+    "note": "Thresholds remain E4 coaching benchmarks until calibration data are collected."
+  }
+}

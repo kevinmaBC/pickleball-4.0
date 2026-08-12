@@ -1,0 +1,16 @@
+{
+  "supersedes": {
+    "schema_version": "2.3",
+    "benchmark_version": "2.1",
+    "protocol_version": "2.2"
+  },
+  "migration_notes": [
+    "rename readiness_score -> capability_score_0_100",
+    "rename current_training_level -> validated_training_level where formally validated",
+    "remove internal_external_gap numeric field",
+    "add assessment_tier",
+    "add feed_mode and feeder_calibration_id to test sessions",
+    "add secondary_bottleneck",
+    "T04/T05/T03 split ball-quality metrics from opponent-response metrics"
+  ]
+}

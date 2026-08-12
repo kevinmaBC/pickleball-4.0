@@ -1,0 +1,99 @@
+{
+  "schema_version": "2.3.1",
+  "governance": {
+    "minimum_block_duration_days": 14,
+    "primary_bottleneck_confirmation_sessions": 2,
+    "max_active_primary_blocks": 1,
+    "secondary_bottleneck_allowed": true,
+    "prerequisite_policy": "A block may prescribe only when prerequisite metrics are at or above maintenance threshold."
+  },
+  "block_prerequisites": {
+    "RESET_TRANSITION_BLOCK": [
+      "basic_contact_control"
+    ],
+    "DROP_ADVANCE_BLOCK": [
+      "basic_contact_control"
+    ],
+    "SSS_DECISION_BLOCK": [
+      "drive_drop_reset_definitions_known"
+    ],
+    "PRESSURE_TRANSITION_BLOCK": [
+      "reset_ball_quality_pct>=50",
+      "shot_selection_pct>=65"
+    ],
+    "MATCH_TRANSFER_BLOCK": [
+      "C2_or_higher"
+    ],
+    "PATTERN_CREATION_BLOCK": [
+      "validated_training_level>=4.0"
+    ],
+    "ATTACK_CONVERSION_BLOCK": [
+      "shot_selection_pct>=80"
+    ]
+  },
+  "rules": [
+    {
+      "priority": 1,
+      "when": {
+        "confirmed_hard_gate_fail": "reset_ball_quality_pct"
+      },
+      "prescribe": "RESET_TRANSITION_BLOCK"
+    },
+    {
+      "priority": 2,
+      "when": {
+        "confirmed_hard_gate_fail": "drop_ball_quality_pct"
+      },
+      "prescribe": "DROP_ADVANCE_BLOCK"
+    },
+    {
+      "priority": 3,
+      "when": {
+        "confirmed_hard_gate_fail": "shot_selection_pct"
+      },
+      "prescribe": "SSS_DECISION_BLOCK"
+    },
+    {
+      "priority": 4,
+      "when": {
+        "confirmed_hard_gate_fail": "pressure_success_pct"
+      },
+      "prescribe": "PRESSURE_TRANSITION_BLOCK"
+    },
+    {
+      "priority": 5,
+      "when": {
+        "match_validation_fail": "match_transfer_score"
+      },
+      "prescribe": "MATCH_TRANSFER_BLOCK"
+    },
+    {
+      "priority": 6,
+      "when": {
+        "metric_low": "serve_in_pct"
+      },
+      "prescribe": "SERVE_STABILITY_BLOCK"
+    },
+    {
+      "priority": 7,
+      "when": {
+        "metric_low": "return_quality_pct"
+      },
+      "prescribe": "RETURN_AND_ADVANCE_BLOCK"
+    },
+    {
+      "priority": 8,
+      "when": {
+        "metric_low": "pattern_success_pct"
+      },
+      "prescribe": "PATTERN_CREATION_BLOCK"
+    },
+    {
+      "priority": 9,
+      "when": {
+        "metric_low": "attack_conversion_pct"
+      },
+      "prescribe": "ATTACK_CONVERSION_BLOCK"
+    }
+  ]
+}

@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Pickleball V2.3.1 Assessment",
+  "type": "object",
+  "required": [
+    "assessment_id",
+    "player_id",
+    "assessment_date",
+    "target_training_level",
+    "benchmark_version",
+    "protocol_version",
+    "schema_version",
+    "assessment_tier"
+  ],
+  "properties": {
+    "assessment_id": {
+      "type": "string"
+    },
+    "player_id": {
+      "type": "string"
+    },
+    "assessment_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "assessment_tier": {
+      "enum": [
+        "lite",
+        "standard",
+        "full"
+      ]
+    },
+    "target_training_level": {
+      "enum": [
+        3.0,
+        3.5,
+        4.0,
+        4.5,
+        5.0
+      ]
+    },
+    "validated_training_level": {
+      "enum": [
+        3.0,
+        3.5,
+        4.0,
+        4.5,
+        5.0
+      ]
+    },
+    "capability_score_0_100": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 100
+    },
+    "technical_score": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 100
+    },
+    "decision_score": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 100
+    },
+    "pressure_score": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 100
+    },
+    "match_transfer_score": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 100
+    },
+    "evidence_confidence": {
+      "enum": [
+        "C1",
+        "C2",
+        "C3",
+        "C4"
+      ]
+    },
+    "primary_bottleneck": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "secondary_bottleneck": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "recommended_block_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "dupr": {
+      "type": "object",
+      "properties": {
+        "singles_rating": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "singles_reliability": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "doubles_rating": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "doubles_reliability": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "mixed_rating": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "last_sync_date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "source_mode": {
+          "enum": [
+            "manual",
+            "api",
+            "tournament_import",
+            "none"
+          ]
+        }
+      }
+    },
+    "external_validation_note": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "benchmark_version": {
+      "const": "2.1.1"
+    },
+    "protocol_version": {
+      "const": "2.2.1"
+    },
+    "schema_version": {
+      "const": "2.3.1"
+    }
+  }
+}

@@ -1,0 +1,516 @@
+{
+  "schema_version": "2.3.1",
+  "benchmark_version": "2.1.1",
+  "protocol_version": "2.2.1",
+  "measurement_model": {
+    "feed_modes": [
+      "machine",
+      "calibrated_human",
+      "partner",
+      "live_match"
+    ],
+    "principle": "Ball-quality metrics and opponent-response metrics are stored separately.",
+    "partial_score_policy": {
+      "T01": "P not allowed",
+      "T02": "P allowed",
+      "T03": "P allowed",
+      "T04-T10": "P allowed only where explicitly defined"
+    }
+  },
+  "tests": {
+    "T01": {
+      "name": "Serve",
+      "category": "technical",
+      "tier_support": [
+        "lite",
+        "standard",
+        "full"
+      ],
+      "sample_plan": {
+        "lite": 20,
+        "standard": 40,
+        "full": 80
+      },
+      "outcome_weights": {
+        "S": 1.0,
+        "F": 0.0,
+        "I": null
+      },
+      "metrics": {
+        "serve_in_pct": {
+          "formula": "in_count/valid_trials*100",
+          "type": "ball_quality"
+        },
+        "serve_deep_pct": {
+          "formula": "deep_count/valid_trials*100",
+          "type": "ball_quality"
+        },
+        "serve_target_pct": {
+          "formula": "target_hit/target_trials*100",
+          "type": "ball_quality"
+        }
+      },
+      "repeatability": {
+        "min_sessions_for_level_gate": 2
+      },
+      "required_trial_fields": [
+        "side",
+        "target_zone",
+        "in_flag",
+        "deep_flag",
+        "target_hit",
+        "fault_type",
+        "pressure_flag",
+        "feed_mode"
+      ]
+    },
+    "T02": {
+      "name": "Return",
+      "category": "technical",
+      "tier_support": [
+        "lite",
+        "standard",
+        "full"
+      ],
+      "sample_plan": {
+        "lite": 20,
+        "standard": 40,
+        "full": 80
+      },
+      "outcome_weights": {
+        "S": 1.0,
+        "P": 0.5,
+        "F": 0.0,
+        "I": null
+      },
+      "metrics": {
+        "return_in_pct": {
+          "formula": "in_count/valid_trials*100",
+          "type": "ball_quality"
+        },
+        "return_depth_pct": {
+          "formula": "deep_count/valid_trials*100",
+          "type": "ball_quality"
+        },
+        "return_recovery_ready_pct": {
+          "formula": "recovery_ready_count/valid_trials*100",
+          "type": "movement"
+        },
+        "return_quality_pct": {
+          "formula": "weighted_success/valid_trials*100",
+          "type": "composite"
+        }
+      },
+      "required_trial_fields": [
+        "side",
+        "feed_zone",
+        "in_flag",
+        "deep_flag",
+        "recovery_ready",
+        "split_ready",
+        "outcome",
+        "feed_mode"
+      ]
+    },
+    "T03": {
+      "name": "Drive",
+      "category": "technical",
+      "tier_support": [
+        "lite",
+        "standard",
+        "full"
+      ],
+      "sample_plan": {
+        "lite": 20,
+        "standard": 40,
+        "full": 80
+      },
+      "outcome_weights": {
+        "S": 1.0,
+        "P": 0.5,
+        "F": 0.0,
+        "I": null
+      },
+      "metrics": {
+        "drive_ball_quality_pct": {
+          "formula": "weighted_ball_quality/valid_trials*100",
+          "type": "ball_quality"
+        },
+        "drive_weak_reply_pct": {
+          "formula": "weak_reply_count/valid_trials*100",
+          "type": "opponent_response"
+        }
+      },
+      "required_trial_fields": [
+        "feed_type",
+        "forehand_backhand",
+        "target",
+        "ball_quality",
+        "weak_reply",
+        "movement",
+        "outcome",
+        "feed_mode",
+        "feeder_calibration_id"
+      ]
+    },
+    "T04": {
+      "name": "Drop",
+      "category": "technical",
+      "tier_support": [
+        "lite",
+        "standard",
+        "full"
+      ],
+      "sample_plan": {
+        "lite": 20,
+        "standard": 40,
+        "full": 60
+      },
+      "outcome_weights": {
+        "S": 1.0,
+        "P": 0.5,
+        "F": 0.0,
+        "I": null
+      },
+      "metrics": {
+        "drop_ball_quality_pct": {
+          "formula": "weighted_ball_quality/valid_trials*100",
+          "type": "ball_quality"
+        },
+        "advance_permission_pct": {
+          "formula": "advance_allowed/valid_trials*100",
+          "type": "movement"
+        },
+        "drop_opponent_pressure_pct": {
+          "formula": "opponent_pressured/valid_trials*100",
+          "type": "opponent_response"
+        }
+      },
+      "required_trial_fields": [
+        "phase",
+        "side",
+        "landing_zone",
+        "contact_height_band",
+        "attackable",
+        "pop_up",
+        "advance_allowed",
+        "outcome",
+        "feed_mode",
+        "feeder_calibration_id"
+      ]
+    },
+    "T05": {
+      "name": "Reset",
+      "category": "technical_pressure",
+      "tier_support": [
+        "lite",
+        "standard",
+        "full"
+      ],
+      "sample_plan": {
+        "lite": {
+          "6ft": 20
+        },
+        "standard": {
+          "3ft": 20,
+          "6ft": 20,
+          "9ft": 20
+        },
+        "full": {
+          "3ft": 30,
+          "6ft": 30,
+          "9ft": 30
+        }
+      },
+      "outcome_weights": {
+        "S": 1.0,
+        "P": 0.5,
+        "F": 0.0,
+        "I": null
+      },
+      "metrics": {
+        "reset_ball_quality_pct": {
+          "formula": "weighted_ball_quality/valid_trials*100",
+          "type": "ball_quality"
+        },
+        "neutralize_pct": {
+          "formula": "neutralized/valid_trials*100",
+          "type": "state_change"
+        },
+        "reset_3ft_pct": {
+          "formula": "weighted_success_3ft/valid_3ft*100",
+          "type": "ball_quality"
+        },
+        "reset_6ft_pct": {
+          "formula": "weighted_success_6ft/valid_6ft*100",
+          "type": "ball_quality"
+        },
+        "reset_9ft_pct": {
+          "formula": "weighted_success_9ft/valid_9ft*100",
+          "type": "ball_quality"
+        }
+      },
+      "required_trial_fields": [
+        "distance_ft",
+        "feed_zone",
+        "contact_type",
+        "landing_zone",
+        "contact_height_band",
+        "neutralized",
+        "pop_up",
+        "outcome",
+        "movement",
+        "feed_mode",
+        "feeder_calibration_id"
+      ]
+    },
+    "T06": {
+      "name": "Dink",
+      "category": "technical",
+      "tier_support": [
+        "lite",
+        "standard",
+        "full"
+      ],
+      "sample_plan": {
+        "lite": 20,
+        "standard": 60,
+        "full": 90
+      },
+      "outcome_weights": {
+        "S": 1.0,
+        "P": 0.5,
+        "F": 0.0,
+        "I": null
+      },
+      "metrics": {
+        "dink_unattackable_pct": {
+          "formula": "weighted_ball_quality/valid_trials*100",
+          "type": "ball_quality"
+        },
+        "intent_target_pct": {
+          "formula": "correct_target/target_assigned_trials*100",
+          "type": "decision"
+        }
+      },
+      "required_trial_fields": [
+        "stage",
+        "direction",
+        "target",
+        "correct_target",
+        "attackable",
+        "pop_up",
+        "movement",
+        "outcome",
+        "feed_mode"
+      ]
+    },
+    "T07": {
+      "name": "VolleyCounter",
+      "category": "technical_decision",
+      "tier_support": [
+        "lite",
+        "standard",
+        "full"
+      ],
+      "sample_plan": {
+        "lite": 20,
+        "standard": 40,
+        "full": 60
+      },
+      "outcome_weights": {
+        "S": 1.0,
+        "P": 0.5,
+        "F": 0.0,
+        "I": null
+      },
+      "metrics": {
+        "volley_control_pct": {
+          "formula": "weighted_success/valid_trials*100",
+          "type": "ball_quality"
+        },
+        "counter_conversion_pct": {
+          "formula": "successful_counter/counter_opportunities*100",
+          "type": "opponent_response"
+        }
+      },
+      "required_trial_fields": [
+        "feed_zone",
+        "feed_speed",
+        "selected_action",
+        "expected_action",
+        "pop_up",
+        "outcome",
+        "feed_mode",
+        "feeder_calibration_id"
+      ]
+    },
+    "T08": {
+      "name": "DecisionSSS2",
+      "category": "decision",
+      "tier_support": [
+        "lite",
+        "standard",
+        "full"
+      ],
+      "sample_plan": {
+        "lite": 10,
+        "standard": 40,
+        "full": 60
+      },
+      "components": {
+        "intent": 0.4,
+        "shot": 0.3,
+        "target": 0.15,
+        "recovery": 0.15
+      },
+      "metrics": {
+        "shot_selection_pct": {
+          "formula": "sum(component_scores*weights)/scenario_count*100",
+          "type": "decision"
+        }
+      },
+      "required_trial_fields": [
+        "scenario_id",
+        "position",
+        "ball_height",
+        "ball_depth",
+        "balance",
+        "opponent_position",
+        "intent_score",
+        "shot_score",
+        "target_score",
+        "recovery_score",
+        "severe_error"
+      ]
+    },
+    "T09": {
+      "name": "PressureTransition",
+      "category": "pressure",
+      "tier_support": [
+        "lite",
+        "standard",
+        "full"
+      ],
+      "sample_plan": {
+        "lite": 10,
+        "standard": 30,
+        "full": 45
+      },
+      "outcome_weights": {
+        "S": 1.0,
+        "P": 0.5,
+        "F": 0.0,
+        "I": null
+      },
+      "metrics": {
+        "pressure_success_pct": {
+          "formula": "weighted_success/valid_rallies*100",
+          "type": "pressure"
+        },
+        "transition_nvz_gain_pct": {
+          "formula": "nvz_gain/valid_rallies*100",
+          "type": "state_change"
+        },
+        "traffic_light_decision_pct": {
+          "formula": "correct_move_decision/opportunities*100",
+          "type": "decision"
+        }
+      },
+      "required_trial_fields": [
+        "start_phase",
+        "shot_sequence",
+        "traffic_light_expected",
+        "traffic_light_actual",
+        "nvz_gain",
+        "outcome",
+        "feed_mode"
+      ]
+    },
+    "T10": {
+      "name": "MatchTransfer",
+      "category": "match",
+      "tier_support": [
+        "lite",
+        "standard",
+        "full"
+      ],
+      "sample_plan": {
+        "lite": {
+          "min_games": 1,
+          "min_rallies": 20
+        },
+        "standard": {
+          "min_games": 3,
+          "min_rallies": 60
+        },
+        "full": {
+          "min_games": 5,
+          "min_rallies": 100
+        }
+      },
+      "metrics": {
+        "match_decision_pct": {
+          "formula": "correct_match_decisions/decision_opportunities*100",
+          "type": "match"
+        },
+        "match_transition_pct": {
+          "formula": "successful_transition_rallies/transition_opportunities*100",
+          "type": "match"
+        },
+        "ue_per_game": {
+          "formula": "total_ue/games",
+          "type": "match"
+        },
+        "attack_conversion_pct": {
+          "formula": "successful_attack_conversions/attack_opportunities*100",
+          "type": "match"
+        },
+        "pattern_success_pct": {
+          "formula": "successful_pattern_attempts/pattern_attempts*100",
+          "type": "match"
+        },
+        "wrong_attack_pct": {
+          "formula": "wrong_attack_attempts/attack_decision_opportunities*100",
+          "type": "match"
+        },
+        "rally_control_pct": {
+          "formula": "rallies_with_intended_state_control/eligible_rallies*100",
+          "type": "match",
+          "definition": "Eligible rally: reaches at least third-shot/transition phase. Intended state control: player/team achieves and maintains planned neutralize/pressure/attack state for >=2 consecutive opponent contacts or wins the rally from the planned state."
+        },
+        "pattern_adaptation_pct": {
+          "formula": "successful_adaptations/adaptation_opportunities*100",
+          "type": "match",
+          "definition": "Adaptation opportunity occurs after opponent repeats a successful pattern >=2 times. Successful adaptation means the player changes target/shot/positioning within next 3 eligible rallies and prevents the same opponent pattern from producing advantage."
+        },
+        "neutralize_under_pressure_pct": {
+          "formula": "successful_neutralizations/pressure_neutralize_opportunities*100",
+          "type": "match",
+          "definition": "Opportunity: player is in defensive or disadvantaged state and must reset/block/leave. Success: rally returns to neutral or better without immediate attackable pop-up."
+        },
+        "match_transfer_score": {
+          "formula": "validation_index_from_match_metrics",
+          "type": "validation",
+          "note": "Not linearly added into capability score in V2.3.1."
+        }
+      },
+      "required_trial_fields": [
+        "phase",
+        "intent",
+        "shot",
+        "target",
+        "quality",
+        "movement",
+        "result",
+        "pattern_id",
+        "review_flag",
+        "adaptation_opportunity",
+        "adaptation_success",
+        "neutralize_opportunity",
+        "neutralize_success",
+        "control_state"
+      ]
+    }
+  }
+}

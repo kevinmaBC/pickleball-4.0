@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Pickleball V2.3.1 Rally Event",
+  "type": "object",
+  "required": [
+    "player_id",
+    "assessment_id",
+    "rally_no",
+    "phase",
+    "intent",
+    "shot",
+    "quality",
+    "movement",
+    "result"
+  ],
+  "properties": {
+    "player_id": {
+      "type": "string"
+    },
+    "assessment_id": {
+      "type": "string"
+    },
+    "rally_no": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "phase": {
+      "enum": [
+        "serve",
+        "return",
+        "third",
+        "transition",
+        "nvz",
+        "defense",
+        "finish"
+      ]
+    },
+    "intent": {
+      "enum": [
+        "neutralize",
+        "pressure",
+        "attack"
+      ]
+    },
+    "shot": {
+      "enum": [
+        "serve",
+        "return",
+        "drive",
+        "drop",
+        "reset",
+        "dink",
+        "roll",
+        "speedup",
+        "counter",
+        "volley",
+        "lob",
+        "overhead",
+        "leave"
+      ]
+    },
+    "target": {
+      "enum": [
+        "middle",
+        "body",
+        "feet",
+        "bh",
+        "fh",
+        "line",
+        "cross",
+        "open_court",
+        "none"
+      ]
+    },
+    "quality": {
+      "enum": [
+        "good",
+        "neutral",
+        "attackable",
+        "pop_up",
+        "error"
+      ]
+    },
+    "movement": {
+      "enum": [
+        "balanced",
+        "split_ready",
+        "moving_contact",
+        "jammed",
+        "late"
+      ]
+    },
+    "result": {
+      "enum": [
+        "continue",
+        "weak_reply",
+        "forced_error_created",
+        "winner",
+        "ue",
+        "opponent_ue",
+        "transition_lost",
+        "attack_converted"
+      ]
+    },
+    "pattern_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "adaptation_opportunity": {
+      "type": "boolean"
+    },
+    "adaptation_success": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "neutralize_opportunity": {
+      "type": "boolean"
+    },
+    "neutralize_success": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "control_state": {
+      "enum": [
+        "none",
+        "neutral",
+        "pressure",
+        "attack"
+      ]
+    },
+    "review_flag": {
+      "type": "boolean"
+    },
+    "timestamp_ms": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    }
+  }
+}
