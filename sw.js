@@ -1,8 +1,8 @@
 /* Service Worker — Pickleball App 2.0 Alpha (Phase 0)
- * 版本升级：pb40-v8 -> pb40-v12（新增 css/js/data 核心资源）。
+ * 版本升级：pb40-v8 -> pb40-v13（新增 css/js/data 核心资源）。
  * 策略：导航(HTML)请求 network-first（避免部署后持续加载旧版代码）；
  *       其它静态资源 stale-while-revalidate；换版本即清旧缓存。 */
-const CACHE='pb40-v12';
+const CACHE='pb40-v13';
 const CORE=[
   './','./index.html','./manifest.json',
   './css/app.css',
