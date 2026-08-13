@@ -165,6 +165,14 @@
     });
   }
 
+  // 合并式更新 Assessment（用于写入 T10-lite 的 ue / match_transfer 字段）
+  function updateAssessment(assessment_id, patch) {
+    return get('assessments', assessment_id).then(function (a) {
+      if (!a) throw new Error('assessment not found: ' + assessment_id);
+      return put('assessments', Object.assign({}, a, patch));
+    });
+  }
+
   // 删除单个 Session（级联删其 trial_events）
   function deleteSession(test_session_id) {
     return trialsBySession(test_session_id).then(function (trials) {
@@ -195,6 +203,7 @@
     listPlayers: listPlayers, listAssessments: listAssessments,
     assessmentsByPlayer: assessmentsByPlayer, sessionsByAssessment: sessionsByAssessment, trialsBySession: trialsBySession,
     exportAssessment: exportAssessment,
+    updateAssessment: updateAssessment,
     deleteSession: deleteSession, deleteAssessment: deleteAssessment,
     _uid: uid
   };

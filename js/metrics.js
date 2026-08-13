@@ -48,9 +48,9 @@
   // 汇总一次 Assessment 下每项测试的主指标 + 抽样完整度（跨该测试的所有 session 合并 trial）
   function computeAssessment(assessment_id) {
     if (typeof PBStore === 'undefined') return Promise.resolve({ per_test: {} });
-    var tier = null;
+    var tier = null, asm = null;
     return PBStore.get('assessments', assessment_id).then(function (a) {
-      tier = a ? a.assessment_tier : null;
+      asm = a; tier = a ? a.assessment_tier : null;
       return PBStore.sessionsByAssessment(assessment_id);
     }).then(function (sessions) {
       var byTest = {};
@@ -63,7 +63,6 @@
             var m = computeTrials(all);
             m.test_id = tid;
             m.metric_key = PRIMARY[tid] || (tid.toLowerCase() + '_ball_quality_pct');
-            // 抽样完整度（raw，仅提示，不作判级依据）
             var target = (typeof PBConfig !== 'undefined' && tier) ? PBConfig.sampleTarget(tid, tier) : null;
             m.sample_target = target;
             m.sample_complete = (target != null) ? (m.n_valid >= target) : null;
@@ -72,11 +71,27 @@
       })).then(function (results) {
         var per_test = {};
         results.forEach(function (r) { per_test[r.test_id] = r; });
+        // T10-lite：从评估记录读 UE 与转化验证分（简化，非逐拍编码）
+        var match = null;
+        if (asm && (asm.ue || asm.match_transfer)) {
+          var ue = asm.ue || null, mt = asm.match_transfer || null;
+          var games = ue && ue.games ? ue.games : 0;
+          var ueTotal = (ue && ue.counts) ? Object.keys(ue.counts).reduce(function (s, k) { return s + (ue.counts[k] || 0); }, 0) : null;
+          match = {
+            games: games,
+            ue_total: ueTotal,
+            ue_per_game: (ueTotal != null && games > 0) ? round1(ueTotal / games) : null,
+            match_transfer_score: (mt && mt.score != null) ? mt.score : null,
+            match_transfer_source: 'simplified_self_or_coach_v1',
+            note: 'ue_per_game = total_ue/games; match_transfer_score = mean of self/coach sub-scores (SIMPLIFIED, not rally-by-rally T10 coding)'
+          };
+        }
         return {
           generated_at: new Date().toISOString(),
           assessment_tier: tier,
-          note: 'raw primary percentages + sampling completeness only; no level judgment / no capability score / no gates. UE & match_transfer belong to T10 (match) — not captured this build.',
-          per_test: per_test
+          note: 'raw primary percentages + sampling completeness + simplified match inputs (T10-lite). No level judgment / no capability score / no gates. Full T10 rally-by-rally coding still deferred.',
+          per_test: per_test,
+          match: match
         };
       });
     });

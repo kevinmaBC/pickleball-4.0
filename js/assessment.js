@@ -30,6 +30,7 @@
     if (ui.screen === 'detail')      return renderDetail();
     if (ui.screen === 'session-new') return renderSessionNew();
     if (ui.screen === 'preview')     return renderPreview();
+    if (ui.screen === 'match')       return renderMatch();
     if (ui.screen === 'record')      return renderRecord();
   }
 
@@ -78,7 +79,7 @@
     var aid = ui.assessment_id;
     Promise.all([PBStore.get('assessments',aid), PBStore.sessionsByAssessment(aid), PBMetrics.computeAssessment(aid)])
       .then(function (r) {
-        var a=r[0], sessions=r[1]||[], metrics=r[2].per_test||{};
+        var a=r[0], sessions=r[1]||[], metrics=r[2].per_test||{}, match=r[2].match||null;
         var byTest={}; sessions.forEach(function(s){ if(!byTest[s.test_id]) byTest[s.test_id]=s; });
         var rows = PBConfig.testIds.map(function (tid) {
           var t=PBConfig.tests[tid]||{name:tid}; var s=byTest[tid]; var m=metrics[tid];
@@ -98,6 +99,8 @@
         h('<div class="a1-h"><button class="btn" data-act="home" style="padding:4px 10px">‹ 返回</button> &nbsp; '+esc(a?a.assessment_tier:'')+' · 目标 '+(a?a.target_training_level.toFixed(1):'')+'</div>'+
           '<div class="a1-sub">'+aid+'</div>'+ rows +
           '<div class="a1-mut" style="margin-top:10px">各项显示"原始主指标%（加权成功/有效试验）+ 抽样完整度（已录/目标）"。含 T08 决策 / T09 抗压；仍不判级、不算综合分、不设门槛。</div>'+
+          '<div class="a1-row" style="border:none;margin-top:8px"><div class="a1-mut">实战 T10-lite：'+(match&&match.ue_per_game!=null?('每局UE '+match.ue_per_game):'UE 未录')+' · '+(match&&match.match_transfer_score!=null?('转化分 '+match.match_transfer_score):'转化分 未录')+'</div>'+
+            '<button class="btn" data-act="match" data-id="'+aid+'">实战录入</button></div>'+
           '<div class="a1-row" style="border:none;margin-top:12px">'+
             '<button class="btn" data-act="preview" data-id="'+aid+'">就绪度预览</button>'+
             '<button class="btn solid" data-act="export" data-id="'+aid+'">导出 JSON</button></div>');
@@ -142,6 +145,63 @@
     }).catch(function (e) { el.innerHTML='<div class="a1-mut">预览失败：'+esc(e.message)+'</div>'; });
   }
 
+  function renderMatch() {
+    var aid = ui.assessment_id;
+    PBStore.get('assessments', aid).then(function (a) {
+      var ue = a.ue || { games: 0, counts: {} };
+      var mt = a.match_transfer || {};
+      ui.matchDraft = {
+        games: ue.games || 0,
+        counts: Object.assign({ serve:0, return:0, drive:0, drop:0, dink:0, reset:0, other:0 }, ue.counts || {}),
+        decision: mt.decision||0, transition: mt.transition||0, pressure: mt.pressure||0, attack: mt.attack||0
+      };
+      var d = ui.matchDraft;
+      var ueTypes = [['serve','发球'],['return','接发'],['drive','Drive'],['drop','Drop'],['dink','Dink'],['reset','Reset'],['other','其它']];
+      var ueInputs = ueTypes.map(function (t) {
+        return '<div class="a1-row"><div>'+t[1]+'</div><input class="fld" style="width:84px" type="number" min="0" data-ue="'+t[0]+'" value="'+(d.counts[t[0]]||0)+'"></div>';
+      }).join('');
+      var dims = [['decision','决策 Decision'],['transition','过渡 Transition'],['pressure','抗压 Pressure'],['attack','进攻转化 Attack']];
+      var dimInputs = dims.map(function (t) {
+        return '<div class="a1-row"><div>'+t[1]+'</div><input class="fld" style="width:84px" type="number" min="0" max="100" data-mt="'+t[0]+'" value="'+(d[t[0]]||0)+'"></div>';
+      }).join('');
+      h('<div class="a1-h"><button class="btn" data-act="open" data-id="'+aid+'" style="padding:4px 10px">‹ 返回</button> &nbsp; 实战录入 Match (T10-lite)</div>'+
+        '<div class="a1-sub">简化版：只采 UE 与转化验证分，用于补全就绪度预览；非逐拍编码，非官方评级。</div>'+
+        '<div class="a1-h" style="font-size:13px">① 非受迫失误 UE（按类型计数）</div>'+
+        '<div class="a1-row"><div>局数 Games</div><input class="fld" style="width:84px" type="number" min="0" id="ue-games" value="'+(d.games||0)+'"></div>'+
+        ueInputs +
+        '<div class="a1-row"><div><b>每局 UE ue_per_game</b></div><div id="ue-pg"><b>—</b></div></div>'+
+        '<div class="a1-h" style="font-size:13px;margin-top:14px">② 转化验证分（0–100，自评/教练评）</div>'+
+        dimInputs +
+        '<div class="a1-row"><div><b>match_transfer_score（4 项均值）</b></div><div id="mt-score"><b>—</b></div></div>'+
+        '<div class="a1-row" style="border:none;margin-top:12px"><button class="btn" data-act="open" data-id="'+aid+'">取消</button>'+
+          '<button class="btn solid" data-act="save-match" data-id="'+aid+'">保存</button></div>'+
+        '<div class="a1-mut" style="margin-top:8px">保存后回详情；就绪度预览里 ue_per_game_max 与 match_transfer_score 两格将用这里的值。</div>');
+      function recompute() {
+        var dd = ui.matchDraft;
+        var tot = Object.keys(dd.counts).reduce(function (s, k) { return s + (dd.counts[k]||0); }, 0);
+        var pg = (dd.games > 0) ? (Math.round(tot / dd.games * 10) / 10) : null;
+        var pgEl = document.getElementById('ue-pg');
+        if (pgEl) pgEl.innerHTML = '<b>'+(pg==null?'—':pg)+'</b>'+(pg==null?'':' <span class="a1-mut">('+tot+'/'+dd.games+')</span>');
+        var mean = Math.round((dd.decision + dd.transition + dd.pressure + dd.attack) / 4);
+        var mtEl = document.getElementById('mt-score');
+        if (mtEl) mtEl.innerHTML = '<b>'+mean+'</b>';
+      }
+      el.querySelectorAll('[data-ue]').forEach(function (inp) { inp.oninput = function () { ui.matchDraft.counts[this.getAttribute('data-ue')] = Math.max(0, parseInt(this.value||'0',10)||0); recompute(); }; });
+      el.querySelectorAll('[data-mt]').forEach(function (inp) { inp.oninput = function () { ui.matchDraft[this.getAttribute('data-mt')] = Math.max(0, Math.min(100, parseInt(this.value||'0',10)||0)); recompute(); }; });
+      var g = document.getElementById('ue-games'); if (g) g.oninput = function () { ui.matchDraft.games = Math.max(0, parseInt(this.value||'0',10)||0); recompute(); };
+      recompute();
+    });
+  }
+
+  function saveMatch(aid) {
+    var d = ui.matchDraft || {};
+    var mean = Math.round(((d.decision||0) + (d.transition||0) + (d.pressure||0) + (d.attack||0)) / 4);
+    PBStore.updateAssessment(aid, {
+      ue: { games: d.games||0, counts: d.counts||{} },
+      match_transfer: { decision:d.decision||0, transition:d.transition||0, pressure:d.pressure||0, attack:d.attack||0, score: mean }
+    }).then(function () { ui.screen='detail'; render(); });
+  }
+
   function renderRecord() {
     var s=ui.session; var tid=s.test_id; var t=PBConfig.tests[tid]||{name:tid};
     var outs=PBConfig.outcomesFor(tid); var target=PBConfig.sampleTarget(tid,s.assessment_tier);
@@ -171,6 +231,8 @@
     if(act==='open'){ui.assessment_id=node.getAttribute('data-id');ui.screen='detail';return render();}
     if(act==='export')return exportJSON(node.getAttribute('data-id'));
     if(act==='preview'){ui.assessment_id=node.getAttribute('data-id');ui.screen='preview';return render();}
+    if(act==='match'){ui.assessment_id=node.getAttribute('data-id');ui.screen='match';return render();}
+    if(act==='save-match')return saveMatch(node.getAttribute('data-id'));
     if(act==='del-asm')return delAssessment(node.getAttribute('data-id'));
     if(act==='new-session'){ui.pendingTestId=node.getAttribute('data-tid');ui.sessDraft={};ui.screen='session-new';return render();}
     if(act==='pick-feed'){ui.sessDraft.feed_mode=node.getAttribute('data-feed');return render();}
