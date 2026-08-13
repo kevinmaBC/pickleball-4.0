@@ -29,6 +29,7 @@
     if (ui.screen === 'new')         return renderNew();
     if (ui.screen === 'detail')      return renderDetail();
     if (ui.screen === 'session-new') return renderSessionNew();
+    if (ui.screen === 'preview')     return renderPreview();
     if (ui.screen === 'record')      return renderRecord();
   }
 
@@ -97,8 +98,9 @@
         h('<div class="a1-h"><button class="btn" data-act="home" style="padding:4px 10px">‹ 返回</button> &nbsp; '+esc(a?a.assessment_tier:'')+' · 目标 '+(a?a.target_training_level.toFixed(1):'')+'</div>'+
           '<div class="a1-sub">'+aid+'</div>'+ rows +
           '<div class="a1-mut" style="margin-top:10px">各项显示"原始主指标%（加权成功/有效试验）+ 抽样完整度（已录/目标）"。含 T08 决策 / T09 抗压；仍不判级、不算综合分、不设门槛。</div>'+
-          '<div class="a1-row" style="border:none;margin-top:12px"><span></span>'+
-            '<button class="btn solid" data-act="export" data-id="'+aid+'">导出完整 Assessment JSON</button></div>');
+          '<div class="a1-row" style="border:none;margin-top:12px">'+
+            '<button class="btn" data-act="preview" data-id="'+aid+'">就绪度预览</button>'+
+            '<button class="btn solid" data-act="export" data-id="'+aid+'">导出 JSON</button></div>');
       });
   }
 
@@ -115,6 +117,29 @@
         '<button class="btn solid" data-act="create-session"'+(d.feed_mode?'':' disabled style="opacity:.5"')+'>创建 Session</button></div>');
     var fi=document.getElementById('a1-feeder'); if(fi) fi.oninput=function(){ui.sessDraft.feeder_id=this.value;};
     var ci=document.getElementById('a1-cal'); if(ci) ci.oninput=function(){ui.sessDraft.cal=this.value;};
+  }
+
+  function renderPreview() {
+    var aid = ui.assessment_id;
+    el.innerHTML = '<div class="a1-mut">计算就绪度…</div>';
+    PBPreview.forAssessment(aid).then(function (P) {
+      if (P.unsupported) { h('<div class="a1-h"><button class="btn" data-act="open" data-id="'+aid+'" style="padding:4px 10px">‹ 返回</button></div><div class="a1-mut">目标等级 '+esc(P.target)+' 暂无门槛表。</div>'); return; }
+      var STAT = { met:['达标 ✓','var(--pass)'], borderline:['边缘 ~','var(--part)'], not_met:['未达 ✗','var(--fail)'], no_data:['无数据','var(--muted)'], not_captured:['未采集·待T10','var(--muted)'] };
+      var rows = P.rows.map(function (x) {
+        var s = STAT[x.status] || ['?','var(--muted)']; var op = x.direction==='max' ? '≤' : '≥'; var mid='';
+        if (x.status==='not_captured') mid='';
+        else if (x.status==='no_data') mid='<span class="a1-mut">'+op+x.threshold+'（未录）</span>';
+        else { var samp = x.min_required ? (' · 样本 '+x.n_valid+'/'+x.min_required+(x.sample_ok?'':' ⚠不足')) : ''; mid='<b>'+x.current+'%</b> <span class="a1-mut">'+op+x.threshold+samp+'</span>'; }
+        return '<div class="a1-row"><div style="flex:1 1 58%"><b>'+esc(x.key)+'</b><div class="a1-mut" style="padding:2px 0 0">'+mid+'</div></div><div style="color:'+s[1]+';font-weight:700;white-space:nowrap">'+s[0]+'</div></div>';
+      }).join('');
+      var t = P.tally;
+      var summary = '目标 '+esc(P.target)+'（'+esc(P.tier)+'）：可比 '+t.total+' 项 → 达标 '+t.met+' · 边缘 '+t.borderline+' · 未达 '+t.not_met+(t.no_data?(' · 无数据 '+t.no_data):'')+(t.not_captured?(' · 未采集 '+t.not_captured):'')+(t.sample_short?(' · 样本不足 '+t.sample_short):'');
+      h('<div style="background:var(--ink);color:#fff;padding:8px 12px;border-radius:10px;font-weight:800;margin-bottom:10px;line-height:1.35">就绪度预览 · 非官方评级<br><span style="font-weight:600;font-size:12px">Readiness Preview — NOT an official rating</span></div>'+
+        '<div class="a1-h"><button class="btn" data-act="open" data-id="'+aid+'" style="padding:4px 10px">‹ 返回</button></div>'+
+        rows +
+        '<div class="a1-mut" style="margin-top:10px">'+esc(summary)+'</div>'+
+        '<div class="a1-mut" style="margin-top:6px">仅逐项比对，不综合、不判官方等级；capability 综合分与 UE / match_transfer 均待后续（T10）。样本不足时百分比仅供参考。</div>');
+    }).catch(function (e) { el.innerHTML='<div class="a1-mut">预览失败：'+esc(e.message)+'</div>'; });
   }
 
   function renderRecord() {
@@ -145,6 +170,7 @@
     if(act==='create-asm')return createAssessment();
     if(act==='open'){ui.assessment_id=node.getAttribute('data-id');ui.screen='detail';return render();}
     if(act==='export')return exportJSON(node.getAttribute('data-id'));
+    if(act==='preview'){ui.assessment_id=node.getAttribute('data-id');ui.screen='preview';return render();}
     if(act==='del-asm')return delAssessment(node.getAttribute('data-id'));
     if(act==='new-session'){ui.pendingTestId=node.getAttribute('data-tid');ui.sessDraft={};ui.screen='session-new';return render();}
     if(act==='pick-feed'){ui.sessDraft.feed_mode=node.getAttribute('data-feed');return render();}
@@ -205,8 +231,8 @@
   function init() {
     el=document.getElementById(ROOT_ID); if(!el) return;
     el.addEventListener('click',onClick);
-    if(typeof PBConfig==='undefined'||typeof PBStore==='undefined'||typeof PBMetrics==='undefined'){
-      el.innerHTML='<div class="a1-mut">模块未就绪（PBConfig/PBStore/PBMetrics 未加载）。</div>';return;}
+    if(typeof PBConfig==='undefined'||typeof PBStore==='undefined'||typeof PBMetrics==='undefined'||typeof PBPreview==='undefined'){
+      el.innerHTML='<div class="a1-mut">模块未就绪（PBConfig/PBStore/PBMetrics/PBPreview 未加载）。</div>';return;}
     PBConfig.load('./data/').then(function(){render();})
       .catch(function(err){el.innerHTML='<div class="a1-mut">配置加载失败：'+esc(err.message)+'</div>';});
   }
