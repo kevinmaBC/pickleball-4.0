@@ -17,9 +17,12 @@
 <body>
 
 <header class="top">
-  <div class="brand">
-    <div class="ball"></div>
-    <h1>Drills Path from 3.0 to 5.0<small>PICKLEBALL · BY KEVIN MA</small></h1>
+  <div class="topbar">
+    <div class="brand">
+      <div class="ball"></div>
+      <h1>Drills Path from 3.0 to 5.0<small>PICKLEBALL · BY KEVIN MA</small></h1>
+    </div>
+    <button class="lang-switch" id="lang-btn" onclick="toggleLang()">中 / <b>EN</b></button>
   </div>
 </header>
 
@@ -29,8 +32,8 @@
   <section class="view active" id="v-home">
     <div class="hero">
       <div class="eyebrow" style="color:var(--lime)">Learn · Drill · Measure · Compete</div>
-      <p class="lead">不靠力量打穿对手，而是用<b>弧线、旋转与判断</b>让对手无力回击。</p>
-      <p>从 3.0 到稳定 4.0 冲 5.0 的一套闭环培训手册：学教材 → 练打卡 → 测评级 → 赛规则。全部记录只存在你自己的设备上。</p>
+      <p class="lead" data-i18n-html="home.lead">不靠力量打穿对手，而是用<b>弧线、旋转与判断</b>让对手无力回击。</p>
+      <p data-i18n="home.desc">从 3.0 到稳定 4.0 冲 5.0 的一套闭环培训手册：学教材 → 练打卡 → 测评级 → 赛规则。全部记录只存在你自己的设备上。</p>
       <div class="loop">
         <button onclick="go('learn')"><span class="cn">学</span><span class="en2">Learn</span></button>
         <button onclick="go('drill')"><span class="cn">练</span><span class="en2">Drill</span></button>
@@ -39,22 +42,22 @@
       </div>
     </div>
 
-    <h3 class="blk">稳定 4.0 · 六道硬门槛 <span class="en">Six Hard Gates</span></h3>
-    <p class="sec-sub" style="margin-top:-4px">全绿才算稳定 4.0 —— 不能靠单项特别强来抵消短板。数据来自「测」页，实时联动。</p>
+    <h3 class="blk" data-i18n-html="home.gatesH3">稳定 4.0 · 六道硬门槛 <span class="en">Six Hard Gates</span></h3>
+    <p class="sec-sub" style="margin-top:-4px" data-i18n="home.gatesSub">全绿才算稳定 4.0 —— 不能靠单项特别强来抵消短板。数据来自「测」页，实时联动。</p>
     <div class="card">
       <div class="gates" id="home-gates"></div>
       <div class="verdict" id="home-verdict"></div>
     </div>
 
-    <h3 class="blk">五份资料如何组成一套体系 <span class="en">System Map</span></h3>
+    <h3 class="blk" data-i18n-html="home.mapH3">五份资料如何组成一套体系 <span class="en">System Map</span></h3>
     <table class="tbl">
-      <thead><tr><th>资料 Doc</th><th>层级 Layer</th><th>作用</th></tr></thead>
+      <thead><tr><th data-i18n="home.tblDoc">资料 Doc</th><th data-i18n="home.tblLayer">层级 Layer</th><th data-i18n="home.tblRole">作用</th></tr></thead>
       <tbody>
-        <tr><td>匹克球大全</td><td class="en">Textbook</td><td>学什么：技术+战术+训练全书（第1–17章）</td></tr>
-        <tr><td>决策系统 SSS</td><td class="en">Decision</td><td>这一拍打什么、怎么打（Drive/Drop/Reset/Leave）</td></tr>
-        <tr><td>4.0 KPI Dashboard</td><td class="en">Measure</td><td>量化现在几分、哪个模块最弱</td></tr>
-        <tr><td>MiLP 打卡表</td><td class="en">Execute</td><td>练了没、达标没、趋势如何</td></tr>
-        <tr><td>MiLP 规则+规划</td><td class="en">Compete</td><td>团体赛怎么打、团队练什么</td></tr>
+        <tr><td data-i18n="home.doc.textbook">匹克球大全</td><td class="en">Textbook</td><td data-i18n="home.role.textbook">学什么：技术+战术+训练全书（第1–17章）</td></tr>
+        <tr><td data-i18n="home.doc.sss">决策系统 SSS</td><td class="en">Decision</td><td data-i18n="home.role.sss">这一拍打什么、怎么打（Drive/Drop/Reset/Leave）</td></tr>
+        <tr><td>4.0 KPI Dashboard</td><td class="en">Measure</td><td data-i18n="home.role.kpi">量化现在几分、哪个模块最弱</td></tr>
+        <tr><td data-i18n="home.doc.milpTrack">MiLP 打卡表</td><td class="en">Execute</td><td data-i18n="home.role.milpTrack">练了没、达标没、趋势如何</td></tr>
+        <tr><td data-i18n="home.doc.milpRules">MiLP 规则+规划</td><td class="en">Compete</td><td data-i18n="home.role.milpRules">团体赛怎么打、团队练什么</td></tr>
       </tbody>
     </table>
   </section>
@@ -62,8 +65,8 @@
   <!-- ========== 学 LEARN ========== -->
   <section class="view" id="v-learn">
     <div class="eyebrow">01 · Learn</div>
-    <h2 class="sec">学 · 教材主干</h2>
-    <p class="sec-sub">《匹克球大全》五段式教学：定义 → 技术分解 → 常见错误 → 实战 → 训练。<span class="en">Definition → Breakdown → Errors → Cases → Drills</span></p>
+    <h2 class="sec" data-i18n="learn.h2">学 · 教材主干</h2>
+    <p class="sec-sub" data-i18n-html="learn.sub">《匹克球大全》五段式教学：定义 → 技术分解 → 常见错误 → 实战 → 训练。<span class="en">Definition → Breakdown → Errors → Cases → Drills</span></p>
 
     <h3 class="blk">核心数据速查 <span class="en">Key Numbers</span></h3>
     <table class="tbl">
@@ -578,8 +581,8 @@
   <!-- ========== 练 DRILL ========== -->
   <section class="view" id="v-drill">
     <div class="eyebrow">02 · Drill</div>
-    <h2 class="sec">练 · 8 周打卡</h2>
-    <p class="sec-sub">MiLP 团队 8 周训练（DUPR 16 组）。逐项选达标状态，自动统计。<span class="en">8-Week Team Log</span></p>
+    <h2 class="sec" data-i18n="drill.h2">练 · 8 周打卡</h2>
+    <p class="sec-sub" data-i18n-html="drill.sub">MiLP 团队 8 周训练（DUPR 16 组）。逐项选达标状态，自动统计。<span class="en">8-Week Team Log</span></p>
 
     <div class="kpibar">
       <div class="stat"><div class="v" id="t-done">0%</div><div class="k">完成率 <span class="en">Done</span></div></div>
@@ -600,8 +603,8 @@
   <!-- ========== 测 MEASURE ========== -->
   <section class="view" id="v-measure">
     <div class="eyebrow">03 · Measure</div>
-    <h2 class="sec">测 · 4.0 KPI</h2>
-    <p class="sec-sub">10 模块加权综合分（满分 100）+ 水平判定 + 六道硬门槛。拖动滑块填入每场录像统计的当前%。<span class="en">Composite KPI Dashboard</span></p>
+    <h2 class="sec" data-i18n="measure.h2">测 · 4.0 KPI</h2>
+    <p class="sec-sub" data-i18n-html="measure.sub">10 模块加权综合分（满分 100）+ 水平判定 + 六道硬门槛。拖动滑块填入每场录像统计的当前%。<span class="en">Composite KPI Dashboard</span></p>
     <!-- ===== S1 · V2.3.1 Assessment Data Core ===== -->
     <div class="card" id="a1-root" style="margin:14px 0 18px">
       <div class="eyebrow" style="margin-bottom:8px">S1 · Assessment Data Core</div>
@@ -610,21 +613,21 @@
 
     <div class="composite">
       <div class="big" id="k-score">0<small>/100</small></div>
-      <div class="lvl">当前水平 <span class="en">Level</span><b id="k-level">基础需加强</b></div>
+      <div class="lvl"><span data-i18n-html="measure.levelLabel">当前水平 <span class="en">Level</span></span><b id="k-level">基础需加强</b></div>
     </div>
 
     <div class="card" id="modules"></div>
 
-    <h3 class="blk">六道硬门槛 <span class="en">Hard Gates</span></h3>
+    <h3 class="blk" data-i18n-html="measure.gatesH3">六道硬门槛 <span class="en">Hard Gates</span></h3>
     <div class="card">
       <div class="gates" id="kpi-gates"></div>
       <div class="verdict" id="kpi-verdict"></div>
     </div>
 
-    <div class="callout">UE 特殊项：<b>每局非受迫失误</b> <span class="en">(UE/game)</span> 单独输入，自动映射为分数（≤2→95, ≤4→85, ≤6→77, ≤8→68, ≤10→58, &gt;10→45）。门槛为 ≤5 次/局。</div>
+    <div class="callout" data-i18n-html="measure.ueCallout">UE 特殊项：<b>每局非受迫失误</b> <span class="en">(UE/game)</span> 单独输入，自动映射为分数（≤2→95, ≤4→85, ≤6→77, ≤8→68, ≤10→58, &gt;10→45）。门槛为 ≤5 次/局。</div>
     <div class="card">
       <div class="mod" style="border:none">
-        <div class="top"><span class="mn">每局非受迫失误 UE/game</span><span class="mw">映射分数</span></div>
+        <div class="top"><span class="mn" data-i18n="measure.ueLabel">每局非受迫失误 UE/game</span><span class="mw" data-i18n="measure.ueMapped">映射分数</span></div>
         <div class="ctl">
           <input type="range" min="0" max="14" step="1" value="2" id="ue-range" oninput="setUE(this.value)">
           <span class="pct" id="ue-val" style="min-width:96px">2 次 → 95</span>
@@ -636,8 +639,8 @@
   <!-- ========== 赛 COMPETE ========== -->
   <section class="view" id="v-compete">
     <div class="eyebrow">04 · Compete</div>
-    <h2 class="sec">赛 · MiLP 规则</h2>
-    <p class="sec-sub">The Dink 小联盟 MLPlay™ 团体赛（2男2女）。<span class="en">Rules Digest & Pre-Match Flow</span></p>
+    <h2 class="sec" data-i18n="compete.h2">赛 · MiLP 规则</h2>
+    <p class="sec-sub" data-i18n-html="compete.sub">The Dink 小联盟 MLPlay™ 团体赛（2男2女）。<span class="en">Rules Digest & Pre-Match Flow</span></p>
 
     <h3 class="blk">赛制 4 局 <span class="en">Format</span></h3>
     <table class="tbl">
@@ -696,8 +699,8 @@
   <!-- ========== 队 TEAM / SYNC ========== -->
   <section class="view" id="v-team">
     <div class="eyebrow">05 · Team</div>
-    <h2 class="sec">队 · 同步</h2>
-    <p class="sec-sub">连云端后你的记录自动上传，教练可一处看全队。<span class="en">Cloud Sync via Supabase</span></p>
+    <h2 class="sec" data-i18n="team.h2">队 · 同步</h2>
+    <p class="sec-sub" data-i18n-html="team.sub">连云端后你的记录自动上传，教练可一处看全队。<span class="en">Cloud Sync via Supabase</span></p>
 
     <details class="acc" id="conn-acc">
       <summary><span>连接设置 Supabase Setup <span class="tag">Kevin 填一次</span></span><span class="chev">▸</span></summary>
@@ -742,9 +745,8 @@
 
   <footer class="foot">
     Drills Path from 3.0 to 5.0<br>
-    整理 by Kevin Ma　|　所有记录仅保存在本设备浏览器 · 请定期"导出备份"<br>
-    规则依据 The Dink MiLP 官方手册 2025-10-21
-    <button class="fbtn" onclick="openFeedback()">💬 反馈 Feedback</button>
+    <span data-i18n-html="shell.footer">整理 by Kevin Ma　|　所有记录仅保存在本设备浏览器 · 请定期"导出备份"<br>规则依据 The Dink MiLP 官方手册 2025-10-21</span>
+    <button class="fbtn" onclick="openFeedback()" data-i18n="shell.feedbackBtn">💬 反馈 Feedback</button>
   </footer>
 </main>
 
@@ -776,6 +778,7 @@
   <button data-t="team" onclick="go('team')"><span class="ti">队</span><span class="te">Team</span></button>
 </nav>
 
+<script src="./js/i18n.js"></script>
 <script src="./js/config-loader.js"></script>
 <script src="./js/storage.js"></script>
 <script src="./js/metrics.js"></script>

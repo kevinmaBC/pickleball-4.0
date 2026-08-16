@@ -31,7 +31,7 @@
     if (_gates) return Promise.resolve(_gates);
     base = base || './data/';
     return fetch(base + 'level_gates_v2_3_1.json', { cache: 'no-cache' }).then(function (r) {
-      if (!r.ok) throw new Error('门槛表加载失败 HTTP ' + r.status);
+      if (!r.ok) throw new Error((typeof LANG !== 'undefined' && LANG === 'en' ? 'Gate table load failed HTTP ' : '门槛表加载失败 HTTP ') + r.status);
       return r.json();
     }).then(function (g) { _gates = g; return g; });
   }

@@ -67,26 +67,26 @@ const TOC=[
 ];
 
 const MODULES=[
- {n:'发球 Serve',w:8,tgt:98,cur:0},
- {n:'接发 Return（高质量率）',w:14,tgt:80,cur:0},
- {n:'Drive 有效率',w:10,tgt:75,cur:0},
- {n:'第三拍 Drop',w:14,tgt:75,cur:0},
- {n:'Reset 过渡区',w:12,tgt:70,cur:0},
- {n:'Kitchen Dink（高质量）',w:10,tgt:80,cur:0},
- {n:'Counter 有效率',w:6,tgt:50,cur:0},
- {n:'Leave 判断',w:6,tgt:85,cur:0},
- {n:'Shot Selection',w:10,tgt:85,cur:0}
+ {n:'发球 Serve',en:'Serve',w:8,tgt:98,cur:0},
+ {n:'接发 Return（高质量率）',en:'Return (High-Quality Rate)',w:14,tgt:80,cur:0},
+ {n:'Drive 有效率',en:'Drive Effectiveness',w:10,tgt:75,cur:0},
+ {n:'第三拍 Drop',en:'Third Shot Drop',w:14,tgt:75,cur:0},
+ {n:'Reset 过渡区',en:'Reset (Transition Zone)',w:12,tgt:70,cur:0},
+ {n:'Kitchen Dink（高质量）',en:'Kitchen Dink (High-Quality)',w:10,tgt:80,cur:0},
+ {n:'Counter 有效率',en:'Counter Effectiveness',w:6,tgt:50,cur:0},
+ {n:'Leave 判断',en:'Leave Judgment',w:6,tgt:85,cur:0},
+ {n:'Shot Selection',en:'Shot Selection',w:10,tgt:85,cur:0}
 ];
 let UE_SCORE=95, UE_PER=2;
 
 /* 六门槛定义：读取对应模块 index 的 cur 与门槛值 */
 const GATES=[
- {lab:'发球成功率',thr:'≥95%',mod:0,min:95},
- {lab:'高质量接发',thr:'≥75%',mod:1,min:75},
- {lab:'Drop 成功率',thr:'≥70%',mod:3,min:70},
- {lab:'Reset 成功率',thr:'≥65%',mod:4,min:65},
- {lab:'Shot Selection',thr:'≥80%',mod:8,min:80},  // index 8 = Shot Selection（模块数组最后一项）
- {lab:'每局 UE',thr:'≤5 次',ue:true}
+ {lab:'发球成功率',en:'Serve Success Rate',thr:'≥95%',mod:0,min:95},
+ {lab:'高质量接发',en:'High-Quality Return',thr:'≥75%',mod:1,min:75},
+ {lab:'Drop 成功率',en:'Drop Success Rate',thr:'≥70%',mod:3,min:70},
+ {lab:'Reset 成功率',en:'Reset Success Rate',thr:'≥65%',mod:4,min:65},
+ {lab:'Shot Selection',en:'Shot Selection',thr:'≥80%',mod:8,min:80},  // index 8 = Shot Selection（模块数组最后一项）
+ {lab:'每局 UE',en:'UE / game',thr:'≤5 次',thrEn:'≤5/game',ue:true}
 ];
 
 /* ============ 存储 Storage (localStorage) ============ */
@@ -171,12 +171,15 @@ function updateTrackerStats(){
 function renderModules(){
   MODULES.forEach((m,i)=>{if(STATE.kpi.cur[i]!=null)m.cur=STATE.kpi.cur[i];});
   const box=document.getElementById('modules');box.innerHTML='';
+  const wLabel = LANG==='en' ? 'Weight' : '权重';
+  const tLabel = LANG==='en' ? '4.0 Target: ' : '目标 4.0：';
   MODULES.forEach((m,i)=>{
     const div=document.createElement('div');div.className='mod';
-    div.innerHTML=`<div class="top"><span class="mn">${m.n}</span><span class="mw">权重 ${m.w}</span></div>
+    const name = LANG==='en' ? m.en : m.n;
+    div.innerHTML=`<div class="top"><span class="mn">${name}</span><span class="mw">${wLabel} ${m.w}</span></div>
       <div class="meter"><div class="fill" id="fill-${i}" style="width:${m.cur}%"></div>
         <div class="tgt" style="left:${m.tgt}%"></div></div>
-      <div class="mt">目标 4.0：${m.tgt}%</div>
+      <div class="mt">${tLabel}${m.tgt}%</div>
       <div class="ctl"><input type="range" min="0" max="100" step="1" value="${m.cur}"
         oninput="setMod(${i},this.value)"><span class="pct" id="pct-${i}">${m.cur}%</span></div>`;
     box.appendChild(div);
@@ -190,7 +193,7 @@ function setMod(i,v){v=+v;MODULES[i].cur=v;STATE.kpi.cur[i]=v;save();
 function setUE(v){
   v=+v;UE_PER=v;STATE.kpi.ue=v;save();
   UE_SCORE = v<=2?95 : v<=4?85 : v<=6?77 : v<=8?68 : v<=10?58 : 45;
-  document.getElementById('ue-val').textContent=`${v} 次 → ${UE_SCORE}`;
+  document.getElementById('ue-val').textContent = LANG==='en' ? `${v} → ${UE_SCORE}` : `${v} 次 → ${UE_SCORE}`;
   computeKPI();
 }
 function levelOf(s){
@@ -209,27 +212,29 @@ function computeKPI(){
   const score=comp.toFixed(1);
   document.getElementById('k-score').innerHTML=score+'<small>/100</small>';
   const lv=levelOf(comp);
-  document.getElementById('k-level').textContent=lv[0];
+  document.getElementById('k-level').textContent = LANG==='en' ? lv[1] : lv[0];
   renderGates();
 }
 function renderGates(){
+  const curLabel = LANG==='en' ? 'current' : '当前';
   ['kpi-gates','home-gates'].forEach(gid=>{
     const box=document.getElementById(gid);box.innerHTML='';
     let allOk=true;
     GATES.forEach(g=>{
-      let ok,cur,thr;
-      if(g.ue){cur=UE_PER;ok=UE_PER<=5;thr=g.thr;var curTxt=UE_PER+' 次';}
-      else{cur=MODULES[g.mod].cur;ok=cur>=g.min;thr=g.thr;var curTxt=cur+'%';}
+      let ok,cur,thr,curTxt;
+      if(g.ue){cur=UE_PER;ok=UE_PER<=5;thr=LANG==='en'?(g.thrEn||g.thr):g.thr;curTxt=LANG==='en'?String(UE_PER):(UE_PER+' 次');}
+      else{cur=MODULES[g.mod].cur;ok=cur>=g.min;thr=g.thr;curTxt=cur+'%';}
       if(!ok)allOk=false;
       const el=document.createElement('div');
       el.className='gate '+(ok?'ok':(cur>0||g.ue?'no':''));
-      el.innerHTML=`<div class="lab">${g.lab}</div><div class="thr">${thr} · 当前 ${curTxt}</div><div class="dot"></div>`;
+      const lab=LANG==='en'?g.en:g.lab;
+      el.innerHTML=`<div class="lab">${lab}</div><div class="thr">${thr} · ${curLabel} ${curTxt}</div><div class="dot"></div>`;
       box.appendChild(el);
     });
     const vid=gid==='kpi-gates'?'kpi-verdict':'home-verdict';
     document.getElementById(vid).innerHTML= allOk
-      ? '✅ 六门槛全绿 · 已达稳定 4.0<span class="en">CERTIFIED STABLE 4.0</span>'
-      : '⛔ 尚未全绿 · 补齐红色项才算稳定 4.0<span class="en">GATES NOT ALL GREEN</span>';
+      ? (LANG==='en' ? '✅ All 6 gates green · Certified Stable 4.0' : '✅ 六门槛全绿 · 已达稳定 4.0<span class="en">CERTIFIED STABLE 4.0</span>')
+      : (LANG==='en' ? '⛔ Not all green yet · Clear the red items for Stable 4.0' : '⛔ 尚未全绿 · 补齐红色项才算稳定 4.0<span class="en">GATES NOT ALL GREEN</span>');
     document.getElementById(vid).style.color=allOk?'var(--pass)':'var(--fail)';
   });
 }
