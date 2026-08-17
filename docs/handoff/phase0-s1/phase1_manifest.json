@@ -1,0 +1,26 @@
+{
+  "package_id": "PB30-50-APPV2-PHASE0-S1-v1",
+  "sprint": "S1 Canonical Runtime Integration",
+  "repository": "kevinmaBC/pickleball-4.0",
+  "base": {
+    "branch": "phase0-s0-data-foundation",
+    "commit": "be4617448d77af4080f1101a33f64304d23f9c10"
+  },
+  "source_counts": {
+    "masters": 13,
+    "drills": 35
+  },
+  "architecture": "static HTML/CSS/JavaScript PWA; no npm/database/framework",
+  "scope": {
+    "runtime_load": true,
+    "runtime_facade": true,
+    "service_worker_update": true,
+    "legacy_dependency_inventory": true,
+    "ui_redesign": false,
+    "bulk_legacy_migration": false,
+    "database": false,
+    "package_manager": false,
+    "s2_features": false
+  },
+  "stop_rule": "PLAN first; after implementation/acceptance stop before commit/push."
+}

@@ -1,13 +1,17 @@
 /* Service Worker — Pickleball App 2.0 Alpha (Phase 0)
- * 版本升级：pb40-v8 -> pb40-v14 -> pb40-v15（新增 js/i18n.js 中/EN 切换）。
+ * 版本升级：pb40-v8 -> pb40-v14 -> pb40-v15（新增 js/i18n.js 中/EN 切换）
+ *       -> pb40-v16（S1：新增 canonical runtime js/masters-repo.js + js/canonical-runtime.js
+ *          与运行时种子 data/canonical/seed_data.json 预缓存）。
  * 策略：导航(HTML)请求 network-first（避免部署后持续加载旧版代码）；
  *       其它静态资源 stale-while-revalidate；换版本即清旧缓存。 */
-const CACHE='pb40-v15';
+const CACHE='pb40-v16';
 const CORE=[
   './','./index.html','./manifest.json',
   './css/app.css',
   './js/i18n.js','./js/config-loader.js','./js/storage.js','./js/metrics.js','./js/preview.js','./js/app.js','./js/assessment.js',
+  './js/masters-repo.js','./js/canonical-runtime.js',
   './data/versions.json','./data/test_definitions_v2_3_1.json','./data/assessment_tiers_v2_3_1.json',
+  './data/canonical/seed_data.json',
   './icon-192.png','./icon-512.png','./icon-maskable-512.png','./apple-touch-icon.png'
 ];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).catch(()=>{}));});

@@ -1,0 +1,97 @@
+{
+  "$schema_note": "Machine-readable inventory only. No entry here implies or authorizes migration. S0 (docs/handoff/phase0-s0/seed_data.json, data/canonical/seed_data.json, js/masters-repo.js) remains the sole canonical Master/Drill data authority.",
+  "generated_by": "S1 Canonical Runtime Integration",
+  "generated_from_commit": "be4617448d77af4080f1101a33f64304d23f9c10",
+  "entries": [
+    {
+      "symbol": "WEEKS",
+      "file": "js/app.js",
+      "line_range": "10-44",
+      "kind": "hardcoded-array",
+      "description": "8-week MiLP team training checklist (week focus + checklist items with pass criteria), rendered on the Drill tab and driving the localStorage tracker.",
+      "canonical_relationship": "none — no 1:1 structural mapping to the 13 Masters / 35 Drills schema exists (different shape: weekly team checklist items vs. Master/Drill progression records)",
+      "migration_status": "deferred, out of S1 scope; inventoried only"
+    },
+    {
+      "symbol": "GLOSSARY",
+      "file": "js/app.js",
+      "line_range": "46-59",
+      "kind": "hardcoded-array",
+      "description": "Chinese/English shot-terminology glossary rendered as a table on the Learn tab.",
+      "canonical_relationship": "none — free text reference content, not drill records",
+      "migration_status": "deferred, out of S1 scope; inventoried only"
+    },
+    {
+      "symbol": "TOC",
+      "file": "js/app.js",
+      "line_range": "61-67",
+      "kind": "hardcoded-array",
+      "description": "Table-of-contents strings for the handbook, rendered on the Learn tab.",
+      "canonical_relationship": "none",
+      "migration_status": "deferred, out of S1 scope; inventoried only"
+    },
+    {
+      "symbol": "MODULES",
+      "file": "js/app.js",
+      "line_range": "69-79",
+      "kind": "hardcoded-array",
+      "description": "10-module weighted KPI dashboard definition (name, weight, target %, current %) used to compute the composite score on the Measure tab.",
+      "canonical_relationship": "none — module names loosely echo canonical Master themes (Serve, Return, Drive, Drop, Reset, Dink, ...) but the array carries no source_drill_id/master_id linkage and is not schema-compatible with the S0 Master record shape",
+      "migration_status": "deferred, out of S1 scope; inventoried only"
+    },
+    {
+      "symbol": "UE_SCORE",
+      "file": "js/app.js",
+      "line_range": "80",
+      "kind": "hardcoded-scalar-pair",
+      "description": "Unforced-error-per-game score/state pair (UE_SCORE, UE_PER) feeding the KPI composite score alongside MODULES.",
+      "canonical_relationship": "none",
+      "migration_status": "deferred, out of S1 scope; inventoried only"
+    },
+    {
+      "symbol": "GATES",
+      "file": "js/app.js",
+      "line_range": "83-90",
+      "kind": "hardcoded-array",
+      "description": "Six hard-gate thresholds (Serve, Return, Drop, Reset, Shot Selection, UE/game) read against MODULES[].cur to render pass/fail gate indicators on Home and Measure tabs.",
+      "canonical_relationship": "none — thresholds reference MODULES[] array indices, not canonical master_id/source_drill_id",
+      "migration_status": "deferred, out of S1 scope; inventoried only"
+    },
+    {
+      "symbol": "config-loader.js data reads (versions.json / test_definitions_v2_3_1.json / assessment_tiers_v2_3_1.json)",
+      "file": "js/config-loader.js",
+      "line_range": "37-75",
+      "kind": "fetch-json",
+      "description": "PBConfig.load() fetches the V2.3.1 assessment baseline (schema/benchmark/protocol versions, T01-T09 test definitions, lite/standard/full tiers) from data/*.json. Powers the New Assessment flow in js/assessment.js.",
+      "canonical_relationship": "none — V2.3.1 assessment/test-protocol data is a separate data domain from the S0 Master/Drill taxonomy; no shared identifiers",
+      "migration_status": "not applicable — separate, already-JSON-driven data domain; no migration implied or needed"
+    },
+    {
+      "symbol": "assessment.js runtime dependency on PBConfig/PBStore/PBMetrics/PBPreview",
+      "file": "js/assessment.js",
+      "line_range": "336-341",
+      "kind": "module-dependency",
+      "description": "assessment.js init() requires PBConfig, PBStore, PBMetrics, and PBPreview to be defined before rendering the Assessment Data Core UI; renders an explicit 'modules not ready' message otherwise.",
+      "canonical_relationship": "none — does not read or reference PBMasters/PBCanonical in any way as of S1",
+      "migration_status": "deferred, out of S1 scope; inventoried only"
+    },
+    {
+      "symbol": "storage.js IndexedDB object stores (players / assessments / test_sessions / trial_events)",
+      "file": "js/storage.js",
+      "line_range": "14-31",
+      "kind": "indexeddb-schema",
+      "description": "PBStore's IndexedDB database (pb_v2) storing per-trial assessment evidence, independent of and coexisting with the app.js localStorage tracker state.",
+      "canonical_relationship": "none — assessment/session/trial records, not Master/Drill definitions",
+      "migration_status": "deferred, out of S1 scope; inventoried only"
+    },
+    {
+      "symbol": "app.js localStorage tracker/kpi state (KEY='pb40_v1', STATE={tracker,kpi})",
+      "file": "js/app.js",
+      "line_range": "93-96",
+      "kind": "localstorage-schema",
+      "description": "Legacy per-device localStorage state for the Drill-tab weekly tracker and Measure-tab KPI sliders (STATE.tracker, STATE.kpi.cur, STATE.kpi.ue), keyed by WEEKS/MODULES indices.",
+      "canonical_relationship": "none — keyed by WEEKS/MODULES array indices, not canonical ids",
+      "migration_status": "deferred, out of S1 scope; inventoried only"
+    }
+  ]
+}
