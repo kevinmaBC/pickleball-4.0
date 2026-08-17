@@ -1,0 +1,20 @@
+app-v2-alpha/
+├─ README.md
+├─ docs/
+│  └─ phase0/
+│     ├─ IMPLEMENTATION_CONTRACT.md
+│     ├─ SOURCE_AUTHORITY.md
+│     └─ S0_ACCEPTANCE_GATE.md
+├─ data/
+│  └─ canonical/
+│     ├─ seed_data.json
+│     └─ seed_data.schema.json
+├─ src/                       # preserve the repository's existing framework/stack
+│  └─ ...
+├─ migrations/                # use existing migration system if one already exists
+│  └─ ...
+└─ tests/
+   ├─ canonical/
+   │  ├─ canonical_counts.test.*
+   │  └─ source_immutability.test.*
+   └─ ...

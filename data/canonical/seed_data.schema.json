@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "PB30-50-S0-SEED-SCHEMA-v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "authority",
+    "masters",
+    "drills"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "PB30-50-S0-SEED-v1"
+    },
+    "authority": {
+      "type": "object"
+    },
+    "masters": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "type": "object",
+        "required": [
+          "master_id",
+          "name",
+          "class",
+          "source_drill_ids"
+        ],
+        "properties": {
+          "master_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "class": {
+            "type": "string"
+          },
+          "source_drill_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          }
+        }
+      }
+    },
+    "drills": {
+      "type": "array",
+      "minItems": 35,
+      "maxItems": 35,
+      "items": {
+        "type": "object",
+        "required": [
+          "source_drill_id",
+          "level_range",
+          "progression",
+          "purpose",
+          "setup",
+          "feed",
+          "dose",
+          "success_criterion",
+          "primary_kpi",
+          "secondary_kpis",
+          "evidence",
+          "match_transfer"
+        ],
+        "properties": {
+          "source_drill_id": {
+            "type": "string"
+          },
+          "level_range": {
+            "type": "string"
+          },
+          "progression": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "setup": {
+            "type": "string"
+          },
+          "feed": {
+            "type": "string"
+          },
+          "dose": {
+            "type": "string"
+          },
+          "success_criterion": {
+            "type": "string"
+          },
+          "primary_kpi": {
+            "type": "string"
+          },
+          "secondary_kpis": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "match_transfer": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

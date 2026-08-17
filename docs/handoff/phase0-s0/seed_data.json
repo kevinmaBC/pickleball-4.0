@@ -1,0 +1,628 @@
+{
+  "schema_version": "PB30-50-S0-SEED-v1",
+  "authority": {
+    "drills": "PB30-50_W4B005_Runtime_Spec_v1.0.json / GREEN35 frozen payload",
+    "masters": "W4A 13-Master frozen architecture",
+    "rule": "Seed content is immutable canonical content. Runtime may reference it but must not rewrite source-owned fields."
+  },
+  "masters": [
+    {
+      "master_id": "FM-01",
+      "name": "Foundation",
+      "class": "FAMILY",
+      "source_drill_ids": [
+        "DRILL-BALANCE",
+        "DRILL-BALANCE-BREATH",
+        "DRILL-GRIP",
+        "DRILL-READY"
+      ]
+    },
+    {
+      "master_id": "FM-02",
+      "name": "Serve",
+      "class": "FAMILY",
+      "source_drill_ids": [
+        "DRILL-SERVE-DEPTH",
+        "DRILL-SERVE-ROUTINE"
+      ]
+    },
+    {
+      "master_id": "FM-03",
+      "name": "Return",
+      "class": "FAMILY",
+      "source_drill_ids": [
+        "DRILL-RETURN-DEPTH",
+        "DRILL-RETURN-ADVANCE"
+      ]
+    },
+    {
+      "master_id": "FM-04",
+      "name": "Drive",
+      "class": "FAMILY",
+      "source_drill_ids": [
+        "DRILL-DRIVE-CONTROL",
+        "DRILL-DRIVE-5TH",
+        "DRILL-SSS-DRIVE"
+      ]
+    },
+    {
+      "master_id": "FM-05",
+      "name": "Drop",
+      "class": "FAMILY",
+      "source_drill_ids": [
+        "DRILL-DROP-QUALITY",
+        "DRILL-DROP-PATH",
+        "DRILL-DROP-TRAJECTORY",
+        "DRILL-DROP-TARGET",
+        "DRILL-SSS-DROP"
+      ]
+    },
+    {
+      "master_id": "FM-06",
+      "name": "Reset",
+      "class": "FAMILY",
+      "source_drill_ids": [
+        "DRILL-RESET-TOUCH",
+        "DRILL-RESET-ADV",
+        "DRILL-RESET-VARIANTS",
+        "DRILL-SSS-RESET"
+      ]
+    },
+    {
+      "master_id": "FM-07",
+      "name": "Dink",
+      "class": "FAMILY",
+      "source_drill_ids": [
+        "DRILL-DINK-CONTROL"
+      ]
+    },
+    {
+      "master_id": "FM-08",
+      "name": "Counter",
+      "class": "FAMILY",
+      "source_drill_ids": [
+        "DRILL-COUNTER-TARGET"
+      ]
+    },
+    {
+      "master_id": "FM-09",
+      "name": "Leave",
+      "class": "FAMILY",
+      "source_drill_ids": [
+        "DRILL-LEAVE-READ",
+        "DRILL-SSS-LEAVE"
+      ]
+    },
+    {
+      "master_id": "FM-10",
+      "name": "Decision Architecture",
+      "class": "SYSTEM/FAMILY",
+      "source_drill_ids": [
+        "DRILL-3RD-DECISION",
+        "DRILL-DECISION-ZONES",
+        "DRILL-SSS",
+        "DRILL-TARGET"
+      ]
+    },
+    {
+      "master_id": "FM-11",
+      "name": "Transition Movement",
+      "class": "SYSTEM/FAMILY",
+      "source_drill_ids": [
+        "DRILL-SPLIT",
+        "DRILL-ADVANCE",
+        "DRILL-TRANSITION"
+      ]
+    },
+    {
+      "master_id": "FM-12",
+      "name": "Doubles Team Movement",
+      "class": "SYSTEM/FAMILY",
+      "source_drill_ids": [
+        "DRILL-PARTNER-SPACING",
+        "DRILL-MIDDLE",
+        "DRILL-ROPE"
+      ]
+    },
+    {
+      "master_id": "SM-01",
+      "name": "Match Transfer",
+      "class": "SYSTEM",
+      "source_drill_ids": [
+        "DRILL-MATCH-RULES"
+      ]
+    }
+  ],
+  "drills": [
+    {
+      "source_drill_id": "DRILL-BALANCE",
+      "level_range": "3.0–3.5",
+      "progression": "P1–P5",
+      "purpose": "Build stable grip/ready/balance/contact foundations supporting later skills.",
+      "setup": "Player + paddle; shadow and fed-ball stations.",
+      "feed": "Shadow → controlled feed → movement feed.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Stable ready/contact/balance rubric across repeated reps.",
+      "primary_kpi": "KPI-FOUND",
+      "secondary_kpis": "KPI-BALANCE; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-BALANCE-BREATH",
+      "level_range": "3.0–3.5",
+      "progression": "P1–P5",
+      "purpose": "Build stable grip/ready/balance/contact foundations supporting later skills.",
+      "setup": "Player + paddle; shadow and fed-ball stations.",
+      "feed": "Shadow → controlled feed → movement feed.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Stable ready/contact/balance rubric across repeated reps.",
+      "primary_kpi": "KPI-FOUND",
+      "secondary_kpis": "KPI-BALANCE; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-GRIP",
+      "level_range": "3.0–3.5",
+      "progression": "P1–P5",
+      "purpose": "Build stable grip/ready/balance/contact foundations supporting later skills.",
+      "setup": "Player + paddle; shadow and fed-ball stations.",
+      "feed": "Shadow → controlled feed → movement feed.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Stable ready/contact/balance rubric across repeated reps.",
+      "primary_kpi": "KPI-FOUND",
+      "secondary_kpis": "KPI-BALANCE; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-READY",
+      "level_range": "3.0–3.5",
+      "progression": "P1–P5",
+      "purpose": "Build stable grip/ready/balance/contact foundations supporting later skills.",
+      "setup": "Player + paddle; shadow and fed-ball stations.",
+      "feed": "Shadow → controlled feed → movement feed.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Stable ready/contact/balance rubric across repeated reps.",
+      "primary_kpi": "KPI-FOUND",
+      "secondary_kpis": "KPI-BALANCE; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-RETURN-ADVANCE",
+      "level_range": "3.0–5.0",
+      "progression": "P3–P4",
+      "purpose": "Build high-quality deep return and recover toward NVZ.",
+      "setup": "Server + returner; deep target zone; NVZ recovery marker.",
+      "feed": "Legal serves with controlled then variable depth/pace.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Return Quality improves without sacrificing recovery movement.",
+      "primary_kpi": "KPI-RETURN",
+      "secondary_kpis": "KPI-RETURN-DEPTH; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-RETURN-DEPTH",
+      "level_range": "3.0–5.0",
+      "progression": "P1–P5",
+      "purpose": "Build high-quality deep return and recover toward NVZ.",
+      "setup": "Server + returner; deep target zone; NVZ recovery marker.",
+      "feed": "Legal serves with controlled then variable depth/pace.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Return Quality improves without sacrificing recovery movement.",
+      "primary_kpi": "KPI-RETURN",
+      "secondary_kpis": "KPI-RETURN-DEPTH; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-SERVE-DEPTH",
+      "level_range": "3.0–5.0",
+      "progression": "P1–P5",
+      "purpose": "Build reliable legal serve, then add depth/target quality.",
+      "setup": "Server behind baseline; receiver optional; deep target zones marked.",
+      "feed": "Self-feed serve.",
+      "dose": "3 × 10 serves; alternate service sides.",
+      "success_criterion": "Serve In and/or Serve Depth meets the current prescription target.",
+      "primary_kpi": "KPI-SERVE",
+      "secondary_kpis": "KPI-SERVE-DEPTH",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-SERVE-ROUTINE",
+      "level_range": "3.0–5.0",
+      "progression": "P1–P5",
+      "purpose": "Build reliable legal serve, then add depth/target quality.",
+      "setup": "Server behind baseline; receiver optional; deep target zones marked.",
+      "feed": "Self-feed serve.",
+      "dose": "3 × 10 serves; alternate service sides.",
+      "success_criterion": "Serve In and/or Serve Depth meets the current prescription target.",
+      "primary_kpi": "KPI-SERVE",
+      "secondary_kpis": "KPI-SERVE-DEPTH",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-DRIVE-5TH",
+      "level_range": "3.5–5.0",
+      "progression": "P1–P5",
+      "purpose": "Use drive as controlled pressure and to create the next ball.",
+      "setup": "Hitter near baseline; feeder/opponents at NVZ; target lanes.",
+      "feed": "Feed/return to forehand/backhand; progress to live third-shot context.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Quality drive to intended target with recoverable next-ball position.",
+      "primary_kpi": "KPI-DRIVE",
+      "secondary_kpis": "KPI-TARGET; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-DRIVE-CONTROL",
+      "level_range": "3.5–5.0",
+      "progression": "P1–P5",
+      "purpose": "Use drive as controlled pressure and to create the next ball.",
+      "setup": "Hitter near baseline; feeder/opponents at NVZ; target lanes.",
+      "feed": "Feed/return to forehand/backhand; progress to live third-shot context.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Quality drive to intended target with recoverable next-ball position.",
+      "primary_kpi": "KPI-DRIVE",
+      "secondary_kpis": "KPI-TARGET; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-SSS-DRIVE",
+      "level_range": "3.5–5.0",
+      "progression": "P3",
+      "purpose": "Use drive as controlled pressure and to create the next ball.",
+      "setup": "Hitter near baseline; feeder/opponents at NVZ; target lanes.",
+      "feed": "Feed/return to forehand/backhand; progress to live third-shot context.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Quality drive to intended target with recoverable next-ball position.",
+      "primary_kpi": "KPI-DRIVE",
+      "secondary_kpis": "KPI-TARGET; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-DROP-PATH",
+      "level_range": "3.5–5.0",
+      "progression": "P1–P5",
+      "purpose": "Create a descending, non-attackable drop and support safe advancement.",
+      "setup": "Hitter baseline/transition; feeder/opponents at NVZ; NVZ target window.",
+      "feed": "Controlled ball to hitter; vary pace, side and contact after stability.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Successful non-attackable drop to target window; no fixed apex requirement.",
+      "primary_kpi": "KPI-DROP",
+      "secondary_kpis": "KPI-DROP-QUALITY; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-DROP-QUALITY",
+      "level_range": "3.5–5.0",
+      "progression": "P1–P5",
+      "purpose": "Create a descending, non-attackable drop and support safe advancement.",
+      "setup": "Hitter baseline/transition; feeder/opponents at NVZ; NVZ target window.",
+      "feed": "Controlled ball to hitter; vary pace, side and contact after stability.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Successful non-attackable drop to target window; no fixed apex requirement.",
+      "primary_kpi": "KPI-DROP",
+      "secondary_kpis": "KPI-DROP-QUALITY; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-DROP-TARGET",
+      "level_range": "3.5–5.0",
+      "progression": "P3",
+      "purpose": "Create a descending, non-attackable drop and support safe advancement.",
+      "setup": "Hitter baseline/transition; feeder/opponents at NVZ; NVZ target window.",
+      "feed": "Controlled ball to hitter; vary pace, side and contact after stability.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Successful non-attackable drop to target window; no fixed apex requirement.",
+      "primary_kpi": "KPI-DROP",
+      "secondary_kpis": "KPI-DROP-QUALITY; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-DROP-TRAJECTORY",
+      "level_range": "3.5–5.0",
+      "progression": "P1–P5",
+      "purpose": "Create a descending, non-attackable drop and support safe advancement.",
+      "setup": "Hitter baseline/transition; feeder/opponents at NVZ; NVZ target window.",
+      "feed": "Controlled ball to hitter; vary pace, side and contact after stability.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Successful non-attackable drop to target window; no fixed apex requirement.",
+      "primary_kpi": "KPI-DROP",
+      "secondary_kpis": "KPI-DROP-QUALITY; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-SSS-DROP",
+      "level_range": "3.5–5.0",
+      "progression": "P3",
+      "purpose": "Create a descending, non-attackable drop and support safe advancement.",
+      "setup": "Hitter baseline/transition; feeder/opponents at NVZ; NVZ target window.",
+      "feed": "Controlled ball to hitter; vary pace, side and contact after stability.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Successful non-attackable drop to target window; no fixed apex requirement.",
+      "primary_kpi": "KPI-DROP",
+      "secondary_kpis": "KPI-DROP-QUALITY; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-RESET-ADV",
+      "level_range": "3.5–5.0",
+      "progression": "P1–P5",
+      "purpose": "Neutralize pressure with a soft reset and regain time/space.",
+      "setup": "Player in transition zone; feeder at NVZ; target window in opponent NVZ.",
+      "feed": "Feet / Body / FH / BH; Ground / Volley / Half Volley, controlled then random.",
+      "dose": "4 feed families × 8 valid reps; minimum 32 valid trials when doing a focused block.",
+      "success_criterion": "Reset produces a neutral/non-attackable reply and supports correct Advance/Hold decision.",
+      "primary_kpi": "KPI-RESET",
+      "secondary_kpis": "KPI-TOUCH; KPI-TRANSITION; KPI-MOVE-DEC",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-RESET-TOUCH",
+      "level_range": "3.5–5.0",
+      "progression": "P1–P5",
+      "purpose": "Neutralize pressure with a soft reset and regain time/space.",
+      "setup": "Player in transition zone; feeder at NVZ; target window in opponent NVZ.",
+      "feed": "Feet / Body / FH / BH; Ground / Volley / Half Volley, controlled then random.",
+      "dose": "4 feed families × 8 valid reps; minimum 32 valid trials when doing a focused block.",
+      "success_criterion": "Reset produces a neutral/non-attackable reply and supports correct Advance/Hold decision.",
+      "primary_kpi": "KPI-RESET",
+      "secondary_kpis": "KPI-TOUCH; KPI-TRANSITION; KPI-MOVE-DEC",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-RESET-VARIANTS",
+      "level_range": "3.5–5.0",
+      "progression": "P1–P5",
+      "purpose": "Neutralize pressure with a soft reset and regain time/space.",
+      "setup": "Player in transition zone; feeder at NVZ; target window in opponent NVZ.",
+      "feed": "Feet / Body / FH / BH; Ground / Volley / Half Volley, controlled then random.",
+      "dose": "4 feed families × 8 valid reps; minimum 32 valid trials when doing a focused block.",
+      "success_criterion": "Reset produces a neutral/non-attackable reply and supports correct Advance/Hold decision.",
+      "primary_kpi": "KPI-RESET",
+      "secondary_kpis": "KPI-TOUCH; KPI-TRANSITION; KPI-MOVE-DEC",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-SSS-RESET",
+      "level_range": "3.5–5.0",
+      "progression": "P3",
+      "purpose": "Neutralize pressure with a soft reset and regain time/space.",
+      "setup": "Player in transition zone; feeder at NVZ; target window in opponent NVZ.",
+      "feed": "Feet / Body / FH / BH; Ground / Volley / Half Volley, controlled then random.",
+      "dose": "4 feed families × 8 valid reps; minimum 32 valid trials when doing a focused block.",
+      "success_criterion": "Reset produces a neutral/non-attackable reply and supports correct Advance/Hold decision.",
+      "primary_kpi": "KPI-RESET",
+      "secondary_kpis": "KPI-TOUCH; KPI-TRANSITION; KPI-MOVE-DEC",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-DINK-CONTROL",
+      "level_range": "3.0–5.0",
+      "progression": "P1–P5",
+      "purpose": "Build controlled dink quality, movement and pressure creation without pop-ups.",
+      "setup": "Players at NVZ; crosscourt/middle/feet targets.",
+      "feed": "Cooperative start → directional constraint → live dink.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Controlled sequence with target intent and low UE/pop-up rate.",
+      "primary_kpi": "KPI-DINK",
+      "secondary_kpis": "KPI-TARGET; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-LEAVE-READ",
+      "level_range": "3.5–5.0",
+      "progression": "P1–P5",
+      "purpose": "Improve intentional Leave decisions on likely-out fast balls.",
+      "setup": "Receiver at NVZ; attacker opposite; safe out-zone behind receiver.",
+      "feed": "Mix dipping in-balls and likely-out fast balls; randomize after learning phase.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Correct Leave/Play decision with stable body position.",
+      "primary_kpi": "KPI-LEAVE",
+      "secondary_kpis": "KPI-DECISION",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-SSS-LEAVE",
+      "level_range": "3.5–5.0",
+      "progression": "P3",
+      "purpose": "Improve intentional Leave decisions on likely-out fast balls.",
+      "setup": "Receiver at NVZ; attacker opposite; safe out-zone behind receiver.",
+      "feed": "Mix dipping in-balls and likely-out fast balls; randomize after learning phase.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Correct Leave/Play decision with stable body position.",
+      "primary_kpi": "KPI-LEAVE",
+      "secondary_kpis": "KPI-DECISION",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-COUNTER-TARGET",
+      "level_range": "3.5–5.0",
+      "progression": "P3",
+      "purpose": "Develop compact block/counter responses and ready-position recovery.",
+      "setup": "Players at NVZ; feeder/attacker opposite.",
+      "feed": "Controlled fast balls → body/FH/BH random → live hands.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Neutralize or counter successfully and recover to ready position.",
+      "primary_kpi": "KPI-COUNTER",
+      "secondary_kpis": "KPI-REACTION; KPI-BALANCE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-3RD-DECISION",
+      "level_range": "3.5–5.0",
+      "progression": "P3",
+      "purpose": "Train Situation → Intent → Shot → Target → Recovery decisions.",
+      "setup": "Scenario cards or live court situations across baseline/transition/NVZ.",
+      "feed": "Coach-generated scenarios → randomized live scenarios.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Weighted decision accuracy improves without coaching prompt.",
+      "primary_kpi": "KPI-DECISION",
+      "secondary_kpis": "KPI-TARGET; KPI-MOVE-DEC",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-DECISION-ZONES",
+      "level_range": "3.5–5.0",
+      "progression": "P3",
+      "purpose": "Train Situation → Intent → Shot → Target → Recovery decisions.",
+      "setup": "Scenario cards or live court situations across baseline/transition/NVZ.",
+      "feed": "Coach-generated scenarios → randomized live scenarios.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Weighted decision accuracy improves without coaching prompt.",
+      "primary_kpi": "KPI-DECISION",
+      "secondary_kpis": "KPI-TARGET; KPI-MOVE-DEC",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-SSS",
+      "level_range": "3.5–5.0",
+      "progression": "P3",
+      "purpose": "Train Situation → Intent → Shot → Target → Recovery decisions.",
+      "setup": "Scenario cards or live court situations across baseline/transition/NVZ.",
+      "feed": "Coach-generated scenarios → randomized live scenarios.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Weighted decision accuracy improves without coaching prompt.",
+      "primary_kpi": "KPI-DECISION",
+      "secondary_kpis": "KPI-TARGET; KPI-MOVE-DEC",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-TARGET",
+      "level_range": "3.5–5.0",
+      "progression": "P3",
+      "purpose": "Train Situation → Intent → Shot → Target → Recovery decisions.",
+      "setup": "Scenario cards or live court situations across baseline/transition/NVZ.",
+      "feed": "Coach-generated scenarios → randomized live scenarios.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Weighted decision accuracy improves without coaching prompt.",
+      "primary_kpi": "KPI-DECISION",
+      "secondary_kpis": "KPI-TARGET; KPI-MOVE-DEC",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-ADVANCE",
+      "level_range": "3.5–5.0",
+      "progression": "P3–P4",
+      "purpose": "Train segmented advancement, split-step timing and Advance/Hold/Retreat decisions.",
+      "setup": "Player starts baseline/transition; feeder/opponent at NVZ; zone markers.",
+      "feed": "Variable ball quality and opponent contact states.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Correct movement decision plus controlled execution; safe NVZ gain.",
+      "primary_kpi": "KPI-TRANSITION",
+      "secondary_kpis": "KPI-MOVE; KPI-SPLIT; KPI-MOVE-DEC; KPI-NVZ-GAIN",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-SPLIT",
+      "level_range": "3.5–5.0",
+      "progression": "P1–P5",
+      "purpose": "Train segmented advancement, split-step timing and Advance/Hold/Retreat decisions.",
+      "setup": "Player starts baseline/transition; feeder/opponent at NVZ; zone markers.",
+      "feed": "Variable ball quality and opponent contact states.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Correct movement decision plus controlled execution; safe NVZ gain.",
+      "primary_kpi": "KPI-TRANSITION",
+      "secondary_kpis": "KPI-MOVE; KPI-SPLIT; KPI-MOVE-DEC; KPI-NVZ-GAIN",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-TRANSITION",
+      "level_range": "3.5–5.0",
+      "progression": "P3–P4",
+      "purpose": "Train segmented advancement, split-step timing and Advance/Hold/Retreat decisions.",
+      "setup": "Player starts baseline/transition; feeder/opponent at NVZ; zone markers.",
+      "feed": "Variable ball quality and opponent contact states.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Correct movement decision plus controlled execution; safe NVZ gain.",
+      "primary_kpi": "KPI-TRANSITION",
+      "secondary_kpis": "KPI-MOVE; KPI-SPLIT; KPI-MOVE-DEC; KPI-NVZ-GAIN",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-MIDDLE",
+      "level_range": "3.5–5.0",
+      "progression": "P1–P5",
+      "purpose": "Improve connected partner movement, middle protection and communication.",
+      "setup": "Four players; doubles court; team spacing/middle cues.",
+      "feed": "Coach/live ball to seams, sidelines and transition gaps.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Team stays connected, protects middle and makes coordinated movement/communication choices.",
+      "primary_kpi": "KPI-PARTNER",
+      "secondary_kpis": "KPI-COMMS; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-PARTNER-SPACING",
+      "level_range": "3.5–5.0",
+      "progression": "P1–P5",
+      "purpose": "Improve connected partner movement, middle protection and communication.",
+      "setup": "Four players; doubles court; team spacing/middle cues.",
+      "feed": "Coach/live ball to seams, sidelines and transition gaps.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Team stays connected, protects middle and makes coordinated movement/communication choices.",
+      "primary_kpi": "KPI-PARTNER",
+      "secondary_kpis": "KPI-COMMS; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-ROPE",
+      "level_range": "3.5–5.0",
+      "progression": "P1–P5",
+      "purpose": "Improve connected partner movement, middle protection and communication.",
+      "setup": "Four players; doubles court; team spacing/middle cues.",
+      "feed": "Coach/live ball to seams, sidelines and transition gaps.",
+      "dose": "3 sets × 10 valid reps; record each valid rep.",
+      "success_criterion": "Team stays connected, protects middle and makes coordinated movement/communication choices.",
+      "primary_kpi": "KPI-PARTNER",
+      "secondary_kpis": "KPI-COMMS; KPI-MOVE",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    },
+    {
+      "source_drill_id": "DRILL-MATCH-RULES",
+      "level_range": "3.0–5.0",
+      "progression": "P5",
+      "purpose": "Transfer trained skills and decisions into representative scoring/rally pressure.",
+      "setup": "Skinny singles or doubles points with defined constraint.",
+      "feed": "Live serve/return and point play.",
+      "dose": "2–3 games or 20+ eligible rally events; preserve rally-event evidence.",
+      "success_criterion": "Target behavior appears in live play with acceptable UE and decision quality.",
+      "primary_kpi": "KPI-MATCH",
+      "secondary_kpis": "KPI-UE; KPI-PATTERN; KPI-RALLY-CONTROL",
+      "evidence": "Raw trial result S/P/F/I + scenario/target/quality; session/date; optional video timestamp.",
+      "match_transfer": "Finish with constrained points or match segment using the same trigger."
+    }
+  ]
+}

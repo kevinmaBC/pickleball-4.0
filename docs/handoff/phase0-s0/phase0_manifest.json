@@ -1,0 +1,20 @@
+{
+  "package_id": "PB30-50-APPV2-PHASE0-S0-v1",
+  "target_repository": "app-v2-alpha",
+  "sprint": "S0 Data Foundation",
+  "files": {
+    "CLAUDE_S0_PROMPT.md": "single-sprint execution prompt",
+    "IMPLEMENTATION_CONTRACT.md": "implementation scope and constraints",
+    "SOURCE_AUTHORITY.md": "canonical authority and immutability",
+    "S0_ACCEPTANCE_GATE.md": "exit criteria",
+    "seed_data.json": "13 Masters + 35 canonical drills",
+    "seed_data.schema.json": "canonical seed validation schema",
+    "repo_tree.txt": "recommended placement without stack replacement"
+  },
+  "counts": {
+    "masters": 13,
+    "drills": 35,
+    "mapped_drills": 35
+  },
+  "stop_rule": "After S0 gate passes, stop and wait for GitHub review. Do not start S1."
+}
