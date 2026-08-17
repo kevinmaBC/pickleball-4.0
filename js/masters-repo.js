@@ -36,6 +36,9 @@
     if (!Array.isArray(drills)) throw new Error('masters-repo: drills must be an array');
     if (masters.length !== 13) throw new Error('masters-repo: expected exactly 13 masters, got ' + masters.length);
     if (drills.length !== 35) throw new Error('masters-repo: expected exactly 35 drills, got ' + drills.length);
+    if (typeof seedData.schema_version !== 'string' || !seedData.schema_version) {
+      throw new Error('masters-repo: seedData.schema_version must be a non-empty string');
+    }
 
     masters.forEach(function (m, i) {
       REQUIRED_MASTER_FIELDS.forEach(function (f) {
@@ -111,7 +114,8 @@
       listMasters: listMasters,
       listDrills: listDrills,
       masterCount: masters.length,
-      drillCount: drills.length
+      drillCount: drills.length,
+      schema_version: seedData.schema_version
     };
   }
 

@@ -1,0 +1,34 @@
+{
+  "package_id": "PB30-50-APPV2-PHASE0-S2-v1",
+  "sprint": "S2 Canonical Training Session Evidence Core",
+  "repository": "kevinmaBC/pickleball-4.0",
+  "base": {
+    "branch": "phase0-s1-runtime-integration",
+    "commit": "2c263873ba8350d07c2f8bbefda6832c7911ddc7"
+  },
+  "upstream": {
+    "canonical": {
+      "masters": 13,
+      "drills": 35
+    },
+    "s1_combined_tests": "50/50 PASS"
+  },
+  "persistence": {
+    "db": "pb_v2",
+    "from_version": 1,
+    "to_version": 2,
+    "new_stores": [
+      "training_sessions",
+      "drill_evidence_events"
+    ]
+  },
+  "scope": {
+    "raw_training_evidence": true,
+    "recommendation": false,
+    "promotion": false,
+    "scoring": false,
+    "p0_p6": false,
+    "ui_redesign": false
+  },
+  "stop_rule": "PLAN first; after approved implementation/testing stop before commit/push."
+}

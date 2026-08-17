@@ -12,7 +12,7 @@
   'use strict';
 
   var DB_NAME = 'pb_v2';
-  var DB_VERSION = 1;
+  var DB_VERSION = 2;
 
   // 版本基线（V2.3.1）；若 PBConfig 已加载则以其为准
   var VERSIONS = { schema_version: '2.3.1', benchmark_version: '2.1.1', protocol_version: '2.2.1' };
@@ -24,10 +24,13 @@
   }
 
   var STORES = {
-    players:       { keyPath: 'player_id',       indexes: [] },
-    assessments:   { keyPath: 'assessment_id',   indexes: [['by_player', 'player_id']] },
-    test_sessions: { keyPath: 'test_session_id', indexes: [['by_assessment', 'assessment_id']] },
-    trial_events:  { keyPath: 'trial_event_id',  indexes: [['by_session', 'test_session_id']] }
+    players:               { keyPath: 'player_id',           indexes: [] },
+    assessments:           { keyPath: 'assessment_id',       indexes: [['by_player', 'player_id']] },
+    test_sessions:         { keyPath: 'test_session_id',     indexes: [['by_assessment', 'assessment_id']] },
+    trial_events:          { keyPath: 'trial_event_id',      indexes: [['by_session', 'test_session_id']] },
+    // S2 · Canonical Training Session Evidence Core（v1→v2 additive；不改动/不删除以上四个既有 store）
+    training_sessions:     { keyPath: 'training_session_id', indexes: [['by_player', 'player_id'], ['by_session_date', 'session_date']] },
+    drill_evidence_events: { keyPath: 'drill_evidence_id',   indexes: [['by_training_session', 'training_session_id'], ['by_source_drill', 'source_drill_id'], ['by_master', 'master_id']] }
   };
 
   var _dbPromise = null;

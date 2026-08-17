@@ -73,7 +73,8 @@
       getDrill: function (source_drill_id) { return requireReady().getDrill(source_drill_id); },
       getDrillsByMaster: function (master_id) { return requireReady().getDrillsByMaster(master_id); },
       listMasters: function () { return requireReady().listMasters(); },
-      listDrills: function () { return requireReady().listDrills(); }
+      listDrills: function () { return requireReady().listDrills(); },
+      get schemaVersion() { return requireReady().schema_version; }
     };
   }
 

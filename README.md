@@ -21,4 +21,7 @@ node --test tests/canonical/*.test.js
 
 Read-only query access for application code is provided by `js/masters-repo.js`
 (`getMaster(master_id)`, `getDrill(source_drill_id)`, `getDrillsByMaster(master_id)`).
-It is not yet wired into `index.html` — that is deferred to a later sprint.
+As of S1, `js/masters-repo.js` and the read-only `PBCanonical` facade in
+`js/canonical-runtime.js` are wired into `index.html`, loaded after the legacy
+scripts. `js/training-evidence.js` (S2) builds on this to persist raw training
+evidence against canonical Drill IDs.
