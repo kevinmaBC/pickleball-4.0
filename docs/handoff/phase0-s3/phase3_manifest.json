@@ -1,0 +1,29 @@
+{
+  "package_id": "PB30-50-APPV2-PHASE0-S3-v1",
+  "sprint": "S3 Canonical Evidence Aggregation & KPI Observation Core",
+  "repository": "kevinmaBC/pickleball-4.0",
+  "base": {
+    "branch": "phase0-s2-training-evidence",
+    "commit": "a4e98a3e7086e382c9817f6bddcd26330f889338"
+  },
+  "upstream": {
+    "canonical": {
+      "masters": 13,
+      "drills": 35
+    },
+    "s2_suite": "93/93 PASS",
+    "indexeddb": "pb_v2 v2"
+  },
+  "scope": {
+    "read_only_analytics": true,
+    "persist_derived_metrics": false,
+    "scoring": false,
+    "bottleneck_ranking": false,
+    "recommendation": false,
+    "prescription": false,
+    "promotion": false,
+    "p0_p6": false,
+    "ui_redesign": false
+  },
+  "stop_rule": "PLAN first; after approved implementation/testing stop before commit/push."
+}
