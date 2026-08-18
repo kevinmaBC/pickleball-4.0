@@ -1,0 +1,23 @@
+{
+  "package_id": "PB30-50-APPV2-PHASE0-S4-v1",
+  "sprint": "S4 Player Training State Integration Core",
+  "repository": "kevinmaBC/pickleball-4.0",
+  "base": {
+    "branch": "phase0-s3-evidence-analytics",
+    "commit": "cd6c780e795b86f6f198f7e1697236de0008c3b7"
+  },
+  "scope": {
+    "compose_player_state": true,
+    "assessment_pass_through": true,
+    "training_analytics_integration": true,
+    "persist_state": false,
+    "scoring": false,
+    "bottleneck_inference": false,
+    "recommendation": false,
+    "prescription": false,
+    "p0_p6": false,
+    "promotion": false,
+    "ui_redesign": false
+  },
+  "stop_rule": "PLAN first; after approved implementation/testing stop before commit/push."
+}
