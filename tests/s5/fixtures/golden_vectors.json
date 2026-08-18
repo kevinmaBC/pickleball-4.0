@@ -1,0 +1,3495 @@
+{
+  "generated_from": "schemas/scoring_engine_reference_v2_3_1.py + data/level_gates_v2_3_1.json (both frozen, unmodified)",
+  "generator": "tests/s5/helpers/generate_golden_vectors.py",
+  "capability_vectors": [
+    {
+      "technical_score": 80,
+      "decision_score": 78,
+      "pressure_score": 75,
+      "expected_capability_score_0_100": 78.2,
+      "note": "ordinary mid"
+    },
+    {
+      "technical_score": 60,
+      "decision_score": 60,
+      "pressure_score": 60,
+      "expected_capability_score_0_100": 60.0,
+      "note": "uniform 60"
+    },
+    {
+      "technical_score": 100,
+      "decision_score": 100,
+      "pressure_score": 100,
+      "expected_capability_score_0_100": 100.0,
+      "note": "uniform 100 (max)"
+    },
+    {
+      "technical_score": 0,
+      "decision_score": 0,
+      "pressure_score": 0,
+      "expected_capability_score_0_100": 0.0,
+      "note": "uniform 0 (min)"
+    },
+    {
+      "technical_score": 95,
+      "decision_score": 75,
+      "pressure_score": 70,
+      "expected_capability_score_0_100": 82.8,
+      "note": "4.0-shaped profile"
+    },
+    {
+      "technical_score": 61,
+      "decision_score": 59,
+      "pressure_score": 57,
+      "expected_capability_score_0_100": 59.4,
+      "note": "ordinary low"
+    },
+    {
+      "technical_score": 87.5,
+      "decision_score": 82.3,
+      "pressure_score": 79.1,
+      "expected_capability_score_0_100": 83.8,
+      "note": "fractional inputs"
+    },
+    {
+      "technical_score": 0,
+      "decision_score": 100,
+      "pressure_score": 50,
+      "expected_capability_score_0_100": 42.5,
+      "note": "spread / extreme weighting"
+    },
+    {
+      "technical_score": 33.3,
+      "decision_score": 66.6,
+      "pressure_score": 99.9,
+      "expected_capability_score_0_100": 59.9,
+      "note": "repeating-decimal inputs"
+    },
+    {
+      "technical_score": 50,
+      "decision_score": 50,
+      "pressure_score": 69.8,
+      "expected_capability_score_0_100": 55.0,
+      "note": "boundary target raw=54.95 (capability_min 60 offset -5.05)"
+    },
+    {
+      "technical_score": 50,
+      "decision_score": 50,
+      "pressure_score": 70.0,
+      "expected_capability_score_0_100": 55.0,
+      "note": "boundary target raw=55.0 (capability_min 60 offset -5.0)"
+    },
+    {
+      "technical_score": 50,
+      "decision_score": 50,
+      "pressure_score": 70.2,
+      "expected_capability_score_0_100": 55.0,
+      "note": "boundary target raw=55.05 (capability_min 60 offset -4.95)"
+    },
+    {
+      "technical_score": 50,
+      "decision_score": 50,
+      "pressure_score": 89.8,
+      "expected_capability_score_0_100": 60.0,
+      "note": "boundary target raw=59.95 (capability_min 60 offset -0.05)"
+    },
+    {
+      "technical_score": 50,
+      "decision_score": 50,
+      "pressure_score": 90.0,
+      "expected_capability_score_0_100": 60.0,
+      "note": "boundary target raw=60.0 (capability_min 60 offset 0.0)"
+    },
+    {
+      "technical_score": 50,
+      "decision_score": 50,
+      "pressure_score": 90.2,
+      "expected_capability_score_0_100": 60.0,
+      "note": "boundary target raw=60.05 (capability_min 60 offset 0.05)"
+    },
+    {
+      "technical_score": 70,
+      "decision_score": 65,
+      "pressure_score": 55.8,
+      "expected_capability_score_0_100": 65.0,
+      "note": "boundary target raw=64.95 (capability_min 60 offset 4.95)"
+    },
+    {
+      "technical_score": 70,
+      "decision_score": 65,
+      "pressure_score": 56.0,
+      "expected_capability_score_0_100": 65.0,
+      "note": "boundary target raw=65.0 (capability_min 60 offset 5.0)"
+    },
+    {
+      "technical_score": 70,
+      "decision_score": 65,
+      "pressure_score": 56.2,
+      "expected_capability_score_0_100": 65.0,
+      "note": "boundary target raw=65.05 (capability_min 60 offset 5.05)"
+    },
+    {
+      "technical_score": 70,
+      "decision_score": 65,
+      "pressure_score": 47.8,
+      "expected_capability_score_0_100": 63.0,
+      "note": "boundary target raw=62.95 (capability_min 68 offset -5.05)"
+    },
+    {
+      "technical_score": 70,
+      "decision_score": 65,
+      "pressure_score": 48.0,
+      "expected_capability_score_0_100": 63.0,
+      "note": "boundary target raw=63.0 (capability_min 68 offset -5.0)"
+    },
+    {
+      "technical_score": 70,
+      "decision_score": 65,
+      "pressure_score": 48.2,
+      "expected_capability_score_0_100": 63.0,
+      "note": "boundary target raw=63.05 (capability_min 68 offset -4.95)"
+    },
+    {
+      "technical_score": 70,
+      "decision_score": 65,
+      "pressure_score": 67.8,
+      "expected_capability_score_0_100": 68.0,
+      "note": "boundary target raw=67.95 (capability_min 68 offset -0.05)"
+    },
+    {
+      "technical_score": 70,
+      "decision_score": 65,
+      "pressure_score": 68.0,
+      "expected_capability_score_0_100": 68.0,
+      "note": "boundary target raw=68.0 (capability_min 68 offset 0.0)"
+    },
+    {
+      "technical_score": 70,
+      "decision_score": 65,
+      "pressure_score": 68.2,
+      "expected_capability_score_0_100": 68.0,
+      "note": "boundary target raw=68.05 (capability_min 68 offset 0.05)"
+    },
+    {
+      "technical_score": 70,
+      "decision_score": 65,
+      "pressure_score": 87.8,
+      "expected_capability_score_0_100": 73.0,
+      "note": "boundary target raw=72.95 (capability_min 68 offset 4.95)"
+    },
+    {
+      "technical_score": 70,
+      "decision_score": 65,
+      "pressure_score": 88.0,
+      "expected_capability_score_0_100": 73.0,
+      "note": "boundary target raw=73.0 (capability_min 68 offset 5.0)"
+    },
+    {
+      "technical_score": 70,
+      "decision_score": 65,
+      "pressure_score": 88.2,
+      "expected_capability_score_0_100": 73.0,
+      "note": "boundary target raw=73.05 (capability_min 68 offset 5.05)"
+    },
+    {
+      "technical_score": 70,
+      "decision_score": 65,
+      "pressure_score": 79.8,
+      "expected_capability_score_0_100": 71.0,
+      "note": "boundary target raw=70.95 (capability_min 76 offset -5.05)"
+    },
+    {
+      "technical_score": 70,
+      "decision_score": 65,
+      "pressure_score": 80.0,
+      "expected_capability_score_0_100": 71.0,
+      "note": "boundary target raw=71.0 (capability_min 76 offset -5.0)"
+    },
+    {
+      "technical_score": 70,
+      "decision_score": 65,
+      "pressure_score": 80.2,
+      "expected_capability_score_0_100": 71.0,
+      "note": "boundary target raw=71.05 (capability_min 76 offset -4.95)"
+    },
+    {
+      "technical_score": 70,
+      "decision_score": 65,
+      "pressure_score": 99.8,
+      "expected_capability_score_0_100": 76.0,
+      "note": "boundary target raw=75.95 (capability_min 76 offset -0.05)"
+    },
+    {
+      "technical_score": 70,
+      "decision_score": 65,
+      "pressure_score": 100.0,
+      "expected_capability_score_0_100": 76.0,
+      "note": "boundary target raw=76.0 (capability_min 76 offset 0.0)"
+    },
+    {
+      "technical_score": 0,
+      "decision_score": 0,
+      "pressure_score": 11,
+      "expected_capability_score_0_100": 2.8,
+      "note": "decimal-tie stress dist=0.000000"
+    },
+    {
+      "technical_score": 0,
+      "decision_score": 0,
+      "pressure_score": 33,
+      "expected_capability_score_0_100": 8.2,
+      "note": "decimal-tie stress dist=0.000000"
+    },
+    {
+      "technical_score": 0,
+      "decision_score": 0,
+      "pressure_score": 55,
+      "expected_capability_score_0_100": 13.8,
+      "note": "decimal-tie stress dist=0.000000"
+    },
+    {
+      "technical_score": 0,
+      "decision_score": 0,
+      "pressure_score": 77,
+      "expected_capability_score_0_100": 19.2,
+      "note": "decimal-tie stress dist=0.000000"
+    },
+    {
+      "technical_score": 0,
+      "decision_score": 0,
+      "pressure_score": 99,
+      "expected_capability_score_0_100": 24.8,
+      "note": "decimal-tie stress dist=0.000000"
+    },
+    {
+      "technical_score": 0,
+      "decision_score": 7,
+      "pressure_score": 11,
+      "expected_capability_score_0_100": 4.8,
+      "note": "decimal-tie stress dist=0.000000"
+    },
+    {
+      "technical_score": 0,
+      "decision_score": 7,
+      "pressure_score": 33,
+      "expected_capability_score_0_100": 10.3,
+      "note": "decimal-tie stress dist=0.000000"
+    },
+    {
+      "technical_score": 0,
+      "decision_score": 7,
+      "pressure_score": 55,
+      "expected_capability_score_0_100": 15.8,
+      "note": "decimal-tie stress dist=0.000000"
+    },
+    {
+      "technical_score": 0,
+      "decision_score": 7,
+      "pressure_score": 77,
+      "expected_capability_score_0_100": 21.4,
+      "note": "decimal-tie stress dist=0.000000"
+    },
+    {
+      "technical_score": 0,
+      "decision_score": 7,
+      "pressure_score": 99,
+      "expected_capability_score_0_100": 26.9,
+      "note": "decimal-tie stress dist=0.000000"
+    },
+    {
+      "technical_score": 0,
+      "decision_score": 14,
+      "pressure_score": 11,
+      "expected_capability_score_0_100": 7.0,
+      "note": "decimal-tie stress dist=0.000000"
+    },
+    {
+      "technical_score": 0,
+      "decision_score": 14,
+      "pressure_score": 33,
+      "expected_capability_score_0_100": 12.4,
+      "note": "decimal-tie stress dist=0.000000"
+    },
+    {
+      "technical_score": 0,
+      "decision_score": 14,
+      "pressure_score": 55,
+      "expected_capability_score_0_100": 17.9,
+      "note": "decimal-tie stress dist=0.000000"
+    },
+    {
+      "technical_score": 0,
+      "decision_score": 14,
+      "pressure_score": 77,
+      "expected_capability_score_0_100": 23.4,
+      "note": "decimal-tie stress dist=0.000000"
+    },
+    {
+      "technical_score": 0,
+      "decision_score": 14,
+      "pressure_score": 99,
+      "expected_capability_score_0_100": 28.9,
+      "note": "decimal-tie stress dist=0.000000"
+    }
+  ],
+  "classify_vectors": [
+    {
+      "level_label": "3.0",
+      "metrics": {
+        "serve_in_pct": 90,
+        "return_in_pct": 85,
+        "ue_per_game": 4
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_in_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "ordinary PASS (all gates comfortably met, evidence sufficient, match ok if required)"
+    },
+    {
+      "level_label": "3.0",
+      "metrics": {
+        "serve_in_pct": 90,
+        "return_in_pct": 85,
+        "ue_per_game": 4
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": null
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "status": "INCOMPLETE",
+        "capability_score_0_100": null
+      },
+      "note": "INCOMPLETE \u2014 pressure_score missing"
+    },
+    {
+      "level_label": "3.0",
+      "metrics": {
+        "serve_in_pct": 90,
+        "return_in_pct": 85,
+        "ue_per_game": 4
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 0
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 68.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_in_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "zero pressure_score is a real value, not INCOMPLETE"
+    },
+    {
+      "level_label": "3.0",
+      "metrics": {
+        "serve_in_pct": 90,
+        "return_in_pct": 85,
+        "ue_per_game": 4
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C1",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_in_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": false,
+        "match_validation_ok": true,
+        "status": "LOW_CONFIDENCE"
+      },
+      "note": "LOW_CONFIDENCE \u2014 evidence C1 below evidence_min"
+    },
+    {
+      "level_label": "3.0",
+      "metrics": {
+        "return_in_pct": 85,
+        "ue_per_game": 4
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": false,
+          "return_in_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "missing gate metric (serve_in_pct) must not silently pass"
+    },
+    {
+      "level_label": "3.0",
+      "metrics": {
+        "serve_in_pct": 85,
+        "return_in_pct": 85,
+        "ue_per_game": 4
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_in_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "serve_in_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "3.0",
+      "metrics": {
+        "serve_in_pct": 84,
+        "return_in_pct": 85,
+        "ue_per_game": 4
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": false,
+          "return_in_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "serve_in_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "3.0",
+      "metrics": {
+        "serve_in_pct": 90,
+        "return_in_pct": 80,
+        "ue_per_game": 4
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_in_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "return_in_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "3.0",
+      "metrics": {
+        "serve_in_pct": 90,
+        "return_in_pct": 79,
+        "ue_per_game": 4
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_in_pct": false,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "return_in_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "3.0",
+      "metrics": {
+        "serve_in_pct": 90,
+        "return_in_pct": 85,
+        "ue_per_game": 9
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_in_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "ue_per_game_max exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "3.0",
+      "metrics": {
+        "serve_in_pct": 90,
+        "return_in_pct": 85,
+        "ue_per_game": 10
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_in_pct": true,
+          "ue_per_game_max": false
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "ue_per_game_max one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "3.0",
+      "metrics": {
+        "serve_in_pct": 90,
+        "return_in_pct": 85,
+        "ue_per_game": 4
+      },
+      "component_scores": {
+        "technical_score": 43.3333,
+        "decision_score": 70.0,
+        "pressure_score": 70.0
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 58.0,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_in_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "BORDERLINE"
+      },
+      "note": "BORDERLINE \u2014 capability ~2pp below capability_min, all gates pass"
+    },
+    {
+      "level_label": "3.0",
+      "metrics": {
+        "serve_in_pct": 90,
+        "return_in_pct": 85,
+        "ue_per_game": 4
+      },
+      "component_scores": {
+        "technical_score": 25.5556,
+        "decision_score": 70.0,
+        "pressure_score": 70.0
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 50.0,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_in_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "FAIL \u2014 capability >5pp below capability_min (outside borderline band)"
+    },
+    {
+      "level_label": "3.0",
+      "metrics": {
+        "serve_in_pct": 90,
+        "return_in_pct": 85,
+        "ue_per_game": 4
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_in_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "no match_validation configured for this level \u2014 match_transfer_score None must not affect outcome"
+    },
+    {
+      "level_label": "3.0",
+      "metrics": {
+        "serve_in_pct": 90,
+        "return_in_pct": 85,
+        "ue_per_game": 4
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 1,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_in_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "no match_validation configured for this level \u2014 a low match_transfer_score must not affect outcome"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 70,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "ordinary PASS (all gates comfortably met, evidence sufficient, match ok if required)"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 70,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": null
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "status": "INCOMPLETE",
+        "capability_score_0_100": null
+      },
+      "note": "INCOMPLETE \u2014 pressure_score missing"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 70,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 0
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 68.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "zero pressure_score is a real value, not INCOMPLETE"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 70,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C1",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": false,
+        "match_validation_ok": true,
+        "status": "LOW_CONFIDENCE"
+      },
+      "note": "LOW_CONFIDENCE \u2014 evidence C1 below evidence_min"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 70,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": false,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "missing gate metric (serve_in_pct) must not silently pass"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 90,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 70,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "serve_in_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 89,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 70,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": false,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "serve_in_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 65,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 70,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "return_quality_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 64,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 70,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": false,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "return_quality_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 55,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 70,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "drop_ball_quality_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 54,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 70,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": false,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "drop_ball_quality_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 50,
+        "shot_selection_pct": 70,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "reset_ball_quality_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 49,
+        "shot_selection_pct": 70,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": false,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "reset_ball_quality_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 65,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "shot_selection_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 64,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": false,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "shot_selection_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 70,
+        "ue_per_game": 7
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "ue_per_game_max exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 70,
+        "ue_per_game": 8
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": false
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "ue_per_game_max one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 70,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 61.1111,
+        "decision_score": 70.0,
+        "pressure_score": 70.0
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 66.0,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "BORDERLINE"
+      },
+      "note": "BORDERLINE \u2014 capability ~2pp below capability_min, all gates pass"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 70,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 43.3333,
+        "decision_score": 70.0,
+        "pressure_score": 70.0
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 58.0,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "FAIL \u2014 capability >5pp below capability_min (outside borderline band)"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 70,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "no match_validation configured for this level \u2014 match_transfer_score None must not affect outcome"
+    },
+    {
+      "level_label": "3.5",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 70,
+        "drop_ball_quality_pct": 60,
+        "reset_ball_quality_pct": 55,
+        "shot_selection_pct": 70,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 1,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "no match_validation configured for this level \u2014 a low match_transfer_score must not affect outcome"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "ordinary PASS (all gates comfortably met, evidence sufficient, match ok if required)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": null
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "status": "INCOMPLETE",
+        "capability_score_0_100": null
+      },
+      "note": "INCOMPLETE \u2014 pressure_score missing"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 0
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 68.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "zero pressure_score is a real value, not INCOMPLETE"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C1",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": false,
+        "match_validation_ok": true,
+        "status": "LOW_CONFIDENCE"
+      },
+      "note": "LOW_CONFIDENCE \u2014 evidence C1 below evidence_min"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": false,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "missing gate metric (serve_in_pct) must not silently pass"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 95,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "serve_in_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 94,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": false,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "serve_in_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 75,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "return_quality_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 74,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": false,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "return_quality_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 70,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "drop_ball_quality_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 69,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": false,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "drop_ball_quality_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 65,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "reset_ball_quality_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 64,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": false,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "reset_ball_quality_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 80,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "shot_selection_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 79,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": false,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "shot_selection_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 70,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "pressure_success_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 69,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": false,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "pressure_success_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 5
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "ue_per_game_max exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 6
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": false
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "ue_per_game_max one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 78.8889,
+        "decision_score": 70.0,
+        "pressure_score": 70.0
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 74.0,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "BORDERLINE"
+      },
+      "note": "BORDERLINE \u2014 capability ~2pp below capability_min, all gates pass"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 61.1111,
+        "decision_score": 70.0,
+        "pressure_score": 70.0
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 90,
+      "expected": {
+        "capability_score_0_100": 66.0,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "FAIL \u2014 capability >5pp below capability_min (outside borderline band)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 70,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "match_transfer_score exact minimum boundary (must PASS match)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 69,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": false,
+        "status": "FAIL"
+      },
+      "note": "match_transfer_score one below minimum (must FAIL overall despite good gates/capability)"
+    },
+    {
+      "level_label": "4.0",
+      "metrics": {
+        "serve_in_pct": 97,
+        "return_quality_pct": 80,
+        "drop_ball_quality_pct": 75,
+        "reset_ball_quality_pct": 70,
+        "shot_selection_pct": 85,
+        "pressure_success_pct": 75,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "serve_in_pct": true,
+          "return_quality_pct": true,
+          "drop_ball_quality_pct": true,
+          "reset_ball_quality_pct": true,
+          "shot_selection_pct": true,
+          "pressure_success_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": false,
+        "status": "FAIL"
+      },
+      "note": "match_transfer_score missing entirely on a match-required level (must FAIL)"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 70,
+        "attack_conversion_pct": 65,
+        "transition_nvz_gain_pct": 75,
+        "wrong_attack_pct": 10,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "pattern_success_pct": true,
+          "attack_conversion_pct": true,
+          "transition_nvz_gain_pct": true,
+          "wrong_attack_pct_max": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "ordinary PASS (all gates comfortably met, evidence sufficient, match ok if required)"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 70,
+        "attack_conversion_pct": 65,
+        "transition_nvz_gain_pct": 75,
+        "wrong_attack_pct": 10,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": null
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "status": "INCOMPLETE",
+        "capability_score_0_100": null
+      },
+      "note": "INCOMPLETE \u2014 pressure_score missing"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 70,
+        "attack_conversion_pct": 65,
+        "transition_nvz_gain_pct": 75,
+        "wrong_attack_pct": 10,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 0
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 68.4,
+        "gate_results": {
+          "pattern_success_pct": true,
+          "attack_conversion_pct": true,
+          "transition_nvz_gain_pct": true,
+          "wrong_attack_pct_max": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "zero pressure_score is a real value, not INCOMPLETE"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 70,
+        "attack_conversion_pct": 65,
+        "transition_nvz_gain_pct": 75,
+        "wrong_attack_pct": 10,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C1",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "pattern_success_pct": true,
+          "attack_conversion_pct": true,
+          "transition_nvz_gain_pct": true,
+          "wrong_attack_pct_max": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": false,
+        "match_validation_ok": true,
+        "status": "LOW_CONFIDENCE"
+      },
+      "note": "LOW_CONFIDENCE \u2014 evidence C1 below evidence_min"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "attack_conversion_pct": 65,
+        "transition_nvz_gain_pct": 75,
+        "wrong_attack_pct": 10,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "pattern_success_pct": false,
+          "attack_conversion_pct": true,
+          "transition_nvz_gain_pct": true,
+          "wrong_attack_pct_max": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "missing gate metric (pattern_success_pct) must not silently pass"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 65,
+        "attack_conversion_pct": 65,
+        "transition_nvz_gain_pct": 75,
+        "wrong_attack_pct": 10,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "pattern_success_pct": true,
+          "attack_conversion_pct": true,
+          "transition_nvz_gain_pct": true,
+          "wrong_attack_pct_max": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "pattern_success_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 64,
+        "attack_conversion_pct": 65,
+        "transition_nvz_gain_pct": 75,
+        "wrong_attack_pct": 10,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "pattern_success_pct": false,
+          "attack_conversion_pct": true,
+          "transition_nvz_gain_pct": true,
+          "wrong_attack_pct_max": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "pattern_success_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 70,
+        "attack_conversion_pct": 60,
+        "transition_nvz_gain_pct": 75,
+        "wrong_attack_pct": 10,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "pattern_success_pct": true,
+          "attack_conversion_pct": true,
+          "transition_nvz_gain_pct": true,
+          "wrong_attack_pct_max": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "attack_conversion_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 70,
+        "attack_conversion_pct": 59,
+        "transition_nvz_gain_pct": 75,
+        "wrong_attack_pct": 10,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "pattern_success_pct": true,
+          "attack_conversion_pct": false,
+          "transition_nvz_gain_pct": true,
+          "wrong_attack_pct_max": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "attack_conversion_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 70,
+        "attack_conversion_pct": 65,
+        "transition_nvz_gain_pct": 70,
+        "wrong_attack_pct": 10,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "pattern_success_pct": true,
+          "attack_conversion_pct": true,
+          "transition_nvz_gain_pct": true,
+          "wrong_attack_pct_max": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "transition_nvz_gain_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 70,
+        "attack_conversion_pct": 65,
+        "transition_nvz_gain_pct": 69,
+        "wrong_attack_pct": 10,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "pattern_success_pct": true,
+          "attack_conversion_pct": true,
+          "transition_nvz_gain_pct": false,
+          "wrong_attack_pct_max": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "transition_nvz_gain_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 70,
+        "attack_conversion_pct": 65,
+        "transition_nvz_gain_pct": 75,
+        "wrong_attack_pct": 15,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "pattern_success_pct": true,
+          "attack_conversion_pct": true,
+          "transition_nvz_gain_pct": true,
+          "wrong_attack_pct_max": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "wrong_attack_pct_max exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 70,
+        "attack_conversion_pct": 65,
+        "transition_nvz_gain_pct": 75,
+        "wrong_attack_pct": 16,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "pattern_success_pct": true,
+          "attack_conversion_pct": true,
+          "transition_nvz_gain_pct": true,
+          "wrong_attack_pct_max": false,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "wrong_attack_pct_max one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 70,
+        "attack_conversion_pct": 65,
+        "transition_nvz_gain_pct": 75,
+        "wrong_attack_pct": 10,
+        "ue_per_game": 4
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "pattern_success_pct": true,
+          "attack_conversion_pct": true,
+          "transition_nvz_gain_pct": true,
+          "wrong_attack_pct_max": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "ue_per_game_max exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 70,
+        "attack_conversion_pct": 65,
+        "transition_nvz_gain_pct": 75,
+        "wrong_attack_pct": 10,
+        "ue_per_game": 5
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "pattern_success_pct": true,
+          "attack_conversion_pct": true,
+          "transition_nvz_gain_pct": true,
+          "wrong_attack_pct_max": true,
+          "ue_per_game_max": false
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "ue_per_game_max one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 70,
+        "attack_conversion_pct": 65,
+        "transition_nvz_gain_pct": 75,
+        "wrong_attack_pct": 10,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92.2222,
+        "decision_score": 70.0,
+        "pressure_score": 70.0
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 80.0,
+        "gate_results": {
+          "pattern_success_pct": true,
+          "attack_conversion_pct": true,
+          "transition_nvz_gain_pct": true,
+          "wrong_attack_pct_max": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "BORDERLINE"
+      },
+      "note": "BORDERLINE \u2014 capability ~2pp below capability_min, all gates pass"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 70,
+        "attack_conversion_pct": 65,
+        "transition_nvz_gain_pct": 75,
+        "wrong_attack_pct": 10,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 74.4444,
+        "decision_score": 70.0,
+        "pressure_score": 70.0
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 72.0,
+        "gate_results": {
+          "pattern_success_pct": true,
+          "attack_conversion_pct": true,
+          "transition_nvz_gain_pct": true,
+          "wrong_attack_pct_max": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "FAIL \u2014 capability >5pp below capability_min (outside borderline band)"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 70,
+        "attack_conversion_pct": 65,
+        "transition_nvz_gain_pct": 75,
+        "wrong_attack_pct": 10,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "pattern_success_pct": true,
+          "attack_conversion_pct": true,
+          "transition_nvz_gain_pct": true,
+          "wrong_attack_pct_max": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "no match_validation configured for this level \u2014 match_transfer_score None must not affect outcome"
+    },
+    {
+      "level_label": "4.5",
+      "metrics": {
+        "pattern_success_pct": 70,
+        "attack_conversion_pct": 65,
+        "transition_nvz_gain_pct": 75,
+        "wrong_attack_pct": 10,
+        "ue_per_game": 2
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 1,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "pattern_success_pct": true,
+          "attack_conversion_pct": true,
+          "transition_nvz_gain_pct": true,
+          "wrong_attack_pct_max": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "no match_validation configured for this level \u2014 a low match_transfer_score must not affect outcome"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 75,
+        "pattern_adaptation_pct": 75,
+        "neutralize_under_pressure_pct": 80,
+        "attack_conversion_pct": 75,
+        "ue_per_game": 1
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "rally_control_pct": true,
+          "pattern_adaptation_pct": true,
+          "neutralize_under_pressure_pct": true,
+          "attack_conversion_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "ordinary PASS (all gates comfortably met, evidence sufficient, match ok if required)"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 75,
+        "pattern_adaptation_pct": 75,
+        "neutralize_under_pressure_pct": 80,
+        "attack_conversion_pct": 75,
+        "ue_per_game": 1
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": null
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "status": "INCOMPLETE",
+        "capability_score_0_100": null
+      },
+      "note": "INCOMPLETE \u2014 pressure_score missing"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 75,
+        "pattern_adaptation_pct": 75,
+        "neutralize_under_pressure_pct": 80,
+        "attack_conversion_pct": 75,
+        "ue_per_game": 1
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 0
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 68.4,
+        "gate_results": {
+          "rally_control_pct": true,
+          "pattern_adaptation_pct": true,
+          "neutralize_under_pressure_pct": true,
+          "attack_conversion_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "zero pressure_score is a real value, not INCOMPLETE"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 75,
+        "pattern_adaptation_pct": 75,
+        "neutralize_under_pressure_pct": 80,
+        "attack_conversion_pct": 75,
+        "ue_per_game": 1
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C1",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "rally_control_pct": true,
+          "pattern_adaptation_pct": true,
+          "neutralize_under_pressure_pct": true,
+          "attack_conversion_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": false,
+        "match_validation_ok": true,
+        "status": "LOW_CONFIDENCE"
+      },
+      "note": "LOW_CONFIDENCE \u2014 evidence C1 below evidence_min"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "pattern_adaptation_pct": 75,
+        "neutralize_under_pressure_pct": 80,
+        "attack_conversion_pct": 75,
+        "ue_per_game": 1
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "rally_control_pct": false,
+          "pattern_adaptation_pct": true,
+          "neutralize_under_pressure_pct": true,
+          "attack_conversion_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "missing gate metric (rally_control_pct) must not silently pass"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 70,
+        "pattern_adaptation_pct": 75,
+        "neutralize_under_pressure_pct": 80,
+        "attack_conversion_pct": 75,
+        "ue_per_game": 1
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "rally_control_pct": true,
+          "pattern_adaptation_pct": true,
+          "neutralize_under_pressure_pct": true,
+          "attack_conversion_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "rally_control_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 69,
+        "pattern_adaptation_pct": 75,
+        "neutralize_under_pressure_pct": 80,
+        "attack_conversion_pct": 75,
+        "ue_per_game": 1
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "rally_control_pct": false,
+          "pattern_adaptation_pct": true,
+          "neutralize_under_pressure_pct": true,
+          "attack_conversion_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "rally_control_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 75,
+        "pattern_adaptation_pct": 70,
+        "neutralize_under_pressure_pct": 80,
+        "attack_conversion_pct": 75,
+        "ue_per_game": 1
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "rally_control_pct": true,
+          "pattern_adaptation_pct": true,
+          "neutralize_under_pressure_pct": true,
+          "attack_conversion_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "pattern_adaptation_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 75,
+        "pattern_adaptation_pct": 69,
+        "neutralize_under_pressure_pct": 80,
+        "attack_conversion_pct": 75,
+        "ue_per_game": 1
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "rally_control_pct": true,
+          "pattern_adaptation_pct": false,
+          "neutralize_under_pressure_pct": true,
+          "attack_conversion_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "pattern_adaptation_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 75,
+        "pattern_adaptation_pct": 75,
+        "neutralize_under_pressure_pct": 75,
+        "attack_conversion_pct": 75,
+        "ue_per_game": 1
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "rally_control_pct": true,
+          "pattern_adaptation_pct": true,
+          "neutralize_under_pressure_pct": true,
+          "attack_conversion_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "neutralize_under_pressure_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 75,
+        "pattern_adaptation_pct": 75,
+        "neutralize_under_pressure_pct": 74,
+        "attack_conversion_pct": 75,
+        "ue_per_game": 1
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "rally_control_pct": true,
+          "pattern_adaptation_pct": true,
+          "neutralize_under_pressure_pct": false,
+          "attack_conversion_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "neutralize_under_pressure_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 75,
+        "pattern_adaptation_pct": 75,
+        "neutralize_under_pressure_pct": 80,
+        "attack_conversion_pct": 70,
+        "ue_per_game": 1
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "rally_control_pct": true,
+          "pattern_adaptation_pct": true,
+          "neutralize_under_pressure_pct": true,
+          "attack_conversion_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "attack_conversion_pct exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 75,
+        "pattern_adaptation_pct": 75,
+        "neutralize_under_pressure_pct": 80,
+        "attack_conversion_pct": 69,
+        "ue_per_game": 1
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "rally_control_pct": true,
+          "pattern_adaptation_pct": true,
+          "neutralize_under_pressure_pct": true,
+          "attack_conversion_pct": false,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "attack_conversion_pct one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 75,
+        "pattern_adaptation_pct": 75,
+        "neutralize_under_pressure_pct": 80,
+        "attack_conversion_pct": 75,
+        "ue_per_game": 3
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "rally_control_pct": true,
+          "pattern_adaptation_pct": true,
+          "neutralize_under_pressure_pct": true,
+          "attack_conversion_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "ue_per_game_max exact-threshold boundary (must PASS this gate)"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 75,
+        "pattern_adaptation_pct": 75,
+        "neutralize_under_pressure_pct": 80,
+        "attack_conversion_pct": 75,
+        "ue_per_game": 4
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "rally_control_pct": true,
+          "pattern_adaptation_pct": true,
+          "neutralize_under_pressure_pct": true,
+          "attack_conversion_pct": true,
+          "ue_per_game_max": false
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "ue_per_game_max one-unit-worse (must FAIL this gate)"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 75,
+        "pattern_adaptation_pct": 75,
+        "neutralize_under_pressure_pct": 80,
+        "attack_conversion_pct": 75,
+        "ue_per_game": 1
+      },
+      "component_scores": {
+        "technical_score": 100,
+        "decision_score": 70.0,
+        "pressure_score": 70.0
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 83.5,
+        "gate_results": {
+          "rally_control_pct": true,
+          "pattern_adaptation_pct": true,
+          "neutralize_under_pressure_pct": true,
+          "attack_conversion_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "BORDERLINE"
+      },
+      "note": "BORDERLINE \u2014 capability ~2pp below capability_min, all gates pass"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 75,
+        "pattern_adaptation_pct": 75,
+        "neutralize_under_pressure_pct": 80,
+        "attack_conversion_pct": 75,
+        "ue_per_game": 1
+      },
+      "component_scores": {
+        "technical_score": 85.5556,
+        "decision_score": 70.0,
+        "pressure_score": 70.0
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 77.0,
+        "gate_results": {
+          "rally_control_pct": true,
+          "pattern_adaptation_pct": true,
+          "neutralize_under_pressure_pct": true,
+          "attack_conversion_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "FAIL"
+      },
+      "note": "FAIL \u2014 capability >5pp below capability_min (outside borderline band)"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 75,
+        "pattern_adaptation_pct": 75,
+        "neutralize_under_pressure_pct": 80,
+        "attack_conversion_pct": 75,
+        "ue_per_game": 1
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": null,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "rally_control_pct": true,
+          "pattern_adaptation_pct": true,
+          "neutralize_under_pressure_pct": true,
+          "attack_conversion_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "no match_validation configured for this level \u2014 match_transfer_score None must not affect outcome"
+    },
+    {
+      "level_label": "5.0",
+      "metrics": {
+        "rally_control_pct": 75,
+        "pattern_adaptation_pct": 75,
+        "neutralize_under_pressure_pct": 80,
+        "attack_conversion_pct": 75,
+        "ue_per_game": 1
+      },
+      "component_scores": {
+        "technical_score": 92,
+        "decision_score": 90,
+        "pressure_score": 88
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 1,
+      "expected": {
+        "capability_score_0_100": 90.4,
+        "gate_results": {
+          "rally_control_pct": true,
+          "pattern_adaptation_pct": true,
+          "neutralize_under_pressure_pct": true,
+          "attack_conversion_pct": true,
+          "ue_per_game_max": true
+        },
+        "evidence_ok": true,
+        "match_validation_ok": true,
+        "status": "PASS"
+      },
+      "note": "no match_validation configured for this level \u2014 a low match_transfer_score must not affect outcome"
+    }
+  ],
+  "validated_level_vectors": [
+    {
+      "metrics": {
+        "serve_in_pct": 99,
+        "return_in_pct": 95,
+        "ue_per_game": 0.5,
+        "return_quality_pct": 95,
+        "drop_ball_quality_pct": 95,
+        "reset_ball_quality_pct": 95,
+        "shot_selection_pct": 95,
+        "pressure_success_pct": 95,
+        "pattern_success_pct": 95,
+        "attack_conversion_pct": 95,
+        "transition_nvz_gain_pct": 95,
+        "wrong_attack_pct": 1,
+        "rally_control_pct": 95,
+        "pattern_adaptation_pct": 95,
+        "neutralize_under_pressure_pct": 95
+      },
+      "component_scores": {
+        "technical_score": 99,
+        "decision_score": 99,
+        "pressure_score": 99
+      },
+      "evidence_confidence": "C4",
+      "match_transfer_score": 99,
+      "expected_validated_training_level": 5.0,
+      "expected_level_results_status": {
+        "3.0": "PASS",
+        "3.5": "PASS",
+        "4.0": "PASS",
+        "4.5": "PASS",
+        "5.0": "PASS"
+      },
+      "note": "all five levels PASS -> validated_training_level 5.0 (provisional levels still count)"
+    },
+    {
+      "metrics": {
+        "serve_in_pct": 1
+      },
+      "component_scores": {
+        "technical_score": 1,
+        "decision_score": 1,
+        "pressure_score": 1
+      },
+      "evidence_confidence": "C1",
+      "match_transfer_score": 1,
+      "expected_validated_training_level": null,
+      "expected_level_results_status": {
+        "3.0": "LOW_CONFIDENCE",
+        "3.5": "LOW_CONFIDENCE",
+        "4.0": "LOW_CONFIDENCE",
+        "4.5": "LOW_CONFIDENCE",
+        "5.0": "LOW_CONFIDENCE"
+      },
+      "note": "no level passes (evidence C1 always insufficient) -> validated_training_level None"
+    },
+    {
+      "metrics": {
+        "serve_in_pct": 50,
+        "return_in_pct": 50,
+        "return_quality_pct": 50,
+        "drop_ball_quality_pct": 50,
+        "reset_ball_quality_pct": 50,
+        "shot_selection_pct": 50,
+        "pressure_success_pct": 50,
+        "pattern_success_pct": 90,
+        "attack_conversion_pct": 90,
+        "transition_nvz_gain_pct": 90,
+        "wrong_attack_pct": 5,
+        "ue_per_game": 1,
+        "rally_control_pct": 50,
+        "pattern_adaptation_pct": 50,
+        "neutralize_under_pressure_pct": 50
+      },
+      "component_scores": {
+        "technical_score": 95,
+        "decision_score": 90,
+        "pressure_score": 85
+      },
+      "evidence_confidence": "C3",
+      "match_transfer_score": 90,
+      "expected_validated_training_level": 4.5,
+      "expected_level_results_status": {
+        "3.0": "FAIL",
+        "3.5": "FAIL",
+        "4.0": "FAIL",
+        "4.5": "PASS",
+        "5.0": "LOW_CONFIDENCE"
+      },
+      "note": "Genuine non-contiguous PASS under the ACTUAL frozen level_gates_v2_3_1.json: 4.5's hard_gates are disjoint from 4.0's (only ue_per_game_max is shared), so failing 4.0's gate set (serve_in_pct etc. driven to 50) while satisfying 4.5's own gate set, capability_min=82, and evidence_min=C3 produces expected_level_results_status == {3.0: FAIL, 3.5: FAIL, 4.0: FAIL, 4.5: PASS, 5.0: LOW_CONFIDENCE (needs C4, only C3 supplied)} and validated_training_level == 4.5, even though 3.0/3.5/4.0 all FAIL. validated_level() computes each label via a fully independent classify() call with no cross-level state or lower-level-must-pass-first branch (confirmed by reading schemas/scoring_engine_reference_v2_3_1.py) -- this must be preserved and exposed as-is, per Owner-frozen R5, never silently corrected or normalized into a contiguous chain."
+    }
+  ]
+}

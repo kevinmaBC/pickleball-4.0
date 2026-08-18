@@ -1,0 +1,16 @@
+{
+  "package_id": "PB30-50-APPV2-PHASE0-S5-v1",
+  "sprint": "S5 Formal Assessment Capability Classification Core",
+  "base": {
+    "branch": "phase0-s4-player-state",
+    "commit": "cb8b67a5b9b28c34f64b4efe93ca61de08e49e23"
+  },
+  "six_core_files": [
+    "S5_ARCHITECTURE.md",
+    "S5_SCOPE.md",
+    "S5_DATA_CONTRACT.md",
+    "S5_CONSTRUCTION_PACKAGE.md",
+    "S5_ACCEPTANCE_GATE.md",
+    "S5_TEST_MATRIX.md"
+  ]
+}
