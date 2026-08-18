@@ -13,15 +13,20 @@
  *          PASS·BORDERLINE·FAIL / 3.0–5.0 最高 PASS 档位），与其配置权威
  *          data/level_gates_v2_3_1.json 一并预缓存；不依赖 PBStore，不做瓶颈/
  *          推荐/处方/P0–P6/晋级/DUPR 解读，不持久化任何结果）。
+ *       -> pb40-v21（S6：新增 js/assessment-explainer.js — 只读、纯函数式的评估
+ *          解释核心，把调用方显式传入的 S5 结果 + 原始 metrics/levelConfig 翻译成
+ *          summary/capability/evidence/hard_gates/match_validation 解释；不重新
+ *          分类、不推导 evidence_confidence、不做瓶颈/推荐/处方/P0–P6/晋级/DUPR，
+ *          不 fetch 任何配置、不依赖 PBStore，不持久化任何结果）。
  * 策略：导航(HTML)请求 network-first（避免部署后持续加载旧版代码）；
  *       其它静态资源 stale-while-revalidate；换版本即清旧缓存。 */
-const CACHE='pb40-v20';
+const CACHE='pb40-v21';
 const CORE=[
   './','./index.html','./manifest.json',
   './css/app.css',
   './js/i18n.js','./js/config-loader.js','./js/storage.js','./js/metrics.js','./js/preview.js','./js/app.js','./js/assessment.js',
   './js/masters-repo.js','./js/canonical-runtime.js','./js/training-evidence.js','./js/training-analytics.js','./js/player-training-state.js',
-  './js/assessment-classifier.js',
+  './js/assessment-classifier.js','./js/assessment-explainer.js',
   './data/versions.json','./data/test_definitions_v2_3_1.json','./data/assessment_tiers_v2_3_1.json',
   './data/level_gates_v2_3_1.json',
   './data/canonical/seed_data.json',

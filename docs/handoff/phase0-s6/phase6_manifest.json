@@ -1,0 +1,16 @@
+{
+  "package_id": "PB30-50-APPV2-PHASE0-S6-v1",
+  "sprint": "S6 Assessment Explanation & Evidence Trace Core",
+  "base": {
+    "branch": "phase0-s5-assessment-classifier",
+    "commit": "c5be57b"
+  },
+  "scope": {
+    "explain_s5": true,
+    "derive_confidence": false,
+    "bottleneck": false,
+    "recommendation": false,
+    "prescription": false,
+    "p0_p6": false
+  }
+}
