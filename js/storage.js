@@ -1,9 +1,13 @@
 /* ============================================================
- * storage.js — Pickleball App 2.0 Alpha · S1 Data Core
- * 浏览器本地数据库 IndexedDB (IDB)。四个对象存储 (object stores)：
+ * storage.js — Pickleball App 2.0 Alpha · S1 Data Core (+ S7-A storage)
+ * 浏览器本地数据库 IndexedDB (IDB)。S1 四个对象存储 (object stores)：
  *   players / assessments / test_sessions / trial_events
  * 逐 Trial 保存原始数据（不做任何聚合、不判级、不算能力分）。
  * 与现有 localStorage(STATE) 完全独立并存，不影响原有功能。
+ * S7-A：DB_VERSION 1 -> 2，新增 review_snapshots / prescriptions / retests
+ * 三个空存储，供未来 S7 阶段使用。升级为纯增量（只新建缺失的 store），
+ * 不清空、不改写、不删除任何既有 store 或记录。本阶段仅提供存储/读写，
+ * 不实现 Review / Trend / Prescription / Retest 的任何计算或判定逻辑。
  * ============================================================ */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -12,7 +16,7 @@
   'use strict';
 
   var DB_NAME = 'pb_v2';
-  var DB_VERSION = 1;
+  var DB_VERSION = 2;
 
   // 版本基线（V2.3.1）；若 PBConfig 已加载则以其为准
   var VERSIONS = { schema_version: '2.3.1', benchmark_version: '2.1.1', protocol_version: '2.2.1' };
@@ -27,7 +31,11 @@
     players:       { keyPath: 'player_id',       indexes: [] },
     assessments:   { keyPath: 'assessment_id',   indexes: [['by_player', 'player_id']] },
     test_sessions: { keyPath: 'test_session_id', indexes: [['by_assessment', 'assessment_id']] },
-    trial_events:  { keyPath: 'trial_event_id',  indexes: [['by_session', 'test_session_id']] }
+    trial_events:  { keyPath: 'trial_event_id',  indexes: [['by_session', 'test_session_id']] },
+    // S7-A 新增（仅存储占位，未来 S7 阶段使用；本阶段无读写业务逻辑接入）
+    review_snapshots: { keyPath: 'review_snapshot_id', indexes: [['by_assessment', 'assessment_id']] },
+    prescriptions:     { keyPath: 'prescription_id',    indexes: [['by_assessment', 'assessment_id']] },
+    retests:           { keyPath: 'retest_id',           indexes: [['by_assessment', 'assessment_id']] }
   };
 
   var _dbPromise = null;
@@ -187,6 +195,56 @@
     }).then(function () { return del('assessments', assessment_id); });
   }
 
+  // ---- S7-A：Review/Prescription/Retest 存储占位 ----
+  // 仅存储 schema_version / benchmark_version / protocol_version / generated_at
+  // 等版本元数据 + 调用方提供的 data；不做任何 CAP/趋势/处方/复测计算。
+  function createReviewSnapshot(opts) {
+    var v = versions();
+    var s = {
+      review_snapshot_id: uid('rev'),
+      assessment_id: opts.assessment_id,
+      schema_version: v.schema_version,
+      benchmark_version: v.benchmark_version,
+      protocol_version: v.protocol_version,
+      generated_at: nowISO(),
+      data: opts.data || {},
+      created_at: nowISO()
+    };
+    return put('review_snapshots', s);
+  }
+  function createPrescription(opts) {
+    var v = versions();
+    var p = {
+      prescription_id: uid('rx'),
+      assessment_id: opts.assessment_id,
+      schema_version: v.schema_version,
+      benchmark_version: v.benchmark_version,
+      protocol_version: v.protocol_version,
+      generated_at: nowISO(),
+      data: opts.data || {},
+      created_at: nowISO()
+    };
+    return put('prescriptions', p);
+  }
+  function createRetest(opts) {
+    var v = versions();
+    var r = {
+      retest_id: uid('rt'),
+      assessment_id: opts.assessment_id,
+      prescription_id: opts.prescription_id || null,
+      schema_version: v.schema_version,
+      benchmark_version: v.benchmark_version,
+      protocol_version: v.protocol_version,
+      generated_at: nowISO(),
+      data: opts.data || {},
+      created_at: nowISO()
+    };
+    return put('retests', r);
+  }
+  function reviewSnapshotsByAssessment(aid) { return getByIndex('review_snapshots', 'by_assessment', aid); }
+  function prescriptionsByAssessment(aid)   { return getByIndex('prescriptions', 'by_assessment', aid); }
+  function retestsByAssessment(aid)         { return getByIndex('retests', 'by_assessment', aid); }
+
   function clearAll() {
     return open().then(function (db) {
       return Promise.all(Object.keys(STORES).map(function (name) {
@@ -205,6 +263,9 @@
     exportAssessment: exportAssessment,
     updateAssessment: updateAssessment,
     deleteSession: deleteSession, deleteAssessment: deleteAssessment,
+    createReviewSnapshot: createReviewSnapshot, reviewSnapshotsByAssessment: reviewSnapshotsByAssessment,
+    createPrescription: createPrescription, prescriptionsByAssessment: prescriptionsByAssessment,
+    createRetest: createRetest, retestsByAssessment: retestsByAssessment,
     _uid: uid
   };
 });
