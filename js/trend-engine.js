@@ -165,6 +165,38 @@
 
   // ---- 单条硬门槛的历史序列 + 状态迁移。使用每个快照自带的 threshold/performance_state/
   // sample_state/status，不得用今天的门槛覆盖历史点；样本不足不得折叠成表现下滑 ----
+  // ---- 硬门槛"正式状态"迁移分级（独立于数值 trend_state，二者都要保留）----
+  // MET/BORDERLINE/NOT_MET 三级按序比较：名次上升=PROGRESSED，下降=REGRESSED，持平=UNCHANGED。
+  // 涉及 INCOMPLETE 的迁移单独处理：
+  //   - 之前 performance 已经是 MET、只是样本不足被降级为 INCOMPLETE，现在样本补齐正式 MET
+  //     -> EVIDENCE_COMPLETED（不是"从头进步"，是证据补齐）。
+  //   - 前后 performance 都已是 MET、只是样本验证在两次快照间波动（如 MET<->INCOMPLETE）
+  //     -> UNCHANGED（不得把样本波动误判为表现退步，呼应 S7-B"样本不足不折叠为表现下滑"）。
+  //   - 其余任何一侧为 INCOMPLETE 且不满足以上两种情形 -> 无法确信分类 -> INCOMPLETE。
+  //   - 缺少可比较的前一个历史点 -> INCOMPLETE（历史不足）。
+  var GATE_STATUS_RANK = { NOT_MET: 0, BORDERLINE: 1, MET: 2 };
+  function classifyGateTransition(prevEntry, currEntry) {
+    if (!prevEntry || !currEntry) return 'INCOMPLETE';
+    var prevStatus = prevEntry.formal_status, curStatus = currEntry.formal_status;
+
+    if (prevStatus === 'INCOMPLETE' && curStatus === 'MET' && prevEntry.performance_state === 'MET') {
+      return 'EVIDENCE_COMPLETED';
+    }
+
+    var prevRank = GATE_STATUS_RANK[prevStatus], curRank = GATE_STATUS_RANK[curStatus];
+    if (prevRank != null && curRank != null) {
+      if (curRank > prevRank) return 'PROGRESSED';
+      if (curRank < prevRank) return 'REGRESSED';
+      return 'UNCHANGED';
+    }
+
+    if (prevEntry.performance_state === 'MET' && currEntry.performance_state === 'MET') {
+      return 'UNCHANGED'; // 两侧表现皆为 MET，正式状态的差异只是样本验证波动
+    }
+
+    return 'INCOMPLETE';
+  }
+
   function buildGateTrend(metricKey, points) {
     var history = [];
     (points || []).forEach(function (p) {
@@ -203,7 +235,9 @@
       current_value: last.value,
       previous_status: prev ? prev.formal_status : null,
       current_status: last.formal_status,
-      trend_state: (prev && prev.value != null && last.value != null) ? classifyTrend(normDelta, band) : 'INSUFFICIENT_EVIDENCE'
+      // 数值趋势与正式状态迁移分开保留，互不替代：
+      trend_state: (prev && prev.value != null && last.value != null) ? classifyTrend(normDelta, band) : 'INSUFFICIENT_EVIDENCE',
+      gate_transition_state: classifyGateTransition(prev, last)
     };
   }
 
@@ -243,7 +277,9 @@
     var prev = eligible[eligible.length - 2].primary_bottleneck;
     var cur = eligible[eligible.length - 1].primary_bottleneck;
     var state;
-    if (prev == null && cur == null) state = 'PERSISTENT';       // 持续无瓶颈
+    // PERSISTENT 冻结定义为"同一个非 null 瓶颈持续存在"；null->null（持续无瓶颈）不是 PERSISTENT，
+    // 是独立的 NONE 状态——没有瓶颈可言，谈不上"持续存在同一个瓶颈"。
+    if (prev == null && cur == null) state = 'NONE';
     else if (prev != null && cur == null) state = 'CLEARED';     // 瓶颈已清除
     else if (prev != null && cur != null && prev === cur) state = 'PERSISTENT';
     else state = 'SHIFTED'; // 含"由无到有"及"瓶颈类型改变"两种情形，均视为变化
@@ -374,6 +410,7 @@
     selectCanonicalSnapshots: selectCanonicalSnapshots,
     filterTrailingWindow: filterTrailingWindow,
     buildGateTrend: buildGateTrend,
+    classifyGateTransition: classifyGateTransition,
     buildHardGateTrends: buildHardGateTrends,
     collectBottleneckHistory: collectBottleneckHistory,
     detectBottleneckMovement: detectBottleneckMovement,

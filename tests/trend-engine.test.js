@@ -134,6 +134,13 @@ function pt(assessment_id, assessment_date, fields) {
 
   var noHistory = PBTrend.detectBottleneckMovement([]);
   assert.strictEqual(noHistory.state, 'INCOMPLETE');
+
+  // Fix: null/NONE -> null/NONE must be NONE, not PERSISTENT — PERSISTENT is frozen to mean
+  // "the same non-null bottleneck persists," which doesn't apply when there was never a bottleneck.
+  var stillClear = PBTrend.detectBottleneckMovement([h(null, 'NONE'), h(null, 'NONE')]);
+  assert.strictEqual(stillClear.state, 'NONE');
+  assert.strictEqual(stillClear.previous_bottleneck, null);
+  assert.strictEqual(stillClear.current_bottleneck, null);
 })();
 
 // ---- Match Transfer Independence: changing match_transfer_score must not change capability_trend values ----
@@ -181,6 +188,8 @@ function pt(assessment_id, assessment_date, fields) {
   assert.strictEqual(gt.history[0].sample_state, 'INSUFFICIENT');
   assert.strictEqual(gt.history[0].performance_state, 'MET'); // numeric performance untouched by sample shortage
   assert.strictEqual(gt.threshold_mixed, false);
+  // performance was already MET, sample just became sufficient -> evidence completed, not "progress from nothing".
+  assert.strictEqual(gt.gate_transition_state, 'EVIDENCE_COMPLETED');
 
   // A gate absent from the latest snapshot is not surfaced in buildHardGateTrends.
   assert.deepStrictEqual(PBTrend.buildHardGateTrends([]), []);
@@ -196,6 +205,37 @@ function pt(assessment_id, assessment_date, fields) {
   assert.strictEqual(gt.trend_state, 'IMPROVING');
   assert.strictEqual(gt.previous_status, 'NOT_MET');
   assert.strictEqual(gt.current_status, 'MET'); // NOT_MET -> MET is positive gate progression
+  assert.strictEqual(gt.gate_transition_state, 'PROGRESSED');
+})();
+
+// ---- Hard-Gate formal state transition classification (independent of numeric trend_state) ----
+(function () {
+  function entry(status, perf) { return { formal_status: status, performance_state: (perf || status) }; }
+
+  assert.strictEqual(PBTrend.classifyGateTransition(entry('NOT_MET'), entry('BORDERLINE')), 'PROGRESSED');
+  assert.strictEqual(PBTrend.classifyGateTransition(entry('NOT_MET'), entry('MET')), 'PROGRESSED');
+  assert.strictEqual(PBTrend.classifyGateTransition(entry('BORDERLINE'), entry('MET')), 'PROGRESSED');
+
+  assert.strictEqual(PBTrend.classifyGateTransition(entry('MET'), entry('BORDERLINE')), 'REGRESSED');
+  assert.strictEqual(PBTrend.classifyGateTransition(entry('MET'), entry('NOT_MET')), 'REGRESSED');
+
+  assert.strictEqual(PBTrend.classifyGateTransition(entry('MET'), entry('MET')), 'UNCHANGED');
+  assert.strictEqual(PBTrend.classifyGateTransition(entry('BORDERLINE'), entry('BORDERLINE')), 'UNCHANGED');
+
+  // Performance was already MET but sample was insufficient (formal status downgraded to INCOMPLETE);
+  // now sample is sufficient -> EVIDENCE_COMPLETED, distinct from a real PROGRESSED climb.
+  assert.strictEqual(PBTrend.classifyGateTransition(entry('INCOMPLETE', 'MET'), entry('MET', 'MET')), 'EVIDENCE_COMPLETED');
+
+  // No prior point to compare -> INCOMPLETE (insufficient history), never guessed.
+  assert.strictEqual(PBTrend.classifyGateTransition(null, entry('MET')), 'INCOMPLETE');
+
+  // Sample-only flicker: performance stayed MET on both sides even though formal status briefly
+  // dropped to INCOMPLETE — must not be reported as a regression (mirrors S7-B's sample-vs-performance split).
+  assert.strictEqual(PBTrend.classifyGateTransition(entry('MET', 'MET'), entry('INCOMPLETE', 'MET')), 'UNCHANGED');
+
+  // Previous state was genuinely unknown (no value at all, not just a sample-sufficiency downgrade) ->
+  // cannot be confidently classified as evidence-completed or a clean progression.
+  assert.strictEqual(PBTrend.classifyGateTransition(entry('INCOMPLETE', 'INCOMPLETE'), entry('MET', 'MET')), 'INCOMPLETE');
 })();
 
 // Threshold mixed: same metric key evaluated against two different historical thresholds must be flagged, not silently overwritten.
@@ -292,6 +332,7 @@ function runIntegrationTest() {
     var ueGate = result.hard_gate_trends.filter(function (g) { return g.metric === 'ue_per_game_max'; })[0];
     assert.strictEqual(ueGate.previous_status, 'NOT_MET');
     assert.strictEqual(ueGate.current_status, 'MET');
+    assert.strictEqual(ueGate.gate_transition_state, 'PROGRESSED');
 
     assert.strictEqual(result.bottleneck_movement.state, 'CLEARED');
     assert.strictEqual(result.bottleneck_movement.previous_bottleneck, 'hard_gate:ue_per_game_max');
