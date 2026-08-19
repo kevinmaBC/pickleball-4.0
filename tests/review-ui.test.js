@@ -6,6 +6,8 @@
  */
 var assert = require('assert');
 
+var PBTrend = require('../js/trend-engine.js'); // real S7-C engine, used for the end-to-end display-flow test below
+
 delete require.cache[require.resolve('../js/review-ui.js')];
 var UI = require('../js/review-ui.js');
 
@@ -299,6 +301,59 @@ function emptyTrendResult(fields) {
   // Instead the two dots should sit near the vertical extremes of the (72..78) range, not clustered together.
   var circleYs = svg.match(/<circle[^>]*cy="([\d.]+)"/g).map(function (m) { return parseFloat(m.match(/cy="([\d.]+)"/)[1]); });
   assert.ok(Math.abs(circleYs[0] - circleYs[1]) > 15, 'value range must be computed from real values only, not a fabricated 0');
+})();
+
+// ---- Fix: the REAL end-to-end UI data flow must preserve missing assessment positions ----
+// 3 assessment snapshots: A1 capability_score=72, A2=null, A3=78. Drives through the actual
+// S7-C PBTrend.buildTrend() -> S7-E buildDomainSeriesModel() -> sparklineSVG() pipeline (no
+// hand-built fixtures standing in for the real engine output).
+(function () {
+  function point(id, date, capScore) {
+    return {
+      assessment_id: id, assessment_date: date, review_snapshot_id: 'rev_' + id,
+      capability_score: capScore,
+      schema_version: '2.3.1', benchmark_version: '2.1.1', protocol_version: '2.2.1'
+    };
+  }
+  var points = [point('a1', '2026-01-01', 72), point('a2', '2026-01-08', null), point('a3', '2026-01-15', 78)];
+
+  // 1. Trend calculation (real S7-C engine): baseline/current/missing_point_count unaffected by this fix.
+  var trendObj = PBTrend.buildTrend(points, function (p) { return p.capability_score; }, 'higher');
+  assert.strictEqual(trendObj.baseline_value, 72);
+  assert.strictEqual(trendObj.current_value, 78);
+  assert.strictEqual(trendObj.point_count, 2);
+  assert.strictEqual(trendObj.missing_point_count, 1);
+  // the calculation-only series must remain valid-points-only, exactly as before this fix
+  assert.strictEqual(trendObj.series.length, 2);
+  assert.strictEqual(trendObj.series.some(function (s) { return s.value == null; }), false);
+
+  // 2. UI sparkline input: buildDomainSeriesModel must surface all 3 chronological positions, gap included.
+  var model = UI.buildDomainSeriesModel(trendObj);
+  assert.strictEqual(model.series.length, 3);
+  assert.deepStrictEqual(model.series.map(function (s) { return s.value; }), [72, null, 78]);
+  // numeric fields still come from the untouched calculation fields (never derived from the display series)
+  assert.strictEqual(model.baseline, 72);
+  assert.strictEqual(model.current, 78);
+  assert.strictEqual(model.missingPointCount, 1);
+
+  // 3. Rendered SVG: two dots, no path bridging the missing middle assessment.
+  var svg = UI.sparklineSVG(model.series);
+  assert.strictEqual((svg.match(/<circle/g) || []).length, 2);
+  assert.strictEqual((svg.match(/<path/g) || []).length, 0);
+})();
+
+// Adjacent valid points (no gap between them) must still connect normally through the same real pipeline.
+(function () {
+  function point(id, date, capScore) {
+    return { assessment_id: id, assessment_date: date, review_snapshot_id: 'rev_' + id, capability_score: capScore };
+  }
+  var points = [point('a1', '2026-01-01', 70), point('a2', '2026-01-08', 74), point('a3', '2026-01-15', 76)];
+  var trendObj = PBTrend.buildTrend(points, function (p) { return p.capability_score; }, 'higher');
+  var model = UI.buildDomainSeriesModel(trendObj);
+  assert.deepStrictEqual(model.series.map(function (s) { return s.value; }), [70, 74, 76]);
+  var svg = UI.sparklineSVG(model.series);
+  assert.strictEqual((svg.match(/<circle/g) || []).length, 3);
+  assert.strictEqual((svg.match(/<path/g) || []).length, 1); // one unbroken segment connecting all three
 })();
 
 // ---- Regression guard: forbidden methodology must never appear in the UI source ----

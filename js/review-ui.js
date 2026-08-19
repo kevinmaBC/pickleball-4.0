@@ -110,8 +110,14 @@
   function fmtLevel(v) { return (v != null && VALIDATED_LEVELS.indexOf(v) !== -1) ? v.toFixed(1) : 'INCOMPLETE'; }
 
   // ---- 纯函数：把一条 PBTrend 域趋势对象整理为展示用视图模型（缺失值绝不当 0）----
+  // 数值计算相关字段（state/baseline/current/delta/pointCount/missingPointCount）仍完全取自 S7-C
+  // 既有的计算语义，不做任何改动。展示用 series 则优先取 display_series——它保留了窗口内每个
+  // assessment 的原始时间顺序位置（缺失观测处 value 为 null），供 sparkline 在缺口处断线，
+  // 不把跨越缺失评估的两个有效点连成一条虚假的连续趋势线。若上游未提供 display_series（如旧
+  // 数据/测试夹具），退回到只含有效点的 series，保持向后兼容。
   function buildDomainSeriesModel(trendObj) {
     trendObj = trendObj || {};
+    var chronology = trendObj.display_series || trendObj.series || [];
     return {
       state: trendObj.state || 'INSUFFICIENT_EVIDENCE',
       evidenceMode: trendObj.evidence_mode || 'INCOMPLETE',
@@ -120,7 +126,7 @@
       delta: fmtNumOrIncomplete(trendObj.raw_delta),
       pointCount: trendObj.point_count || 0,
       missingPointCount: trendObj.missing_point_count || 0,
-      series: (trendObj.series || []).map(function (s) { return { date: s.assessment_date, value: s.value }; })
+      series: chronology.map(function (s) { return { date: s.assessment_date, value: (s.value == null ? null : s.value) }; })
     };
   }
 

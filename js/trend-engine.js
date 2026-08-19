@@ -87,20 +87,23 @@
     return round1(direction === 'lower' ? (baseline - current) : (current - baseline));
   }
 
-  // ---- 单个指标的时间序列：仅收录有效值（非 null）的点，缺失点绝不当 0 处理，只计入 missing_point_count ----
+  // ---- 单个指标的时间序列：计算用 series 仅收录有效值（非 null）的点，缺失点绝不当 0 处理，
+  // 只计入 missing_point_count —— 这部分行为与既有语义完全不变。
+  // 另外附带 display_series：保留窗口内每个 assessment 的原始时间顺序位置（含缺失观测，value 为 null），
+  // 供 UI 端画图时能在缺口处断开折线，不把跨越缺失评估的两个有效点误连成一条连续趋势线。
   // points 须已按 assessment_date 升序排列。extraExtractor 可选，用于附带每点的证据元数据（如 match_transfer_mode）。
   // band 可选：非 0-100 绝对量指标（如 ue_per_game）传 0，其余默认沿用 TREND_BAND。
   function buildTrend(points, valueExtractor, direction, extraExtractor, band) {
     var totalCount = (points || []).length;
     var series = [];
+    var displaySeries = [];
     (points || []).forEach(function (p) {
       var v = valueExtractor(p);
-      if (v == null) return;
       var entry = {
         assessment_id: p.assessment_id,
         assessment_date: p.assessment_date,
         review_snapshot_id: p.review_snapshot_id,
-        value: v,
+        value: (v == null ? null : v),
         schema_version: p.schema_version,
         benchmark_version: p.benchmark_version,
         protocol_version: p.protocol_version
@@ -109,7 +112,9 @@
         var extra = extraExtractor(p) || {};
         Object.keys(extra).forEach(function (k) { entry[k] = extra[k]; });
       }
-      series.push(entry);
+      displaySeries.push(entry); // 完整时间顺序占位，含 null，绝不跳过、绝不置 0
+      if (v == null) return;
+      series.push(entry); // 计算用序列：只含有效点，与既有行为一致，不受本次改动影响
     });
     var pointCount = series.length;
     var baseline = pointCount ? series[0].value : null;
@@ -125,7 +130,8 @@
       point_count: pointCount,
       missing_point_count: totalCount - pointCount,
       evidence_mode: classifyHistoryState(pointCount),
-      series: series
+      series: series,
+      display_series: displaySeries
     };
   }
 
