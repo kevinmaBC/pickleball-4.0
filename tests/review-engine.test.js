@@ -66,6 +66,7 @@ var PBReview = require('../js/review-engine.js');
 
   var gate = PBReview.evalHardGate('serve_in_pct', { threshold: 85 }, null, null, 5, null);
   assert.strictEqual(gate.status, 'INCOMPLETE');
+  assert.strictEqual(gate.performance_state, 'INCOMPLETE');
   assert.strictEqual(gate.current_value, null);
 
   var ev = PBReview.determineEvidenceConfidence(null, null);
@@ -89,41 +90,106 @@ var PBReview = require('../js/review-engine.js');
   assert.deepStrictEqual(tech.contributing_tests, ['ASMT-01', 'ASMT-02']);
 })();
 
-// ---- 6. Minimum-direction hard gate: correct MET / BORDERLINE / NOT_MET ----
+// ---- 6. Minimum-direction hard gate: correct MET / BORDERLINE / NOT_MET (sample requirement satisfied) ----
 (function () {
   var cfg = { threshold: 85, min_trials: 40 };
-  var met = PBReview.evalHardGate('serve_in_pct', cfg, 90, 40, 5, 'ASMT-01');
+  var met = PBReview.evalHardGate('serve_in_pct', cfg, 90, { n_valid: 40 }, 5, 'ASMT-01');
   assert.strictEqual(met.direction, 'min');
+  assert.strictEqual(met.performance_state, 'MET');
+  assert.strictEqual(met.sample_state, 'SUFFICIENT');
   assert.strictEqual(met.status, 'MET');
 
-  var borderline = PBReview.evalHardGate('serve_in_pct', cfg, 82, 40, 5, 'ASMT-01'); // within 85-5..85
+  var borderline = PBReview.evalHardGate('serve_in_pct', cfg, 82, { n_valid: 40 }, 5, 'ASMT-01'); // within 85-5..85
+  assert.strictEqual(borderline.performance_state, 'BORDERLINE');
   assert.strictEqual(borderline.status, 'BORDERLINE');
 
-  var notMet = PBReview.evalHardGate('serve_in_pct', cfg, 70, 40, 5, 'ASMT-01');
+  var notMet = PBReview.evalHardGate('serve_in_pct', cfg, 70, { n_valid: 40 }, 5, 'ASMT-01');
+  assert.strictEqual(notMet.performance_state, 'NOT_MET');
   assert.strictEqual(notMet.status, 'NOT_MET');
 })();
 
 // ---- 7. Maximum-direction hard gate: correct direction (lower-is-better, e.g. ue_per_game_max) ----
 (function () {
   var cfg = { threshold: 9, min_games: 2 };
-  var met = PBReview.evalHardGate('ue_per_game_max', cfg, 7, 2, 5, 'match');
+  var met = PBReview.evalHardGate('ue_per_game_max', cfg, 7, { games: 2 }, 5, 'match');
   assert.strictEqual(met.direction, 'max');
   assert.strictEqual(met.status, 'MET'); // lower is better: 7 <= 9
 
-  var borderline = PBReview.evalHardGate('ue_per_game_max', cfg, 12, 2, 5, 'match'); // within 9..14
+  var borderline = PBReview.evalHardGate('ue_per_game_max', cfg, 12, { games: 2 }, 5, 'match'); // within 9..14
   assert.strictEqual(borderline.status, 'BORDERLINE');
 
-  var notMet = PBReview.evalHardGate('ue_per_game_max', cfg, 20, 2, 5, 'match');
+  var notMet = PBReview.evalHardGate('ue_per_game_max', cfg, 20, { games: 2 }, 5, 'match');
   assert.strictEqual(notMet.status, 'NOT_MET');
 })();
 
-// ---- 8. Insufficient sample -> not formally MET (downgraded to BORDERLINE even though value clears threshold) ----
+// ---- 8. Insufficient sample -> not formally MET, and never mislabeled as BORDERLINE: formal status = INCOMPLETE ----
 (function () {
   var cfg = { threshold: 85, min_trials: 40 };
-  var g = PBReview.evalHardGate('serve_in_pct', cfg, 95, 10, 5, 'ASMT-01'); // value clearly MET but only 10/40 trials
-  assert.strictEqual(g.sample_ok, false);
+  var g = PBReview.evalHardGate('serve_in_pct', cfg, 95, { n_valid: 10 }, 5, 'ASMT-01'); // value clearly MET but only 10/40 trials
+  assert.strictEqual(g.performance_state, 'MET');
+  assert.strictEqual(g.sample_state, 'INSUFFICIENT');
+  assert.strictEqual(g.sample_requirements.min_trials.met, false);
   assert.notStrictEqual(g.status, 'MET');
-  assert.strictEqual(g.status, 'BORDERLINE');
+  assert.notStrictEqual(g.status, 'BORDERLINE'); // must not mislabel insufficient sample as BORDERLINE performance
+  assert.strictEqual(g.status, 'INCOMPLETE');
+})();
+
+// ---- Fix regression scenarios: independent multi-dimension sample requirements (min_trials AND min_sessions) ----
+// 4.0 serve_in_pct requires min_trials>=80 AND min_sessions>=2 — both must hold; 80 trials in 1 session is NOT sufficient.
+(function () {
+  var cfg = { threshold: 95, min_trials: 80, min_sessions: 2 };
+
+  // Scenario 1: 96% serve, 80 trials, only 1 session -> performance MET, sample INSUFFICIENT, formal gate INCOMPLETE.
+  var s1 = PBReview.evalHardGate('serve_in_pct', cfg, 96, { n_valid: 80, session_count: 1 }, 5, 'ASMT-01');
+  assert.strictEqual(s1.performance_state, 'MET');
+  assert.strictEqual(s1.sample_requirements.min_trials.met, true);
+  assert.strictEqual(s1.sample_requirements.min_sessions.met, false);
+  assert.strictEqual(s1.sample_requirements.min_sessions.actual, 1);
+  assert.strictEqual(s1.sample_requirements.min_sessions.required, 2);
+  assert.strictEqual(s1.sample_state, 'INSUFFICIENT');
+  assert.strictEqual(s1.status, 'INCOMPLETE');
+
+  // Scenario 2: 96% serve, 80 trials, 2 sessions -> performance MET, sample SUFFICIENT, formal gate MET.
+  var s2 = PBReview.evalHardGate('serve_in_pct', cfg, 96, { n_valid: 80, session_count: 2 }, 5, 'ASMT-01');
+  assert.strictEqual(s2.performance_state, 'MET');
+  assert.strictEqual(s2.sample_requirements.min_trials.met, true);
+  assert.strictEqual(s2.sample_requirements.min_sessions.met, true);
+  assert.strictEqual(s2.sample_state, 'SUFFICIENT');
+  assert.strictEqual(s2.status, 'MET');
+
+  // Scenario 3: session count missing/unverifiable -> sample INCOMPLETE, formal gate INCOMPLETE.
+  var s3 = PBReview.evalHardGate('serve_in_pct', cfg, 96, { n_valid: 80, session_count: null }, 5, 'ASMT-01');
+  assert.strictEqual(s3.performance_state, 'MET');
+  assert.strictEqual(s3.sample_requirements.min_sessions.actual, null);
+  assert.strictEqual(s3.sample_requirements.min_sessions.met, false);
+  assert.strictEqual(s3.sample_state, 'INCOMPLETE');
+  assert.strictEqual(s3.status, 'INCOMPLETE');
+})();
+
+// Sample dimensions are evaluated independently, never OR-substituted: a large trial count must not paper over a missing/short session count.
+(function () {
+  var cfg = { threshold: 50, min_trials: 5, min_sessions: 10 }; // deliberately tiny min_trials vs. huge min_sessions
+  var g = PBReview.evalHardGate('serve_in_pct', cfg, 100, { n_valid: 1000, session_count: 1 }, 5, 'ASMT-01');
+  assert.strictEqual(g.sample_requirements.min_trials.met, true);   // 1000 >= 5
+  assert.strictEqual(g.sample_requirements.min_sessions.met, false); // 1 < 10 — must still fail despite huge trial count
+  assert.strictEqual(g.sample_state, 'INSUFFICIENT');
+  assert.strictEqual(g.status, 'INCOMPLETE');
+})();
+
+// A gate with no configured sample requirement at all is vacuously SUFFICIENT and does not block MET.
+(function () {
+  var g = PBReview.evalHardGate('shot_selection_pct', { threshold: 80 }, 85, {}, 5, 'ASMT-08');
+  assert.deepStrictEqual(g.sample_requirements, {});
+  assert.strictEqual(g.sample_state, 'SUFFICIENT');
+  assert.strictEqual(g.status, 'MET');
+})();
+
+// min_opportunities / min_eligible_rallies are structurally unverifiable in the current data model -> always INCOMPLETE sample.
+(function () {
+  var g = PBReview.evalHardGate('pattern_success_pct', { threshold: 65, min_opportunities: 30 }, 70, { n_valid: 999 }, 5, null);
+  assert.strictEqual(g.sample_requirements.min_opportunities.actual, null);
+  assert.strictEqual(g.sample_state, 'INCOMPLETE');
+  assert.strictEqual(g.status, 'INCOMPLETE');
 })();
 
 // ---- 9. Required match validation missing -> INCOMPLETE ----
@@ -148,8 +214,8 @@ var PBReview = require('../js/review-engine.js');
 // ---- 10. Failed hard gate -> eligible as primary bottleneck candidate ----
 (function () {
   var gates = [
-    PBReview.evalHardGate('serve_in_pct', { threshold: 85, min_trials: 40 }, 60, 40, 5, 'ASMT-01'), // NOT_MET, deficit 25
-    PBReview.evalHardGate('return_in_pct', { threshold: 80, min_trials: 40 }, 78, 40, 5, 'ASMT-02')  // BORDERLINE
+    PBReview.evalHardGate('serve_in_pct', { threshold: 85, min_trials: 40 }, 60, { n_valid: 40 }, 5, 'ASMT-01'), // NOT_MET, deficit 25
+    PBReview.evalHardGate('return_in_pct', { threshold: 80, min_trials: 40 }, 78, { n_valid: 40 }, 5, 'ASMT-02')  // BORDERLINE
   ];
   var b = PBReview.determinePrimaryBottleneck({
     hardGates: gates,
@@ -167,8 +233,8 @@ var PBReview = require('../js/review-engine.js');
 // Bottleneck picks the largest deficit among multiple failed gates.
 (function () {
   var gates = [
-    PBReview.evalHardGate('serve_in_pct', { threshold: 85 }, 80, null, 5, 'ASMT-01'),   // BORDERLINE, not a failed gate
-    PBReview.evalHardGate('return_in_pct', { threshold: 80 }, 30, null, 5, 'ASMT-02')   // NOT_MET, deficit 50 -> the failed gate
+    PBReview.evalHardGate('serve_in_pct', { threshold: 85 }, 80, {}, 5, 'ASMT-01'),   // BORDERLINE, not a failed gate
+    PBReview.evalHardGate('return_in_pct', { threshold: 80 }, 30, {}, 5, 'ASMT-02')   // NOT_MET, deficit 50 -> the failed gate
   ];
   var b = PBReview.determinePrimaryBottleneck({ hardGates: gates, capabilityThresholdState: 'MET', matchValidationRequired: false, matchValidationState: 'INCOMPLETE', evidenceState: 'DETERMINED', evidenceConfidence: 'C2', evidenceMin: 'C2' });
   assert.strictEqual(b.primary_bottleneck, 'hard_gate:return_in_pct');
@@ -177,7 +243,7 @@ var PBReview = require('../js/review-engine.js');
 // No bottleneck when everything passes -> NONE, not INCOMPLETE (positive case is distinct from "unknown").
 (function () {
   var b = PBReview.determinePrimaryBottleneck({
-    hardGates: [PBReview.evalHardGate('serve_in_pct', { threshold: 85 }, 95, 40, 5, 'ASMT-01')],
+    hardGates: [PBReview.evalHardGate('serve_in_pct', { threshold: 85 }, 95, { n_valid: 40 }, 5, 'ASMT-01')],
     capabilityThresholdState: 'MET',
     matchValidationRequired: false,
     matchValidationState: 'INCOMPLETE',
@@ -271,6 +337,30 @@ var PBReview = require('../js/review-engine.js');
     { started_at: '2026-01-05T10:00:00.000Z' }
   ]), 2);
   assert.strictEqual(PBReview.countDistinctDates([]), 0);
+})();
+
+// ---- sessionCountsByTest: distinct sessions per test_id, used for the min_sessions sample dimension ----
+(function () {
+  var counts = PBReview.sessionCountsByTest([
+    { test_id: 'T01', test_session_id: 'ses_1' },
+    { test_id: 'T01', test_session_id: 'ses_2' },
+    { test_id: 'T02', test_session_id: 'ses_3' }
+  ]);
+  assert.deepStrictEqual(counts, { T01: 2, T02: 1 });
+  assert.deepStrictEqual(PBReview.sessionCountsByTest([]), {});
+})();
+
+// ---- resolveSampleActual: each sample key resolves from the correct captured dimension ----
+(function () {
+  var ctx = { n_valid: 40, session_count: 2, games: 3 };
+  assert.strictEqual(PBReview.resolveSampleActual('min_trials', ctx), 40);
+  assert.strictEqual(PBReview.resolveSampleActual('min_scenarios', ctx), 40);
+  assert.strictEqual(PBReview.resolveSampleActual('min_rallies', ctx), 40);
+  assert.strictEqual(PBReview.resolveSampleActual('min_sessions', ctx), 2);
+  assert.strictEqual(PBReview.resolveSampleActual('min_games', ctx), 3);
+  assert.strictEqual(PBReview.resolveSampleActual('min_opportunities', ctx), null);
+  assert.strictEqual(PBReview.resolveSampleActual('min_eligible_rallies', ctx), null);
+  assert.strictEqual(PBReview.resolveSampleActual('min_trials', null), null);
 })();
 
 // ---- Regression guard (section 21): forbidden methodology must never appear in the engine source ----

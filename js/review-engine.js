@@ -77,40 +77,78 @@
     return { capability_score: round1(cap), capability_state: 'OK' };
   }
 
+  // 一个 gate 可同时配置多个样本维度（如 4.0 serve_in_pct 要求 min_trials>=80 AND min_sessions>=2）。
+  // 必须逐个独立核对、全部满足才算样本充分；不得用 || 互相顶替（例如用 trial 数掩盖 session 数不足）。
+  var SAMPLE_KEYS = ['min_trials', 'min_sessions', 'min_scenarios', 'min_rallies', 'min_games', 'min_opportunities', 'min_eligible_rallies'];
+
+  // sampleContext 提供各样本维度的"实际值"来源：
+  //   n_valid       -> 该测试的有效 trial 数（trial/scenario/rally 在本 App 数据模型中为同一原子单位）
+  //   session_count -> 该测试在本次 assessment 下的独立 session 数
+  //   games         -> T10-lite 记录的比赛局数
+  // min_opportunities / min_eligible_rallies 当前采集体系未记录对应原子事件，结构性不可验证 -> 恒返回 null。
+  function resolveSampleActual(key, ctx) {
+    if (!ctx) return null;
+    if (key === 'min_trials' || key === 'min_scenarios' || key === 'min_rallies') {
+      return (ctx.n_valid == null) ? null : ctx.n_valid;
+    }
+    if (key === 'min_sessions') return (ctx.session_count == null) ? null : ctx.session_count;
+    if (key === 'min_games') return (ctx.games == null) ? null : ctx.games;
+    return null; // min_opportunities / min_eligible_rallies：不可验证
+  }
+
   // ---- 单条硬门槛评估（纯函数）----
   // gateKey 以 _max 结尾 -> 越低越好（direction=max）；否则越高越好（direction=min）。
-  // sampleCount 不足门槛所需样本时，即使数值达标也不得报 MET，降级为 BORDERLINE（"formally not MET"）。
-  function evalHardGate(gateKey, gateCfg, currentValue, sampleCount, borderlineBandPp, sourceTestCanonicalId) {
+  // performance_state：仅由数值与门槛比较得出，独立于样本是否充分。
+  // sample_state：配置的每个 min_* 维度独立核对，全部满足才 SUFFICIENT；任一维度实际值不可验证则 INCOMPLETE；
+  //   都可验证但未全部达标则 INSUFFICIENT。
+  // 正式 status：performance_state==='MET' 且 sample_state!=='SUFFICIENT' 时一律降为 INCOMPLETE
+  //   （样本不足/不可验证时绝不可判定为正式 MET，也不得误标为 BORDERLINE）。BORDERLINE / NOT_MET 不受样本影响。
+  function evalHardGate(gateKey, gateCfg, currentValue, sampleContext, borderlineBandPp, sourceTestCanonicalId) {
     var isMax = /_max$/.test(gateKey);
     var direction = isMax ? 'max' : 'min';
     var threshold = gateCfg.threshold;
     var band = (borderlineBandPp == null) ? DEFAULT_BORDERLINE_BAND_PP : borderlineBandPp;
-    var sampleRequirement = gateCfg.min_trials || gateCfg.min_sessions || gateCfg.min_scenarios ||
-      gateCfg.min_rallies || gateCfg.min_games || gateCfg.min_opportunities || gateCfg.min_eligible_rallies || null;
+
+    var configuredKeys = SAMPLE_KEYS.filter(function (k) { return gateCfg[k] != null; });
+    var sampleRequirements = {};
+    configuredKeys.forEach(function (k) {
+      var required = gateCfg[k];
+      var actual = resolveSampleActual(k, sampleContext);
+      sampleRequirements[k] = { required: required, actual: actual, met: (actual != null) && (actual >= required) };
+    });
+    var sampleState;
+    if (!configuredKeys.length) {
+      sampleState = 'SUFFICIENT'; // 该 gate 未配置任何样本要求
+    } else if (configuredKeys.some(function (k) { return sampleRequirements[k].actual == null; })) {
+      sampleState = 'INCOMPLETE'; // 至少一个维度无法从现有数据验证
+    } else if (configuredKeys.every(function (k) { return sampleRequirements[k].met; })) {
+      sampleState = 'SUFFICIENT';
+    } else {
+      sampleState = 'INSUFFICIENT';
+    }
 
     var row = {
       metric: gateKey,
       threshold: threshold,
       direction: direction,
       current_value: (currentValue == null ? null : currentValue),
-      sample_requirement: sampleRequirement,
-      sample_ok: null,
+      sample_requirements: sampleRequirements,
+      sample_state: sampleState,
+      performance_state: null,
       status: null,
       source_test: sourceTestCanonicalId || null
     };
 
-    if (currentValue == null) { row.status = 'INCOMPLETE'; return row; }
+    if (currentValue == null) { row.performance_state = 'INCOMPLETE'; row.status = 'INCOMPLETE'; return row; }
 
-    row.sample_ok = (sampleRequirement == null) ? true : (sampleCount != null && sampleCount >= sampleRequirement);
-
-    var raw;
+    var perf;
     if (isMax) {
-      raw = (currentValue <= threshold) ? 'MET' : ((currentValue <= threshold + band) ? 'BORDERLINE' : 'NOT_MET');
+      perf = (currentValue <= threshold) ? 'MET' : ((currentValue <= threshold + band) ? 'BORDERLINE' : 'NOT_MET');
     } else {
-      raw = (currentValue >= threshold) ? 'MET' : ((currentValue >= threshold - band) ? 'BORDERLINE' : 'NOT_MET');
+      perf = (currentValue >= threshold) ? 'MET' : ((currentValue >= threshold - band) ? 'BORDERLINE' : 'NOT_MET');
     }
-    if (raw === 'MET' && row.sample_ok === false) raw = 'BORDERLINE'; // 样本不足：不得判定为正式 MET
-    row.status = raw;
+    row.performance_state = perf;
+    row.status = (perf === 'MET' && sampleState !== 'SUFFICIENT') ? 'INCOMPLETE' : perf;
     return row;
   }
 
@@ -153,6 +191,16 @@
     var set = {};
     (sessions || []).forEach(function (s) { if (s && s.started_at) set[s.started_at.slice(0, 10)] = true; });
     return Object.keys(set).length;
+  }
+
+  // 每个 test_id 在本次 assessment 下的独立 session 数（供 min_sessions 样本维度核对）
+  function sessionCountsByTest(sessions) {
+    var counts = {};
+    (sessions || []).forEach(function (s) {
+      if (!s || !s.test_id) return;
+      counts[s.test_id] = (counts[s.test_id] || 0) + 1;
+    });
+    return counts;
   }
 
   // ---- Validated-Level Eligibility：Capability 门槛 AND Evidence 门槛 AND 目标等级硬门槛 AND（若要求）Match Validation ----
@@ -288,14 +336,15 @@
         ? levelGates.statistical_policy.borderline_band_pp : DEFAULT_BORDERLINE_BAND_PP;
 
       var metricToTest = buildMetricToTest(testDefs);
+      var sessionCounts = sessionCountsByTest(sessions);
       var hardGates = [];
       if (levelCfg && levelCfg.hard_gates) {
         Object.keys(levelCfg.hard_gates).forEach(function (gateKey) {
           var gateCfg = levelCfg.hard_gates[gateKey];
           if (gateKey === 'ue_per_game_max') {
             var cur = (match && match.ue_per_game != null) ? match.ue_per_game : null;
-            var sc = (match && match.games != null) ? match.games : null;
-            hardGates.push(evalHardGate(gateKey, gateCfg, cur, sc, borderBand, 'match'));
+            var ctx = { games: (match && match.games != null) ? match.games : null };
+            hardGates.push(evalHardGate(gateKey, gateCfg, cur, ctx, borderBand, 'match'));
             return;
           }
           var isMax = /_max$/.test(gateKey);
@@ -303,8 +352,11 @@
           var tid = metricToTest[baseKey] || null;
           var m = tid ? perTest[tid] : null;
           var cur2 = (m && m.quality_pct != null) ? m.quality_pct : null;
-          var sc2 = (m && m.n_valid != null) ? m.n_valid : null;
-          hardGates.push(evalHardGate(gateKey, gateCfg, cur2, sc2, borderBand, tid ? canon(tid) : null));
+          var ctx2 = {
+            n_valid: (m && m.n_valid != null) ? m.n_valid : null,
+            session_count: tid ? (sessionCounts[tid] || 0) : null
+          };
+          hardGates.push(evalHardGate(gateKey, gateCfg, cur2, ctx2, borderBand, tid ? canon(tid) : null));
         });
       }
       var hardGateState = aggregateHardGateState(hardGates);
@@ -413,11 +465,14 @@
     computeDecisionDomain: computeDecisionDomain,
     computePressureDomain: computePressureDomain,
     evalHardGate: evalHardGate,
+    resolveSampleActual: resolveSampleActual,
+    SAMPLE_KEYS: SAMPLE_KEYS.slice(),
     aggregateHardGateState: aggregateHardGateState,
     evalCapabilityThreshold: evalCapabilityThreshold,
     evalMatchValidation: evalMatchValidation,
     determineEvidenceConfidence: determineEvidenceConfidence,
     countDistinctDates: countDistinctDates,
+    sessionCountsByTest: sessionCountsByTest,
     evalValidationEligibility: evalValidationEligibility,
     determinePrimaryBottleneck: determinePrimaryBottleneck,
     buildMetricToTest: buildMetricToTest,
