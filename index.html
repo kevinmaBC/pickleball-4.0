@@ -636,6 +636,16 @@
     </div>
   </section>
 
+  <!-- ========== 析 REVIEW / TREND (S7-E) ========== -->
+  <section class="view" id="v-review">
+    <div class="eyebrow">S7-E · Review / Trend</div>
+    <h2 class="sec">析 · 复盘 / 趋势</h2>
+    <p class="sec-sub">读取既有 Review Snapshot / Trend / Prescription / Re-test 结果，只读展示，不重新计算方法论。<span class="en">Review & Trend — read-only, reuses S7-A~D engines</span></p>
+    <div class="card" id="review-root" style="margin:14px 0 18px">
+      <div id="review-app"></div>
+    </div>
+  </section>
+
   <!-- ========== 赛 COMPETE ========== -->
   <section class="view" id="v-compete">
     <div class="eyebrow">04 · Compete</div>
@@ -774,6 +784,7 @@
   <button data-t="learn" onclick="go('learn')"><span class="ti">学</span><span class="te">Learn</span></button>
   <button data-t="drill" onclick="go('drill')"><span class="ti">练</span><span class="te">Drill</span></button>
   <button data-t="measure" onclick="go('measure')"><span class="ti">测</span><span class="te">Measure</span></button>
+  <button data-t="review" onclick="go('review')"><span class="ti">析</span><span class="te">Review</span></button>
   <button data-t="compete" onclick="go('compete')"><span class="ti">赛</span><span class="te">Compete</span></button>
   <button data-t="team" onclick="go('team')"><span class="ti">队</span><span class="te">Team</span></button>
 </nav>
@@ -786,6 +797,7 @@
 <script src="./js/review-engine.js"></script>
 <script src="./js/trend-engine.js"></script>
 <script src="./js/retest-engine.js"></script>
+<script src="./js/review-ui.js"></script>
 <script src="./js/preview.js"></script>
 <script src="./js/app.js"></script>
 <script src="./js/assessment.js"></script>

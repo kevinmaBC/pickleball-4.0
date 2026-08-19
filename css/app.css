@@ -213,3 +213,25 @@
 #a1-app .a1-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
 #a1-app .a1-row:last-child{border-bottom:none}
 #a1-app .a1-list{max-height:150px;overflow:auto;font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:8px;white-space:pre-wrap}
+
+/* ===== S7-E Review/Trend UI (rv-) ===== */
+#review-app{font-family:var(--sans)}
+#review-app .rv-h{font-weight:800;font-size:15px;margin:2px 0 8px;color:var(--ink)}
+#review-app .rv-mut{font-size:12px;color:var(--muted)}
+#review-app .rv-chip{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:6px 13px;margin:4px 6px 4px 0;cursor:pointer;font-size:13px;background:var(--card);color:var(--ink)}
+#review-app .rv-chip.sel{background:var(--lime-deep,#2f6f5f);color:#fff;border-color:transparent}
+#review-app .rv-section{margin-bottom:18px}
+#review-app .rv-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+#review-app .rv-row:last-child{border-bottom:none}
+#review-app .rv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:8px}
+#review-app .rv-card{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fafcf9}
+#review-app .rv-badge{display:inline-block;font-family:var(--mono);font-size:10.5px;padding:2px 8px;border-radius:6px;font-weight:700;letter-spacing:.2px;line-height:1.5}
+#review-app .rv-pos{background:#f1fbf5;color:var(--pass)}
+#review-app .rv-warn{background:#fff8e8;color:var(--part)}
+#review-app .rv-neg{background:#fdecec;color:var(--fail)}
+#review-app .rv-neu{background:#eef2ee;color:var(--muted)}
+#review-app .rv-inc{background:#eef2ee;color:var(--muted);border:1px dashed var(--line)}
+#review-app .rv-banner{background:#f1fbf5;border-left:3px solid var(--pass);border-radius:0 10px 10px 0;padding:9px 12px;font-size:12.5px;margin-bottom:10px}
+#review-app table.rv-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
+#review-app table.rv-tbl th,#review-app table.rv-tbl td{text-align:left;padding:6px 7px;border-bottom:1px solid var(--line);vertical-align:top}
+#review-app table.rv-tbl th{font-family:var(--mono);font-size:9.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:600}
