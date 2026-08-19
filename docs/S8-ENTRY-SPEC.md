@@ -1,0 +1,141 @@
+# S8 Entry Spec (S8-0)
+
+Documentation-only boundary freeze for S8. This file defines what S8 *will*
+build; it does not implement any of it. No S8-A code is included in this
+commit.
+
+## Baseline
+
+- Repository: `kevinmaBC/pickleball-4.0`
+- Branch: `app-v2-alpha`
+- S8-0 started from `2f940c2193683ff4128f6701faea15ff6518986c` (S7-F, clean tree).
+- S1–S6: ACCEPTED. S7: CLOSED / ACCEPTED WITH NON-BLOCKING LIMITATIONS.
+- Master Control V2 methodology (validated levels, CAP weighting, Match
+  Transfer separation, evidence ranks, namespace, hard-gate logic) is
+  frozen and **not modified** by S8-0. See `docs/S7-FINAL-ACCEPTANCE.md`
+  for the audited state.
+
+## Planned future S8 entities (not implemented yet)
+
+```
+TrainingCycle
+WeeklyPlan
+SessionPlan
+SessionLog
+CycleSummary
+```
+
+These will be built in S8-A onward. S8-0 does not create IndexedDB object
+stores, engines, or UI for any of them.
+
+## Required architectural relationship
+
+```
+S7 Review Snapshot
+        ↓
+S7 Prescription
+        ↓
+Training Cycle
+        ↓
+Weekly Plan
+        ↓
+Session Plan
+        ↓
+Session Log
+        ↓
+Cycle Summary
+        ↓
+Re-test
+        ↓
+Assessment
+        ↓
+S7 Review
+```
+
+`Training Cycle` is anchored to an existing `prescriptions` record
+(`prescription_id`, itself anchored to an `assessment_id`). The chain
+closes the loop back into the existing S7 assessment/review pipeline
+rather than forming a parallel system — S8 consumes S7 output
+(`review_snapshots` → `prescriptions`) and eventually produces new S7
+input (a `retests` record feeding a new `assessments`/`review_snapshots`
+cycle).
+
+## Critical invariants (binding on all future S8 work)
+
+- **Plan != Execution Log.** A `WeeklyPlan`/`SessionPlan` describes intent;
+  a `SessionLog` records what actually happened. They are distinct
+  records — a plan is never mutated in place to "become" its log.
+- **Adherence != Capability.** Whether a player did the prescribed work
+  (adherence) is tracked independently of whether they can perform at a
+  level (capability, i.e. CAP / validated level). S8 adherence data must
+  never be read as a capability signal by S7 logic.
+- **Training Completion != Hard Gate Passed.** Finishing a `CycleSummary`
+  does not imply any `level_gates` hard gate was met. Gate status is only
+  ever produced by the existing S7 review/gate logic, from assessment
+  evidence.
+- **`RETEST_READY` != `PROMOTED`.** A cycle reaching a re-test-ready state
+  is a scheduling signal, not a promotion. Promotion language stays
+  scoped to S7's existing `PROMOTION_REVIEW_ELIGIBLE` semantics (review
+  eligible, not promoted — see `docs/S7-FINAL-ACCEPTANCE.md`).
+- **S8 must not write `validated_training_level` directly.** Only the S7
+  Validated Level logic (Capability Threshold + Evidence Confidence +
+  Target Hard Gates + Match Validation) may produce that field. S8 writes
+  training-cycle data; it does not judge or promote.
+- **Match Transfer remains outside CAP.** S8 training-cycle data must not
+  be folded into the CAP calculation (`45% Technical / 30% Decision / 25%
+  Pressure`), and Match Transfer stays an independent validation layer, as
+  in S7.
+- **Missing evidence remains `INCOMPLETE`.** S8 must not introduce a `C0`
+  evidence rank or otherwise treat missing/insufficient evidence as
+  anything other than the canonical `INCOMPLETE` outcome.
+
+## Storage/IndexedDB compatibility for S8 (findings)
+
+Current `pb_v2` database (`js/storage.js`, `DB_VERSION` 2):
+
+- Object stores: `players`, `assessments`, `test_sessions`, `trial_events`
+  (S1), plus `review_snapshots`, `prescriptions`, `retests` (S7-A,
+  currently empty placeholders with no read/write business logic wired
+  in beyond CRUD).
+- Migration mechanism: a single `indexedDB.open(DB_NAME, DB_VERSION)` with
+  an `onupgradeneeded` handler that only **creates stores that don't
+  already exist** (`if (!db.objectStoreNames.contains(name))`). It never
+  drops, renames, or rewrites an existing store. This has already been
+  exercised safely once (v1 → v2, S7-A) and is covered by
+  `tests/storage.test.js`, which seeds a pre-existing v1 database and
+  asserts all v1 data survives the v2 upgrade untouched.
+- Assessment namespace handling: canonical `TECH-xx` / `DEC-xx` /
+  `ASMT-01..10` with legacy `T01..T10` aliases, resolved by
+  `js/namespace.js`; storage itself is namespace-agnostic (it stores
+  whatever `test_id` string it's given).
+- Review Snapshot / Prescription / Retest persistence: each is its own
+  store, keyed by its own id, indexed `by_assessment`. `retests` also
+  carries an optional `prescription_id` foreign key.
+
+**Conclusion: the existing architecture safely supports S8's future
+entities without any change today.** The same additive-only
+`onupgradeneeded` pattern extends cleanly to a `DB_VERSION` 3 that adds
+`training_cycles`, `weekly_plans`, `session_plans`, `session_logs`, and
+`cycle_summaries` stores, each indexed back to its parent (e.g.
+`training_cycles.by_prescription`, `weekly_plans.by_cycle`, etc.),
+mirroring the existing `by_assessment`/`by_session` index convention. No
+preparatory schema change was required or made in S8-0 — S8-A will add
+the v3 upgrade following this same pattern.
+
+## Service Worker (TD-SW-01)
+
+Resolved in this commit. See `docs/SW-CACHE-POLICY.md` for the full
+policy. Summary: navigation and code/data assets (`js`/`css`/`json`) now
+use network-first instead of stale-while-revalidate, so a deploy can no
+longer leave an already-installed client silently serving stale
+application logic — independent of whether `sw.js`'s `CACHE` constant was
+bumped. Obsolete cache versions continue to be purged on `activate`.
+
+## Explicitly out of scope for S8-0
+
+- Training Cycle engine, weekly-plan engine, session execution engine,
+  adherence engine, retest-readiness engine — none implemented.
+- No new S8 UI.
+- `TD-REG-01` (automated regression suite for pre-S7 UI modules) —
+  deferred to S8-F.
+- No redesign of S1–S7 or Master Control V2 methodology.
