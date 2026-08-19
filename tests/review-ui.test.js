@@ -197,8 +197,47 @@ function emptyTrendResult(fields) {
   assert.strictEqual(typeof UI.deriveValidatedLevel, 'undefined');
   assert.strictEqual(typeof UI.promotePlayer, 'undefined');
 
-  var s = UI.buildCurrentStatusModel({ target_training_level: 4.0 }, null);
-  assert.strictEqual(s.validatedLevel, 'INCOMPLETE'); // frozen rule: this system never writes validated_training_level
+  var sNoLevelArg = UI.buildCurrentStatusModel({ target_training_level: 4.0 }, null);
+  assert.strictEqual(sNoLevelArg.validatedLevel, 'INCOMPLETE'); // omitted -> INCOMPLETE, never auto-derived
+})();
+
+// ---- Fix: Validated Training Level must be READ from persisted data, not hard-coded INCOMPLETE ----
+
+// Persisted validated level = 4.0 -> display 4.0.
+(function () {
+  var s = UI.buildCurrentStatusModel({ target_training_level: 4.0 }, null, 4.0);
+  assert.strictEqual(s.validatedLevel, '4.0');
+})();
+
+// Missing validated level -> INCOMPLETE.
+(function () {
+  var s1 = UI.buildCurrentStatusModel({ target_training_level: 4.0 }, null, null);
+  assert.strictEqual(s1.validatedLevel, 'INCOMPLETE');
+  var s2 = UI.buildCurrentStatusModel({ target_training_level: 4.0 }, null, undefined);
+  assert.strictEqual(s2.validatedLevel, 'INCOMPLETE');
+})();
+
+// Invalid/decimal validated level = 3.87 -> INCOMPLETE (never display a non-frozen level).
+(function () {
+  var s = UI.buildCurrentStatusModel({ target_training_level: 4.0 }, null, 3.87);
+  assert.strictEqual(s.validatedLevel, 'INCOMPLETE');
+})();
+
+// Validated level must never be derived from CAP or target level — changing those must not affect it.
+(function () {
+  var a = UI.buildCurrentStatusModel({ target_training_level: 3.0, capability_score: 95, capability_state: 'OK' }, null, null);
+  var b = UI.buildCurrentStatusModel({ target_training_level: 5.0, capability_score: 10, capability_state: 'OK' }, null, null);
+  assert.strictEqual(a.validatedLevel, 'INCOMPLETE');
+  assert.strictEqual(b.validatedLevel, 'INCOMPLETE');
+  assert.strictEqual(a.validatedLevel, b.validatedLevel); // same regardless of wildly different CAP/target
+})();
+
+// Every allowed validated level renders as itself; nothing outside the frozen set ever passes through.
+(function () {
+  [3.0, 3.5, 4.0, 4.5, 5.0].forEach(function (lvl) {
+    var s = UI.buildCurrentStatusModel({}, null, lvl);
+    assert.strictEqual(s.validatedLevel, lvl.toFixed(1));
+  });
 })();
 
 // ---- Sparkline: only connects real points, no fabricated interpolation ----
@@ -211,6 +250,55 @@ function emptyTrendResult(fields) {
   assert.ok(svgTwo.indexOf('<path') !== -1);
   var dotCount = (svgTwo.match(/<circle/g) || []).length;
   assert.strictEqual(dotCount, 2); // exactly the two real points, nothing interpolated in between
+})();
+
+// ---- Fix: a missing middle observation must break the path, not draw one continuous line across it ----
+(function () {
+  // 72, null, 78 -- a gap in the middle must NOT be bridged by a single connecting line.
+  var svg = UI.sparklineSVG([
+    { date: '2026-01-01', value: 72 },
+    { date: '2026-01-08', value: null },
+    { date: '2026-01-15', value: 78 }
+  ]);
+  var dotCount = (svg.match(/<circle/g) || []).length;
+  assert.strictEqual(dotCount, 2); // only the two real observations are drawn
+
+  var circles = svg.match(/<circle[^>]*cx="([\d.]+)"/g).map(function (m) { return parseFloat(m.match(/cx="([\d.]+)"/)[1]); });
+  assert.strictEqual(circles.length, 2);
+  // Chronological position preserved: the missing middle slot leaves a real horizontal gap between the two dots
+  // (they must NOT be adjacent/compacted as if the null slot never existed).
+  assert.ok(circles[1] - circles[0] > 50, 'points must keep their original spaced-out chronological position');
+
+  // Both real points are isolated (segment length 1 each) -> no <path> element connects them at all.
+  var pathCount = (svg.match(/<path/g) || []).length;
+  assert.strictEqual(pathCount, 0, 'no line may bridge the missing observation');
+})();
+
+// A gap followed by two adjacent valid points: only the adjacent pair connects; the isolated leading point does not.
+(function () {
+  var svg = UI.sparklineSVG([
+    { date: '2026-01-01', value: 70 },
+    { date: '2026-01-08', value: null },
+    { date: '2026-01-15', value: 74 },
+    { date: '2026-01-22', value: 76 }
+  ]);
+  var pathCount = (svg.match(/<path/g) || []).length;
+  assert.strictEqual(pathCount, 1); // exactly one segment (points 3 & 4) gets a connecting line
+  var dotCount = (svg.match(/<circle/g) || []).length;
+  assert.strictEqual(dotCount, 3); // all three real observations are still drawn as points
+})();
+
+// Null values are never coerced to 0 when computing the sparkline's value range.
+(function () {
+  var svg = UI.sparklineSVG([
+    { date: '2026-01-01', value: 72 },
+    { date: '2026-01-08', value: null },
+    { date: '2026-01-15', value: 78 }
+  ]);
+  // If null had been treated as 0, the y-domain would stretch to include 0, compressing 72/78 near the top.
+  // Instead the two dots should sit near the vertical extremes of the (72..78) range, not clustered together.
+  var circleYs = svg.match(/<circle[^>]*cy="([\d.]+)"/g).map(function (m) { return parseFloat(m.match(/cy="([\d.]+)"/)[1]); });
+  assert.ok(Math.abs(circleYs[0] - circleYs[1]) > 15, 'value range must be computed from real values only, not a fabricated 0');
 })();
 
 // ---- Regression guard: forbidden methodology must never appear in the UI source ----

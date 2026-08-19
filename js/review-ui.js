@@ -124,7 +124,10 @@
     };
   }
 
-  function buildCurrentStatusModel(snap, reassessment) {
+  // validatedTrainingLevel：调用方读取到的既有持久化值（如 assessment.validated_training_level），
+  // 本函数只做展示格式化——绝不从 CAP 反推、绝不从 target_training_level 顶替、绝不自动晋级/写入。
+  // 只接受冻结的 3.0/3.5/4.0/4.5/5.0；缺失或非法（如连续小数）一律显示 INCOMPLETE。
+  function buildCurrentStatusModel(snap, reassessment, validatedTrainingLevel) {
     if (!snap) {
       return {
         validatedLevel: 'INCOMPLETE', targetLevel: 'INCOMPLETE',
@@ -135,7 +138,7 @@
       };
     }
     return {
-      validatedLevel: 'INCOMPLETE', // 冻结规则：本系统从不写 validated_training_level / 自动晋级
+      validatedLevel: fmtLevel(validatedTrainingLevel),
       targetLevel: fmtLevel(snap.target_training_level),
       capabilityScore: fmtNumOrIncomplete(snap.capability_score),
       capabilityState: snap.capability_state || 'INCOMPLETE',
@@ -249,7 +252,7 @@
       assessmentCount: trend.assessment_count,
       historyState: trend.history_state,
       versionMixed: !!trend.version_mixed,
-      currentStatus: buildCurrentStatusModel(snap, input.reassessment),
+      currentStatus: buildCurrentStatusModel(snap, input.reassessment, input.validatedTrainingLevel),
       capabilityTrend: buildCapabilityTrendModel(trend),
       matchTransfer: buildMatchTransferModel(snap, trend, input.latestRetestEntry),
       hardGates: buildHardGateRows(trend.hard_gate_trends),
@@ -259,27 +262,50 @@
     };
   }
 
-  // ---- 轻量 SVG 折线：只连接真实存在的点，缺失点不臆造插值；无预测、仅历史展示 ----
+  // ---- 轻量 SVG 折线：坐标按原始时间顺序位置排布（含缺失点占位），缺失点绝不臆造插值——
+  // 遇到 null/缺失观测，路径在该处断开，绝不画出跨越缺口的连线；无预测、仅历史展示。
+  // points 可包含 {value:null} 这类缺失观测占位，用于保留其在时间序列中的原始位置。
   function sparklineSVG(points, opts) {
     opts = opts || {};
     var w = opts.width || 220, h = opts.height || 40, pad = 5;
-    var pts = (points || []).filter(function (p) { return p.value != null; });
-    if (!pts.length) return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '"></svg>';
-    if (pts.length === 1) {
+    var all = points || [];
+    var n = all.length;
+    if (!n) return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '"></svg>';
+
+    var validValues = [];
+    all.forEach(function (p) { if (p && p.value != null) validValues.push(p.value); });
+    if (!validValues.length) return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '"></svg>';
+
+    if (n === 1) {
       return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '"><circle cx="' + (w / 2) + '" cy="' + (h / 2) + '" r="3" fill="var(--ink)"></circle></svg>';
     }
-    var values = pts.map(function (p) { return p.value; });
-    var min = Math.min.apply(null, values), max = Math.max.apply(null, values);
+
+    var min = Math.min.apply(null, validValues), max = Math.max.apply(null, validValues);
     if (min === max) { min -= 1; max += 1; }
-    var stepX = (w - pad * 2) / (pts.length - 1);
-    var coords = pts.map(function (p, i) {
-      var x = pad + i * stepX;
-      var y = pad + (h - pad * 2) * (1 - (p.value - min) / (max - min));
-      return [x, y];
+    var stepX = (w - pad * 2) / (n - 1);
+
+    // 按原始索引分段：连续无缺口的有效点归为同一段可连线；一旦遇到 null，另起一段——
+    // 段与段之间绝不连线，即"72, null, 78"必须渲染成两个互不相连的点/段。
+    var segments = [], current = [];
+    all.forEach(function (p, i) {
+      if (p && p.value != null) {
+        var x = pad + i * stepX;
+        var y = pad + (h - pad * 2) * (1 - (p.value - min) / (max - min));
+        current.push([x, y]);
+      } else if (current.length) {
+        segments.push(current); current = [];
+      }
     });
-    var path = coords.map(function (c, i) { return (i === 0 ? 'M' : 'L') + c[0].toFixed(1) + ',' + c[1].toFixed(1); }).join(' ');
-    var dots = coords.map(function (c) { return '<circle cx="' + c[0].toFixed(1) + '" cy="' + c[1].toFixed(1) + '" r="2.5" fill="var(--ink)"></circle>'; }).join('');
-    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '"><path d="' + path + '" fill="none" stroke="var(--lime-deep,#2f6f5f)" stroke-width="2"></path>' + dots + '</svg>';
+    if (current.length) segments.push(current);
+
+    var paths = segments.filter(function (seg) { return seg.length > 1; }).map(function (seg) {
+      return '<path d="' + seg.map(function (c, i) { return (i === 0 ? 'M' : 'L') + c[0].toFixed(1) + ',' + c[1].toFixed(1); }).join(' ') + '" fill="none" stroke="var(--lime-deep,#2f6f5f)" stroke-width="2"></path>';
+    }).join('');
+    var dots = segments.reduce(function (acc, seg) { return acc.concat(seg); }, []).map(function (c) {
+      return '<circle cx="' + c[0].toFixed(1) + '" cy="' + c[1].toFixed(1) + '" r="2.5" fill="var(--ink)"></circle>';
+    }).join('');
+
+    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' + paths + dots + '</svg>';
   }
 
   // ================= 以下为 DOM 渲染 / 数据编排（仅浏览器环境运行）=================
@@ -395,7 +421,12 @@
       prescriptions.sort(function (a, b) { return (a.created_at || '') < (b.created_at || '') ? -1 : ((a.created_at || '') > (b.created_at || '') ? 1 : 0); });
       var latestPrescription = prescriptions.length ? prescriptions[prescriptions.length - 1] : null;
       var summaryPromise = latestPrescription ? PBRetest.getPrescriptionRetestSummary(latestPrescription.prescription_id) : Promise.resolve(null);
-      return summaryPromise.then(function (retestSummary) {
+      // 只读取既有 Assessment 记录上的 validated_training_level（S7-E 从不写入/推导它），
+      // 该字段目前仅在外部/人工写入 assessment 记录时才会存在（schema 已预留），本页只展示。
+      var assessmentId = latestSnapRec && latestSnapRec.data ? latestSnapRec.data.assessment_id : null;
+      var assessmentPromise = assessmentId ? PBStore.get('assessments', assessmentId) : Promise.resolve(null);
+      return Promise.all([summaryPromise, assessmentPromise]).then(function (r2) {
+        var retestSummary = r2[0], assessmentRec = r2[1];
         var latestRetestEntry = (retestSummary && retestSummary.response_history.length)
           ? retestSummary.response_history[retestSummary.response_history.length - 1] : null;
         return buildReviewViewModel({
@@ -404,7 +435,8 @@
           prescription: latestPrescription,
           retestSummary: retestSummary,
           reassessment: reassessment,
-          latestRetestEntry: latestRetestEntry
+          latestRetestEntry: latestRetestEntry,
+          validatedTrainingLevel: assessmentRec ? assessmentRec.validated_training_level : null
         });
       });
     });
