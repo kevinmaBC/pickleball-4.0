@@ -134,6 +134,16 @@ above exist with the indexes predicted here. See
 [`docs/S8-A-DATA-ARCHITECTURE.md`](S8-A-DATA-ARCHITECTURE.md) for the
 implemented schema, parent/source validation, and enforced invariants.
 
+**Update (S8-B):** the `TrainingCycle → WeeklyPlan → SessionPlan` planning
+layer referenced in the architectural relationship above is now
+implemented as a deterministic engine
+(`js/training-plan-engine.js`/`PBTrainingPlan`) that consumes an accepted
+S7 Review Snapshot + Prescription and persists the planned structure
+through the S8-A storage API. See
+[`docs/S8-B-ADAPTIVE-PLAN-ENGINE.md`](S8-B-ADAPTIVE-PLAN-ENGINE.md).
+`SessionLog`, `CycleSummary`, adherence, and `RETEST_READY` remain
+entirely unimplemented, per the invariants below.
+
 ## Service Worker (TD-SW-01)
 
 Resolved in this commit. See `docs/SW-CACHE-POLICY.md` for the full

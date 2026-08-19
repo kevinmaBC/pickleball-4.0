@@ -14,6 +14,9 @@
  * 本阶段只提供 CRUD + 轻量父子关系/枚举校验，不实现自适应计划生成、
  * 依从度(adherence)计算、RETEST_READY 判定或训练 UI —— 详见
  * docs/S8-A-DATA-ARCHITECTURE.md。
+ * S8-B：新增 listTrainingCyclesByPrescription（复用既有 by_prescription 索引），
+ * 供 js/training-plan-engine.js 做同一 Prescription 的重复建周期保护查询；
+ * 不新增 store/index，不改既有校验逻辑 —— 详见 docs/S8-B-ADAPTIVE-PLAN-ENGINE.md。
  * ============================================================ */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -334,6 +337,8 @@
   }
   function getTrainingCycle(cycle_id) { return get('training_cycles', cycle_id); }
   function listTrainingCycles() { return getAll('training_cycles'); }
+  // S8-B duplicate-plan-protection lookup: reuses the by_prescription index already created in S8-A.
+  function listTrainingCyclesByPrescription(prescription_id) { return getByIndex('training_cycles', 'by_prescription', prescription_id); }
   function updateTrainingCycle(cycle_id, patch) {
     patch = patch || {};
     if (hasForbiddenField(patch, FORBIDDEN_PATCH_FIELDS)) return fail('updateTrainingCycle: must not write validated_training_level');
@@ -516,7 +521,8 @@
 
     // S8-A: Training Cycle data architecture
     createTrainingCycle: createTrainingCycle, getTrainingCycle: getTrainingCycle,
-    listTrainingCycles: listTrainingCycles, updateTrainingCycle: updateTrainingCycle,
+    listTrainingCycles: listTrainingCycles, listTrainingCyclesByPrescription: listTrainingCyclesByPrescription,
+    updateTrainingCycle: updateTrainingCycle,
     createWeeklyPlan: createWeeklyPlan, getWeeklyPlan: getWeeklyPlan,
     listWeeklyPlansByCycle: listWeeklyPlansByCycle, getWeeklyPlanByCycleWeek: getWeeklyPlanByCycleWeek,
     updateWeeklyPlan: updateWeeklyPlan,

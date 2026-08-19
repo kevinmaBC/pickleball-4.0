@@ -153,6 +153,11 @@ createSessionLog, getSessionLog, listSessionLogsBySessionPlan, listSessionLogsBy
 createCycleSummary, getCycleSummary, getCycleSummaryByCycle, updateCycleSummary
 ```
 
+**Update (S8-B):** one minimal addition, `listTrainingCyclesByPrescription(prescription_id)`,
+reusing the `by_prescription` index above (no new store/index). Added to
+support the Adaptive Plan Engine's duplicate-cycle protection — see
+[`docs/S8-B-ADAPTIVE-PLAN-ENGINE.md`](S8-B-ADAPTIVE-PLAN-ENGINE.md).
+
 (`getWeeklyPlanByCycleWeek` is one addition beyond the brief's minimum
 list, needed to satisfy the explicit "`by_cycle_week` should support
 deterministic retrieval of week N for a given cycle" requirement.)
