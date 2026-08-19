@@ -66,11 +66,18 @@
     );
     var base = { metric: metricKey, previous_status: bGate.status, current_status: rGate.status };
 
-    if (transition === 'PROGRESSED' || transition === 'EVIDENCE_COMPLETED') {
+    if (transition === 'PROGRESSED') {
       return Object.assign({ response_state: 'POSITIVE_RESPONSE', reason: transition }, base);
     }
     if (transition === 'REGRESSED') {
       return Object.assign({ response_state: 'NEGATIVE_RESPONSE', reason: transition }, base);
+    }
+    // EVIDENCE_COMPLETED：performance 在两侧都已是 MET，正式状态只是因为样本从不足变充分——
+    // 这是证据补齐，不是训练带来的表现提升，绝不能当作 POSITIVE_RESPONSE/EFFECTIVE 的依据。
+    // 即使同一时刻数值恰好也有变化，也不得仅凭"证据补齐"推断因果关系；保守判 INCOMPLETE，
+    // 除非有独立的表现进阶（PROGRESSED）依据。
+    if (transition === 'EVIDENCE_COMPLETED') {
+      return Object.assign({ response_state: 'INCOMPLETE', reason: transition }, base);
     }
     if (transition === 'INCOMPLETE') {
       return Object.assign({ response_state: 'INCOMPLETE', reason: 'gate_transition_incomplete' }, base);

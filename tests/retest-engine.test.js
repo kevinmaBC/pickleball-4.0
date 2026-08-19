@@ -41,6 +41,49 @@ function snap(fields) {
   assert.strictEqual(r.response_state, 'POSITIVE_RESPONSE');
 })();
 
+// ---- Fix: EVIDENCE_COMPLETED must NOT be treated as POSITIVE_RESPONSE ----
+
+// 1. INCOMPLETE -> MET caused only by sample sufficiency, performance unchanged (already MET at
+// baseline) -> response INCOMPLETE, effectiveness INCOMPLETE. Must not be attributed to training improvement.
+(function () {
+  var baseline = snap({ hard_gates: [gate('serve_in_pct', 'min', 85, 90, 'MET', 'INSUFFICIENT', 'INCOMPLETE')] });
+  var retest = snap({ hard_gates: [gate('serve_in_pct', 'min', 85, 90, 'MET', 'SUFFICIENT', 'MET')] });
+  var r = PBRetest.evaluateRetest({ baseline: baseline, retest: retest, primaryBottleneck: 'hard_gate:serve_in_pct' });
+  assert.strictEqual(r.response_state, 'INCOMPLETE');
+  assert.strictEqual(r.response_reason, 'EVIDENCE_COMPLETED'); // transition info preserved, just not conflated with a positive response
+  assert.strictEqual(PBRetest.mapResponseToEffectiveness(r.response_state), 'INCOMPLETE');
+})();
+
+// 2. NOT_MET -> MET is a genuine performance progression (not a sample-sufficiency artifact) -> POSITIVE_RESPONSE / EFFECTIVE.
+(function () {
+  var baseline = snap({ hard_gates: [gate('serve_in_pct', 'min', 85, 60, 'NOT_MET', 'SUFFICIENT', 'NOT_MET')] });
+  var retest = snap({ hard_gates: [gate('serve_in_pct', 'min', 85, 92, 'MET', 'SUFFICIENT', 'MET')] });
+  var r = PBRetest.evaluateRetest({ baseline: baseline, retest: retest, primaryBottleneck: 'hard_gate:serve_in_pct' });
+  assert.strictEqual(r.response_state, 'POSITIVE_RESPONSE');
+  assert.strictEqual(r.response_reason, 'PROGRESSED');
+  assert.strictEqual(PBRetest.mapResponseToEffectiveness(r.response_state), 'EFFECTIVE');
+})();
+
+// 3. NOT_MET -> BORDERLINE: existing progression behavior unchanged by this fix.
+(function () {
+  var baseline = snap({ hard_gates: [gate('serve_in_pct', 'min', 85, 60, 'NOT_MET', 'SUFFICIENT', 'NOT_MET')] });
+  var retest = snap({ hard_gates: [gate('serve_in_pct', 'min', 85, 82, 'BORDERLINE', 'SUFFICIENT', 'BORDERLINE')] });
+  var r = PBRetest.evaluateRetest({ baseline: baseline, retest: retest, primaryBottleneck: 'hard_gate:serve_in_pct' });
+  assert.strictEqual(r.response_state, 'POSITIVE_RESPONSE');
+  assert.strictEqual(r.response_reason, 'PROGRESSED');
+})();
+
+// Direct unit test on the classifier (bypassing evaluateRetest) for the exact example given in the fix spec.
+(function () {
+  var baseline = snap({ hard_gates: [gate('serve_in_pct', 'min', 85, 90, 'MET', 'INSUFFICIENT', 'INCOMPLETE')] });
+  var retest = snap({ hard_gates: [gate('serve_in_pct', 'min', 85, 90, 'MET', 'SUFFICIENT', 'MET')] });
+  var r = PBRetest.classifyGateBottleneckResponse('serve_in_pct', baseline, retest);
+  assert.strictEqual(r.response_state, 'INCOMPLETE');
+  assert.strictEqual(r.reason, 'EVIDENCE_COMPLETED');
+  assert.strictEqual(r.previous_status, 'INCOMPLETE');
+  assert.strictEqual(r.current_status, 'MET');
+})();
+
 // ---- 3. Same failed gate, stable metric -> NO_MEANINGFUL_CHANGE ----
 (function () {
   var baseline = snap({ hard_gates: [gate('serve_in_pct', 'min', 85, 70, 'NOT_MET', 'SUFFICIENT', 'NOT_MET')] });
