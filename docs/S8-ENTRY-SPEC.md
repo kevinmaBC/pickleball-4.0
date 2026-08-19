@@ -1,8 +1,16 @@
-# S8 Entry Spec (S8-0)
+# S8 Entry Spec (S8-0 / S8-A)
 
-Documentation-only boundary freeze for S8. This file defines what S8 *will*
-build; it does not implement any of it. No S8-A code is included in this
-commit.
+Documentation-only boundary freeze for S8, written at S8-0. It defined
+what S8 *would* build; S8-0 itself implemented none of it.
+
+**Update (S8-A):** the storage/IndexedDB architecture described below
+under "Storage/IndexedDB compatibility for S8 (findings)" is now
+implemented — see [`docs/S8-A-DATA-ARCHITECTURE.md`](S8-A-DATA-ARCHITECTURE.md)
+for the full schema, indexes, validation rules, and enforced invariants.
+S8-A implemented data persistence only: no plan-generation engine,
+adherence calculation, `RETEST_READY` calculation, or Training UI exists
+yet. Those remain deferred to S8-B onward, per the "Explicitly out of
+scope" section below, which is still fully in force.
 
 ## Baseline
 
@@ -112,15 +120,19 @@ Current `pb_v2` database (`js/storage.js`, `DB_VERSION` 2):
   store, keyed by its own id, indexed `by_assessment`. `retests` also
   carries an optional `prescription_id` foreign key.
 
-**Conclusion: the existing architecture safely supports S8's future
-entities without any change today.** The same additive-only
-`onupgradeneeded` pattern extends cleanly to a `DB_VERSION` 3 that adds
-`training_cycles`, `weekly_plans`, `session_plans`, `session_logs`, and
-`cycle_summaries` stores, each indexed back to its parent (e.g.
-`training_cycles.by_prescription`, `weekly_plans.by_cycle`, etc.),
-mirroring the existing `by_assessment`/`by_session` index convention. No
-preparatory schema change was required or made in S8-0 — S8-A will add
-the v3 upgrade following this same pattern.
+**Conclusion (as assessed at S8-0): the existing architecture safely
+supports S8's future entities without any change at that time.** The
+same additive-only `onupgradeneeded` pattern was expected to extend
+cleanly to a `DB_VERSION` 3 that adds `training_cycles`, `weekly_plans`,
+`session_plans`, `session_logs`, and `cycle_summaries` stores, each
+indexed back to its parent, mirroring the existing
+`by_assessment`/`by_session` index convention. No preparatory schema
+change was made in S8-0.
+
+**S8-A implemented exactly this.** `DB_VERSION` is now 3; the five stores
+above exist with the indexes predicted here. See
+[`docs/S8-A-DATA-ARCHITECTURE.md`](S8-A-DATA-ARCHITECTURE.md) for the
+implemented schema, parent/source validation, and enforced invariants.
 
 ## Service Worker (TD-SW-01)
 

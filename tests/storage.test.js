@@ -1,6 +1,10 @@
-/* tests/storage.test.js — S7-A: Safe IndexedDB upgrade (v1 -> v2)
+/* tests/storage.test.js — S7-A/S8-A: Safe IndexedDB upgrade (v1 -> v3)
  * Verifies: existing S1-S6 stores/records survive the upgrade untouched,
- * and review_snapshots / prescriptions / retests are created empty.
+ * review_snapshots / prescriptions / retests (S7-A) are created empty, and
+ * training_cycles / weekly_plans / session_plans / session_logs /
+ * cycle_summaries (S8-A) are created empty — all in a single additive
+ * upgrade from a pre-existing v1 database (as a real user's device would
+ * see, having never opened the app between S1 and now).
  * Run: node tests/storage.test.js
  */
 var assert = require('assert');
@@ -38,11 +42,11 @@ var PBStore = require('../js/storage.js');
 
 function run() {
   return PBStore.open().then(function () {
-    // 1. DB version bumped to 2, without destroying prior data.
-    assert.strictEqual(PBStore.DB_VERSION, 2);
+    // 1. DB version bumped to 3 (S8-A), without destroying prior data.
+    assert.strictEqual(PBStore.DB_VERSION, 3);
 
     var dump = fakeIDB._dump()['pb_v2'];
-    assert.strictEqual(dump.version, 2);
+    assert.strictEqual(dump.version, 3);
 
     // 2. Existing S1-S6 stores preserved with their original records intact.
     ['players', 'assessments', 'test_sessions', 'trial_events'].forEach(function (name) {
@@ -58,6 +62,27 @@ function run() {
       assert.ok(dump.stores[name], 'store created: ' + name);
       assert.strictEqual(dump.stores[name].data.size, 0, name + ' starts empty');
     });
+
+    // 3b. New S8-A stores created, empty, in the same single additive upgrade.
+    ['training_cycles', 'weekly_plans', 'session_plans', 'session_logs', 'cycle_summaries'].forEach(function (name) {
+      assert.ok(dump.stores[name], 'store created: ' + name);
+      assert.strictEqual(dump.stores[name].data.size, 0, name + ' starts empty');
+    });
+    // Required indexes exist on each new S8-A store.
+    assert.ok(dump.stores.training_cycles.indexes.by_prescription, 'training_cycles.by_prescription index exists');
+    assert.ok(dump.stores.training_cycles.indexes.by_review_snapshot, 'training_cycles.by_review_snapshot index exists');
+    assert.ok(dump.stores.training_cycles.indexes.by_status, 'training_cycles.by_status index exists');
+    assert.ok(dump.stores.weekly_plans.indexes.by_cycle, 'weekly_plans.by_cycle index exists');
+    assert.ok(dump.stores.weekly_plans.indexes.by_cycle_week, 'weekly_plans.by_cycle_week index exists');
+    assert.ok(dump.stores.session_plans.indexes.by_week, 'session_plans.by_week index exists');
+    assert.ok(dump.stores.session_plans.indexes.by_cycle, 'session_plans.by_cycle index exists');
+    assert.ok(dump.stores.session_plans.indexes.by_status, 'session_plans.by_status index exists');
+    assert.ok(dump.stores.session_logs.indexes.by_session_plan, 'session_logs.by_session_plan index exists');
+    assert.ok(dump.stores.session_logs.indexes.by_week, 'session_logs.by_week index exists');
+    assert.ok(dump.stores.session_logs.indexes.by_cycle, 'session_logs.by_cycle index exists');
+    assert.ok(dump.stores.session_logs.indexes.by_status, 'session_logs.by_status index exists');
+    assert.ok(dump.stores.cycle_summaries.indexes.by_cycle, 'cycle_summaries.by_cycle index exists');
+    assert.ok(dump.stores.cycle_summaries.indexes.by_retest_readiness, 'cycle_summaries.by_retest_readiness index exists');
 
     // 4. Existing S1-S6 reads/writes still work post-upgrade.
     return PBStore.listPlayers();
