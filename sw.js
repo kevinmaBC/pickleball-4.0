@@ -1,14 +1,15 @@
 /* Service Worker — Pickleball App 2.0 Alpha (Phase 0)
  * 版本升级：pb40-v8 -> pb40-v14 -> pb40-v15（新增 js/i18n.js 中/EN 切换）
- *   -> pb40-v16（S7-A 新增 js/namespace.js 规范命名空间兼容层）。
+ *   -> pb40-v16（S7-A 新增 js/namespace.js 规范命名空间兼容层）
+ *   -> pb40-v17（S7-B 新增 js/review-engine.js Review Snapshot 引擎）。
  * 策略：导航(HTML)请求 network-first（避免部署后持续加载旧版代码）；
  *       其它静态资源 stale-while-revalidate；换版本即清旧缓存。 */
-const CACHE='pb40-v16';
+const CACHE='pb40-v17';
 const CORE=[
   './','./index.html','./manifest.json',
   './css/app.css',
-  './js/i18n.js','./js/namespace.js','./js/config-loader.js','./js/storage.js','./js/metrics.js','./js/preview.js','./js/app.js','./js/assessment.js',
-  './data/versions.json','./data/test_definitions_v2_3_1.json','./data/assessment_tiers_v2_3_1.json',
+  './js/i18n.js','./js/namespace.js','./js/config-loader.js','./js/storage.js','./js/metrics.js','./js/review-engine.js','./js/preview.js','./js/app.js','./js/assessment.js',
+  './data/versions.json','./data/test_definitions_v2_3_1.json','./data/assessment_tiers_v2_3_1.json','./data/level_gates_v2_3_1.json','./data/evidence_confidence_v2_3_1.json',
   './icon-192.png','./icon-512.png','./icon-maskable-512.png','./apple-touch-icon.png'
 ];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).catch(()=>{}));});
