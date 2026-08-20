@@ -21,6 +21,10 @@
  * js/session-execution-engine.js 做"每个 SessionPlan 最多一条终态 SessionLog"
  * 的判重查询；不新增 store/index，不改既有校验逻辑 —— 详见
  * docs/S8-C-SESSION-EXECUTION-ENGINE.md。
+ * S9-A：新增 createMatchObservationSession，复用既有 test_sessions/trial_events
+ * store（test_id 固定 'ASMT-10'、feed_mode 固定 'live_match'）承载 full T10 Match
+ * Observation 采集；DB_VERSION 不变（仍为 3），不新增 store/index，不实现任何聚合/
+ * 评分/判定逻辑 —— 详见 docs/S9-A-MATCH-DATA-ARCHITECTURE.md。
  * ============================================================ */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -506,6 +510,26 @@
     });
   }
 
+  // ---- S9-A：Match Observation Session（复用 test_sessions/trial_events，无新增 store/index）----
+  // createTestSession 的受限包装：强制 test_id='ASMT-10'（full T10 canonical）、
+  // feed_mode='live_match'，标记"这是一次真实比赛的 Match Observation 采集会话"。
+  // 不做任何聚合/评分/校验逻辑（属于未来 S9-B Match Observation Engine / S9-C Match
+  // Validation Engine）；trial_events 仍通过既有 addTrialEvent 写入，raw_json 承载
+  // ASMT-10 的 required_trial_fields，不改动 trial_events 的 schema。
+  function createMatchObservationSession(opts) {
+    opts = opts || {};
+    if (!opts.assessment_id) return fail('createMatchObservationSession: assessment_id is required');
+    if (opts.feed_mode != null && opts.feed_mode !== 'live_match') return fail('createMatchObservationSession: feed_mode must be live_match');
+    return createTestSession({
+      assessment_id: opts.assessment_id,
+      test_id: 'ASMT-10',
+      assessment_tier: opts.assessment_tier,
+      feed_mode: 'live_match',
+      feeder_id: opts.feeder_id,
+      feeder_calibration_id: opts.feeder_calibration_id
+    });
+  }
+
   function clearAll() {
     return open().then(function (db) {
       return Promise.all(Object.keys(STORES).map(function (name) {
@@ -519,6 +543,7 @@
     open: open, put: put, get: get, getAll: getAll, del: del, getByIndex: getByIndex, clearAll: clearAll,
     createPlayer: createPlayer, createAssessment: createAssessment,
     createTestSession: createTestSession, addTrialEvent: addTrialEvent,
+    createMatchObservationSession: createMatchObservationSession,
     listPlayers: listPlayers, listAssessments: listAssessments,
     assessmentsByPlayer: assessmentsByPlayer, sessionsByAssessment: sessionsByAssessment, trialsBySession: trialsBySession,
     exportAssessment: exportAssessment,

@@ -34,6 +34,15 @@
   function isLegacy(id) { return LEGACY_IDS.indexOf(id) !== -1; }
   function isCanonical(id) { return CANONICAL_IDS.indexOf(id) !== -1; }
 
+  // S9-A：Match Capture 测试 ID（full T10 / ASMT-10）——标记哪个规范 ID 属于
+  // Match Observation（真实比赛采集），不新增第二套命名空间，不改变别名解析本身；
+  // 仅供 storage 层识别 test_sessions 记录是否为 Match Observation Session。
+  var MATCH_CAPTURE_IDS = ['ASMT-10'];
+  function isMatchCapture(id) {
+    var canon = toCanonical(id);
+    return canon != null && MATCH_CAPTURE_IDS.indexOf(canon) !== -1;
+  }
+
   // 归一化为规范 ID：已是规范 ID 原样返回；Legacy Alias 映射；未知 ID 一律 null（绝不猜测）
   function toCanonical(id) {
     if (isCanonical(id)) return id;
@@ -56,6 +65,8 @@
     isLegacy: isLegacy,
     isCanonical: isCanonical,
     toCanonical: toCanonical,
-    toLegacy: toLegacy
+    toLegacy: toLegacy,
+    MATCH_CAPTURE_IDS: MATCH_CAPTURE_IDS.slice(),
+    isMatchCapture: isMatchCapture
   };
 });
