@@ -235,3 +235,35 @@
 #review-app table.rv-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
 #review-app table.rv-tbl th,#review-app table.rv-tbl td{text-align:left;padding:6px 7px;border-bottom:1px solid var(--line);vertical-align:top}
 #review-app table.rv-tbl th{font-family:var(--mono);font-size:9.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:600}
+
+/* ===== S8-E Training / Cycle UI (tr-), shared across the three mount points (.tr-app) ===== */
+.tr-app{font-family:var(--sans)}
+.tr-app .tr-h{font-weight:800;font-size:15px;margin:2px 0 8px;color:var(--ink)}
+.tr-app .tr-h2{font-weight:700;font-size:13px;margin:14px 0 6px;color:var(--ink)}
+.tr-app .tr-mut{font-size:12px;color:var(--muted)}
+.tr-app .tr-chip{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:6px 13px;margin:4px 6px 4px 0;cursor:pointer;font-size:13px;background:var(--card);color:var(--ink)}
+.tr-app .tr-chip.sel{background:var(--lime-deep,#2f6f5f);color:#fff;border-color:transparent}
+.tr-app .tr-section{margin-bottom:16px}
+.tr-app .tr-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tr-app .tr-row:last-child{border-bottom:none}
+.tr-app .tr-card{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafcf9;margin-bottom:10px}
+.tr-app .tr-badge{display:inline-block;font-family:var(--mono);font-size:10.5px;padding:2px 8px;border-radius:6px;font-weight:700;letter-spacing:.2px;line-height:1.5}
+.tr-app .tr-pos{background:#f1fbf5;color:var(--pass)}
+.tr-app .tr-warn{background:#fff8e8;color:var(--part)}
+.tr-app .tr-neg{background:#fdecec;color:var(--fail)}
+.tr-app .tr-neu{background:#eef2ee;color:var(--muted)}
+.tr-app .tr-inc{background:#eef2ee;color:var(--muted);border:1px dashed var(--line)}
+.tr-app .tr-banner{background:#f1fbf5;border-left:3px solid var(--pass);border-radius:0 10px 10px 0;padding:10px 12px;font-size:13px;margin-bottom:10px;font-weight:700}
+.tr-app .tr-ready{background:#f1fbf5;border-color:var(--pass);color:var(--pass)}
+.tr-app .tr-cta{display:block;width:100%;padding:14px;font-size:15.5px;border-radius:12px;text-align:center}
+.tr-app .tr-week{border:1px solid var(--line);border-radius:14px;margin-bottom:10px;background:var(--card);overflow:hidden}
+.tr-app .tr-week>summary{list-style:none;cursor:pointer;padding:12px 14px;font-weight:700;background:var(--ink);color:#fff;border-radius:14px}
+.tr-app .tr-week[open]>summary{border-radius:14px 14px 0 0}
+.tr-app .tr-week>summary::-webkit-details-marker{display:none}
+.tr-app .tr-week-body{padding:4px 14px 8px}
+.tr-app .tr-assign{border-top:1px solid var(--line);padding:9px 0;font-size:13px}
+.tr-app .tr-assign:first-child{border-top:none}
+.tr-app .tr-exec-row{border-top:1px solid var(--line);padding:9px 0}
+.tr-app .tr-exec-row:first-child{border-top:none}
+.tr-app .tr-exec-fields{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.tr-app .tr-exec-fields input.fld{min-width:0;flex:1 1 90px}

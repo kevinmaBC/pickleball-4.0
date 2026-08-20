@@ -26,6 +26,13 @@
  * 确定性：所有计算均为对已持久化数据的纯函数变换，无随机数、无 LLM、
  * 无外部/云调用、无时间相关评分；calculated_at 仅作为生成时间的元信息
  * 写入 training_exposure 内部，从不参与任何判定比较。
+ *
+ * S8-E：retest_target_detail[] 新增 meets_threshold 字段——把 R3 内部本就
+ * 对照 RETEST_READINESS_THRESHOLDS.MIN_RETEST_TARGET_EXPOSURE 做的同一次
+ * 比较，逐项也附加出来，供 S8-E UI 直接读取展示"EXPOSURE MET / BELOW
+ * TARGET"，不必在 UI 层重复实现阈值比较逻辑。未新增阈值、未改变任何
+ * 门槛判定结果，纯粹是把既有内部比较结果多暴露一份 —— 详见
+ * docs/S8-E-TRAINING-UI.md。
  * ============================================================ */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -169,13 +176,16 @@
         if (!occ.length) {
           // Section 7: 无法安全映射的必测目标 -> 整体结果必须 INCOMPLETE，绝不臆造暴露值。
           retest_target_exposure[key] = null;
-          retest_target_detail.push({ metric: metric, namespace: null, exposure_rate: null, occurrence_count: 0, has_complete_or_partial: false });
+          retest_target_detail.push({ metric: metric, namespace: null, exposure_rate: null, occurrence_count: 0, has_complete_or_partial: false, meets_threshold: null });
           return;
         }
         var rate = occ.reduce(function (s, o) { return s + o.credit; }, 0) / occ.length;
         var hasExec = occ.some(function (o) { return o.executed; });
         retest_target_exposure[key] = rate;
-        retest_target_detail.push({ metric: metric, namespace: namespace, exposure_rate: rate, occurrence_count: occ.length, has_complete_or_partial: hasExec });
+        // meets_threshold：把 R3 内部已做的同一次比较（对照下方同一个 RETEST_READINESS_THRESHOLDS
+        // 常量，不是新阈值）也附加到逐项 detail 上，供 S8-E UI 直接读取展示，不必在 UI 层重复实现
+        // 阈值比较逻辑（S8-E Section 21 明确要求 UI 不得自行复制门槛判定）。
+        retest_target_detail.push({ metric: metric, namespace: namespace, exposure_rate: rate, occurrence_count: occ.length, has_complete_or_partial: hasExec, meets_threshold: rate >= RETEST_READINESS_THRESHOLDS.MIN_RETEST_TARGET_EXPOSURE });
       });
 
       // ---- Section 9: Match Transfer 训练暴露——只按 metric 精确匹配 match_transfer_score，
@@ -246,7 +256,7 @@
       } else if (detail.some(function (d) { return d.exposure_rate == null; })) {
         r3State = 'INCOMPLETE'; r4State = 'INCOMPLETE'; gateReason = 'one or more required retest targets could not be safely mapped to a planned assignment';
       } else {
-        r3State = detail.every(function (d) { return d.exposure_rate >= RETEST_READINESS_THRESHOLDS.MIN_RETEST_TARGET_EXPOSURE; }) ? 'PASS' : 'FAIL';
+        r3State = detail.every(function (d) { return d.meets_threshold; }) ? 'PASS' : 'FAIL'; // 复用 detail 上已算好的同一次比较，避免两处各自重复阈值判定
         r4State = detail.every(function (d) { return d.has_complete_or_partial; }) ? 'PASS' : 'FAIL';
       }
       gates.R3 = gateResult('R3_RETEST_TARGET_COVERAGE', r3State, gateReason, null, detail);

@@ -15,10 +15,14 @@ var vm = require('vm');
 
 function loadSW() {
   var code = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+  // Read the live CACHE constant out of sw.js itself rather than hardcoding a version literal,
+  // so this test doesn't need editing every time sw.js's CACHE is bumped for an unrelated change.
+  var currentCacheMatch = /const\s+CACHE\s*=\s*'([^']+)'/.exec(code);
+  var CURRENT_CACHE = currentCacheMatch ? currentCacheMatch[1] : 'pb40-vTEST';
   var listeners = {};
   var putCalls = [];
   var deletedKeys = [];
-  var cacheKeys = ['pb40-v20', 'pb40-v21'];
+  var cacheKeys = ['pb40-v-obsolete-fixture', CURRENT_CACHE];
   var cacheStore = { 'https://pb.app.test/icon-192.png': { fromCache: true } };
 
   var fakeCacheObj = {
@@ -59,7 +63,7 @@ function loadSW() {
   vm.createContext(sandbox);
   vm.runInContext(code, sandbox);
 
-  return { listeners: listeners, sandbox: sandbox, putCalls: putCalls, deletedKeys: deletedKeys, cacheKeys: function () { return cacheKeys; }, cacheStore: cacheStore };
+  return { listeners: listeners, sandbox: sandbox, putCalls: putCalls, deletedKeys: deletedKeys, cacheKeys: function () { return cacheKeys; }, cacheStore: cacheStore, currentCache: CURRENT_CACHE };
 }
 
 function mkReq(url, opts) {
@@ -121,8 +125,8 @@ function run() {
           var activateEvent = { waitUntil: function (p) { activatePromise = p; } };
           env5.listeners.activate(activateEvent);
           return activatePromise.then(function () {
-            assert.deepStrictEqual(env5.deletedKeys, ['pb40-v20'], 'activate should purge obsolete cache versions only');
-            assert.deepStrictEqual(env5.cacheKeys(), ['pb40-v21'], 'current CACHE version should survive activate cleanup');
+            assert.deepStrictEqual(env5.deletedKeys, ['pb40-v-obsolete-fixture'], 'activate should purge obsolete cache versions only');
+            assert.deepStrictEqual(env5.cacheKeys(), [env5.currentCache], 'current CACHE version should survive activate cleanup');
             console.log('sw-cache.test.js: all assertions passed');
           });
         });

@@ -95,6 +95,17 @@ same `1.00 / 0.50 / 0.00` values as adherence.
   occurrences anywhere, its value is `null` — an unmapped required
   target, exactly Section 7's "if a required retest target cannot be
   mapped safely" case.
+
+  **Update (S8-E):** each entry in `retest_target_detail[]` also carries
+  `meets_threshold` (boolean, or `null` when unmapped) — the same
+  `exposure_rate >= RETEST_READINESS_THRESHOLDS.MIN_RETEST_TARGET_EXPOSURE`
+  comparison R3 already performs in aggregate, now also attached per
+  target. No new threshold and no changed gate result; R3's own
+  aggregate check was simplified to `detail.every(d => d.meets_threshold)`
+  so the comparison exists in exactly one place. This exists so
+  `js/training-ui.js` can render "EXPOSURE MET"/"EXPOSURE BELOW TARGET"
+  per target without duplicating threshold logic in the UI — see
+  [`docs/S8-E-TRAINING-UI.md`](S8-E-TRAINING-UI.md).
 - **Match Transfer exposure** (Section 9): computed **by metric**
   (`target === 'match_transfer_score'`), not by role. This matters
   because S8-B gives both the `PRESSURE_TRANSFER`-week assignment and

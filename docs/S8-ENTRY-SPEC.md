@@ -164,6 +164,17 @@ to justify a formal re-test" — it is never capability, a passed hard
 gate, or a promotion signal, and no actual re-test/promotion is
 triggered by this stage.
 
+**Update (S8-E):** the full `TODAY → TRAINING CYCLE → SESSION → PROGRESS
+→ RE-TEST READINESS → MEASURE` flow now has a thin UI layer,
+`js/training-ui.js`/`PBTrainingUI`, folded into the existing HOME/DRILL/
+REVIEW/MEASURE tabs (no new top-level nav). It renders S8-A→D data and
+calls `PBSessionExecution`/`PBTrainingReadiness` only — it contains no
+adherence/exposure/R1-R4/threshold logic of its own. See
+[`docs/S8-E-TRAINING-UI.md`](S8-E-TRAINING-UI.md). All S8 engines
+(S8-A through S8-D) remain unmodified except one additive, non-semantic
+field on `training-readiness-engine.js`'s existing output (documented
+there and in the S8-E doc).
+
 ## Service Worker (TD-SW-01)
 
 Resolved in this commit. See `docs/SW-CACHE-POLICY.md` for the full

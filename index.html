@@ -42,6 +42,12 @@
       </div>
     </div>
 
+    <!-- ===== S8-E · Today's Training ===== -->
+    <div class="card tr-app" id="training-today-root" style="margin:14px 0 18px">
+      <div class="eyebrow" style="margin-bottom:8px">S8-E · Today's Training</div>
+      <div id="training-today-app"></div>
+    </div>
+
     <h3 class="blk" data-i18n-html="home.gatesH3">稳定 4.0 · 六道硬门槛 <span class="en">Six Hard Gates</span></h3>
     <p class="sec-sub" style="margin-top:-4px" data-i18n="home.gatesSub">全绿才算稳定 4.0 —— 不能靠单项特别强来抵消短板。数据来自「测」页，实时联动。</p>
     <div class="card">
@@ -584,6 +590,12 @@
     <h2 class="sec" data-i18n="drill.h2">练 · 8 周打卡</h2>
     <p class="sec-sub" data-i18n-html="drill.sub">MiLP 团队 8 周训练（DUPR 16 组）。逐项选达标状态，自动统计。<span class="en">8-Week Team Log</span></p>
 
+    <!-- ===== S8-E · Training Cycle / Session ===== -->
+    <div class="card tr-app" id="training-cycle-root" style="margin:14px 0 18px">
+      <div class="eyebrow" style="margin-bottom:8px">S8-E · Training Cycle / Session</div>
+      <div id="training-cycle-app"></div>
+    </div>
+
     <div class="kpibar">
       <div class="stat"><div class="v" id="t-done">0%</div><div class="k">完成率 <span class="en">Done</span></div></div>
       <div class="stat"><div class="v" id="t-pass">0%</div><div class="k">达标率 <span class="en">Pass</span></div></div>
@@ -643,6 +655,12 @@
     <p class="sec-sub">读取既有 Review Snapshot / Trend / Prescription / Re-test 结果，只读展示，不重新计算方法论。<span class="en">Review & Trend — read-only, reuses S7-A~D engines</span></p>
     <div class="card" id="review-root" style="margin:14px 0 18px">
       <div id="review-app"></div>
+    </div>
+
+    <!-- ===== S8-E · Training Progress / Re-test Readiness ===== -->
+    <div class="card tr-app" id="training-progress-root" style="margin:14px 0 18px">
+      <div class="eyebrow" style="margin-bottom:8px">S8-E · Training Progress / Re-test Readiness</div>
+      <div id="training-progress-app"></div>
     </div>
   </section>
 
@@ -798,6 +816,9 @@
 <script src="./js/trend-engine.js"></script>
 <script src="./js/retest-engine.js"></script>
 <script src="./js/review-ui.js"></script>
+<script src="./js/session-execution-engine.js"></script>
+<script src="./js/training-readiness-engine.js"></script>
+<script src="./js/training-ui.js"></script>
 <script src="./js/preview.js"></script>
 <script src="./js/app.js"></script>
 <script src="./js/assessment.js"></script>
