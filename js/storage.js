@@ -25,6 +25,10 @@
  * store（test_id 固定 'ASMT-10'、feed_mode 固定 'live_match'）承载 full T10 Match
  * Observation 采集；DB_VERSION 不变（仍为 3），不新增 store/index，不实现任何聚合/
  * 评分/判定逻辑 —— 详见 docs/S9-A-MATCH-DATA-ARCHITECTURE.md。
+ * S9-B：createMatchObservationSession 新增可选 match_context 透传字段（仍是
+ * test_sessions 的普通嵌套字段，无 schema/索引变化）；实际的采集校验、去重、抽样
+ * 完整度与描述性 Full-T10 指标计算全部位于新模块 js/match-observation-engine.js，
+ * storage.js 本身不新增计算逻辑 —— 详见 docs/S9-B-MATCH-OBSERVATION-ENGINE.md。
  * ============================================================ */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -516,6 +520,10 @@
   // 不做任何聚合/评分/校验逻辑（属于未来 S9-B Match Observation Engine / S9-C Match
   // Validation Engine）；trial_events 仍通过既有 addTrialEvent 写入，raw_json 承载
   // ASMT-10 的 required_trial_fields，不改动 trial_events 的 schema。
+  // S9-B：新增可选 opts.match_context（原样透传，storage 层不做枚举校验，交由
+  // js/match-observation-engine.js 的 validateMatchContext 负责），作为 test_sessions
+  // 记录上的一个附加嵌套字段（与既有 assessments 记录上的嵌套字段是同一种约定）；
+  // 不新增 store/index，不改 createTestSession 本身（避免影响 T01-T09 既有调用方）。
   function createMatchObservationSession(opts) {
     opts = opts || {};
     if (!opts.assessment_id) return fail('createMatchObservationSession: assessment_id is required');
@@ -527,6 +535,8 @@
       feed_mode: 'live_match',
       feeder_id: opts.feeder_id,
       feeder_calibration_id: opts.feeder_calibration_id
+    }).then(function (session) {
+      return put('test_sessions', Object.assign({}, session, { match_context: opts.match_context || {} }));
     });
   }
 
