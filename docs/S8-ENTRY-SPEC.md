@@ -153,6 +153,17 @@ See [`docs/S8-C-SESSION-EXECUTION-ENGINE.md`](S8-C-SESSION-EXECUTION-ENGINE.md).
 remain entirely unimplemented — S8-C only records session-level
 execution facts.
 
+**Update (S8-D):** the `SessionLog → CycleSummary → Re-test` step
+(adherence, training exposure, R1-R4 re-test-readiness gates) is now
+implemented as `js/training-readiness-engine.js`/`PBTrainingReadiness`,
+persisting through the existing S8-A `cycle_summaries` store with zero
+storage-schema changes. See
+[`docs/S8-D-TRAINING-READINESS.md`](S8-D-TRAINING-READINESS.md).
+`RETEST_READY` here means only "sufficient training execution/exposure
+to justify a formal re-test" — it is never capability, a passed hard
+gate, or a promotion signal, and no actual re-test/promotion is
+triggered by this stage.
+
 ## Service Worker (TD-SW-01)
 
 Resolved in this commit. See `docs/SW-CACHE-POLICY.md` for the full
