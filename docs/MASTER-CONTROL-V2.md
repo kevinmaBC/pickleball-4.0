@@ -67,12 +67,17 @@ Acceptance Commit: bd96b6c
 Acceptance Record: docs/S10-A-WORKFLOW-INTEGRATION.md
 
 S10-B
-Status: IMPLEMENTED / GPT QA PENDING
-Implementation Commit: see Git history / pending GPT acceptance
-Implementation Record: docs/S10-B-DASHBOARD-INTEGRATION.md
+Status: CLOSED / ACCEPTED
+Acceptance Commit: 4426250
+Full SHA: 44262501ce29fab4a5345bcba24149b34285bbb7
+Acceptance Records:
+docs/S10-B-DASHBOARD-INTEGRATION.md
+docs/S10-B-R1-DASHBOARD-UI-WIRING.md
 
 S10-C
-Status: PLANNED
+Status: IMPLEMENTED / GPT QA PENDING
+Implementation Commit: pending GPT acceptance / see Git history
+Implementation Record: docs/S10-C-PRESCRIPTION-WORKFLOW.md
 
 S10-D
 Status: PLANNED
