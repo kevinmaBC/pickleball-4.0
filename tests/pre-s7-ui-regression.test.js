@@ -194,6 +194,7 @@ function run() {
     'PBNamespace', 'PBConfig', 'PBStore', 'PBMetrics', // S1/S7-A infra
     'PBReview', 'PBTrend', 'PBRetest', 'PBReviewUI',   // S7
     'PBSessionExecution', 'PBTrainingReadiness', 'PBTrainingUI', // S8-C/D/E (PBTrainingPlan is not script-included by design, per S8-E)
+    'PBMatchObservation', 'PBPerformanceAnalysis', 'PBDiagnosis', 'PBRecommendationPriority', 'PBTrainingPrescription', 'PBDashboard', // S9-B~F + S10-B-R1 (PBWorkflow/S10-A is not script-included: no persisted cycle to read yet)
     'PBPreview', 'PBAssessment', // pre-S7 UI support + S1 UI
     'go', 'LANG' // pre-S7 shell
   ];

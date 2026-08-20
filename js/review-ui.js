@@ -7,6 +7,17 @@
  * 不因渲染页面而重新生成 Review Snapshot（只读 PBStore 既有数据）。
  * 纯格式化/取值函数与 DOM 挂载逻辑分离：前者可在 Node 下单测，
  * 后者只在浏览器环境运行（UMD 包装，module.exports 分支不触碰 DOM）。
+ *
+ * S10-B-R1：新增 Section 7"Recommendation / Training Focus"，把 S9
+ * Diagnosis -> Recommendation Priority -> Training Prescription 链路
+ * 经由 S10-B js/dashboard-integration-engine.js（PBDashboard）投影出的
+ * Dashboard View Model 接到这个既有只读页面上。本文件依旧不实现任何
+ * 判定/评分/处方逻辑——只调用既有 PBDiagnosis.diagnoseMatch /
+ * PBRecommendationPriority.prioritizeDiagnosis /
+ * PBTrainingPrescription.prescribeRecommendations（S9 既有公共
+ * API，未新增/未复制其内部规则）取得结果，再交给 PBDashboard 投影，
+ * 只读展示；找不到已持久化的 S10-A Workflow Cycle 时，工作流状态
+ * 诚实显示为 UNRESOLVED（不臆造），而不是新增一个持久化存储来凑数据。
  * ============================================================ */
 (function (root, factory) {
   var pure = factory();
@@ -39,7 +50,19 @@
     section3: { en: '3 · Match Transfer', zh: '3 · 实战转化 Match Transfer' },
     section4: { en: '4 · Hard-Gate Progress', zh: '4 · 硬门槛进展' },
     section5: { en: '5 · Bottleneck & Prescription', zh: '5 · 瓶颈与处方' },
-    section6: { en: '6 · Re-test / Promotion Review', zh: '6 · 复测 / 晋级复核' }
+    section6: { en: '6 · Re-test / Promotion Review', zh: '6 · 复测 / 晋级复核' },
+    section7: { en: '7 · Recommendation / Training Focus', zh: '7 · 推荐 / 训练重点 Recommendation Focus' },
+    noActiveRecommendation: { en: 'No active recommendation available', zh: '暂无有效推荐 No active recommendation available' },
+    rankUnresolved: { en: 'Rank unresolved', zh: '排名未定 Rank unresolved' },
+    prescriptionNotYet: { en: 'Recommendation available. Training prescription not yet available.', zh: '已有推荐，训练处方尚未生成。' },
+    drillUnresolvedMsg: { en: 'Specific drill not yet resolved', zh: '具体训练项尚未确定 Specific drill not yet resolved' },
+    kpiUnresolvedMsg: { en: 'KPI benchmark not yet resolved', zh: 'KPI 基准尚未确定 KPI benchmark not yet resolved' },
+    reassessmentMsg: { en: 'New evidence available — reassessment required', zh: '有新证据 — 需要重新评估 New evidence available — reassessment required' },
+    whyEvidenceLabel: { en: 'Why / Evidence', zh: '原因 / 证据 Why / Evidence' },
+    findingsLabel: { en: 'Findings', zh: '依据 Findings' },
+    evidencePatternsLabel: { en: 'Evidence patterns', zh: '证据模式 Evidence patterns' },
+    trainingDirectionLabel: { en: 'Training Direction', zh: '训练方向 Training Direction' },
+    noneLabel: { en: '(none)', zh: '（无）' }
   };
   function t(key) {
     var m = MESSAGES[key];
@@ -95,7 +118,23 @@
     ACTIVE: { kind: 'pos', label: 'ACTIVE' },
     COMPLETED: { kind: 'neu', label: 'COMPLETED' },
     SUPERSEDED: { kind: 'neu', label: 'SUPERSEDED' },
-    INCOMPLETE: { kind: 'inc', label: 'INCOMPLETE' }
+    INCOMPLETE: { kind: 'inc', label: 'INCOMPLETE' },
+    // S10-B-R1: Dashboard priority tiers / unresolved semantics / S10-A workflow states —
+    // machine code always stays the label text, never silently swapped for a verdict word.
+    HIGH: { kind: 'neg', label: 'HIGH' },
+    MEDIUM: { kind: 'warn', label: 'MEDIUM' },
+    LOW: { kind: 'neu', label: 'LOW' },
+    UNRESOLVED: { kind: 'warn', label: 'UNRESOLVED' },
+    BENCHMARK_NOT_RESOLVED: { kind: 'warn', label: 'BENCHMARK_NOT_RESOLVED' },
+    BASELINE_READY: { kind: 'neu', label: 'BASELINE_READY' },
+    EVIDENCE_AVAILABLE: { kind: 'neu', label: 'EVIDENCE_AVAILABLE' },
+    RECOMMENDATION_READY: { kind: 'pos', label: 'RECOMMENDATION_READY' },
+    PRESCRIPTION_READY: { kind: 'pos', label: 'PRESCRIPTION_READY' },
+    TRAINING_ACTIVE: { kind: 'pos', label: 'TRAINING_ACTIVE' },
+    SESSION_COMPLETED: { kind: 'pos', label: 'SESSION_COMPLETED' },
+    PROGRESS_RECORDED: { kind: 'pos', label: 'PROGRESS_RECORDED' },
+    REASSESSMENT_READY: { kind: 'warn', label: 'REASSESSMENT_READY' },
+    CYCLE_COMPLETED: { kind: 'pos', label: 'CYCLE_COMPLETED' }
   };
   function stateBadgeMeta(value) {
     if (value == null) return STATE_META.INCOMPLETE;
@@ -245,12 +284,23 @@
     };
   }
 
+  // ---- S10-B-R1: Dashboard View Model passthrough — PBDashboard already produced the final
+  // shape (dashboardResult.dashboard); this only supplies an honest default when the S9 match
+  // pipeline yielded nothing (no match session, or the caller-side fetch degraded on error),
+  // matching PBDashboard.projectDashboardList([])'s own empty-state contract exactly. No
+  // recommendation/priority/prescription value is read, computed, or altered here.
+  function buildDashboardModel(dashboardResult) {
+    if (dashboardResult && dashboardResult.dashboard) return dashboardResult.dashboard;
+    return { items: [], item_count: 0, message_code: 'NO_RECOMMENDATION', message: 'No active recommendation available' };
+  }
+
   // ---- 主编排：把已取得的原始引擎输出整理成整页视图模型（纯函数，不发请求、不碰 DOM）----
   function buildReviewViewModel(input) {
     input = input || {};
     var trend = input.trend;
+    var dashboard = buildDashboardModel(input.dashboardResult);
     if (!trend || !trend.assessment_count) {
-      return { emptyState: true, message: t('noHistory') };
+      return { emptyState: true, message: t('noHistory'), dashboard: dashboard };
     }
     var snap = input.latestSnapshot || null;
     return {
@@ -264,7 +314,8 @@
       hardGates: buildHardGateRows(trend.hard_gate_trends),
       bottleneck: buildBottleneckModel(trend.bottleneck_movement),
       prescription: buildPrescriptionModel(input.prescription, input.retestSummary),
-      reassessment: buildReassessmentModel(input.reassessment)
+      reassessment: buildReassessmentModel(input.reassessment),
+      dashboard: dashboard
     };
   }
 
@@ -410,10 +461,113 @@
       '</div></div>';
   }
 
+  // review-ui.js's existing render1-6 read the browser global `LANG` (set by js/i18n.js)
+  // directly and were previously only ever invoked from the browser; curLang() gives the new
+  // Section 7 renderers below the same dynamic per-call read but with a safe fallback, so they
+  // stay Node-unit-testable like this file's other pure functions.
+  function curLang() { return (typeof LANG !== 'undefined') ? LANG : 'zh'; }
+
+  // ---- S10-B-R1: one dashboard_item -> one read-only recommendation card. Every value is read
+  // straight off the PBDashboard-projected item; this function computes nothing (no rank, no
+  // score, no tier, no mapping) — it only chooses HTML/copy for values already decided upstream.
+  function dashboardItemCard(item) {
+    var rankLabel = item.rank_status === 'RESOLVED' ? ('#' + item.rank) : t('rankUnresolved');
+    var header = '<div class="rv-row" style="border:none"><b>' + esc(rankLabel) + '</b> ' + badgeHTML(item.priority_tier) + '</div>';
+    var body =
+      '<div class="rv-row"><span>' + (curLang() === 'en' ? 'Skill' : '技能') + '</span><b>' + esc(item.skill || t('noneLabel')) + '</b></div>' +
+      '<div class="rv-row"><span>' + (curLang() === 'en' ? 'Recommendation' : '推荐') + '</span><b>' + esc(item.recommendation_code || 'UNRESOLVED') + '</b></div>' +
+      '<div class="rv-row"><span>' + (curLang() === 'en' ? 'Status' : '状态') + '</span>' + badgeHTML(item.status) + '</div>';
+
+    var trace = item.traceability || { source_skill_gap_ids: [], evidence_pattern_ids: [] };
+    var traceHTML = '<div class="rv-row" style="display:block;border:none"><span class="rv-mut">' + t('whyEvidenceLabel') + '</span>' +
+      '<div class="rv-mut">' + esc(t('findingsLabel')) + ': ' + esc(trace.source_skill_gap_ids.length ? trace.source_skill_gap_ids.join(', ') : t('noneLabel')) + '</div>' +
+      '<div class="rv-mut">' + esc(t('evidencePatternsLabel')) + ': ' + esc(trace.evidence_pattern_ids.length ? trace.evidence_pattern_ids.join(', ') : t('noneLabel')) + '</div>' +
+      '</div>';
+
+    var presc = item.prescription_summary;
+    var prescHTML;
+    if (!presc) {
+      prescHTML = '<div class="rv-mut">' + esc(t('prescriptionNotYet')) + '</div>';
+    } else {
+      prescHTML =
+        '<div class="rv-row"><span>' + (curLang() === 'en' ? 'Objective' : '训练目标') + '</span><b>' + esc(presc.training_objective_code || 'UNRESOLVED') + '</b></div>' +
+        '<div class="rv-row"><span>' + (curLang() === 'en' ? 'Mode' : '训练模式') + '</span><b>' + esc(presc.training_mode || 'UNRESOLVED') + '</b></div>' +
+        '<div class="rv-row"><span>' + (curLang() === 'en' ? 'Drill Family' : '训练项类型') + '</span><b>' + esc(presc.drill_family_code || 'UNRESOLVED') + '</b></div>' +
+        '<div class="rv-row"><span>' + (curLang() === 'en' ? 'Dosage' : '强度权重') + '</span><b>' + esc(presc.dosage_profile_code || 'UNRESOLVED') + '</b></div>' +
+        (presc.drill_resolution_status === 'UNRESOLVED'
+          ? '<div class="rv-row"><span class="rv-mut">' + esc(t('drillUnresolvedMsg')) + '</span>' + badgeHTML('UNRESOLVED') + '</div>' : '') +
+        (presc.kpi_target_status === 'BENCHMARK_NOT_RESOLVED'
+          ? '<div class="rv-row" style="border:none"><span class="rv-mut">' + esc(t('kpiUnresolvedMsg')) + '</span>' + badgeHTML('BENCHMARK_NOT_RESOLVED') + '</div>' : '');
+    }
+
+    var workflowHTML = '<div class="rv-row" style="border:none"><span>' + (curLang() === 'en' ? 'Workflow' : '工作流状态') + '</span>' + badgeHTML(item.workflow_state) + '</div>';
+    var reassessHTML = item.reassessment_pending ? '<div class="rv-banner" style="border-color:var(--part);background:#fff8e8">' + esc(t('reassessmentMsg')) + '</div>' : '';
+
+    return '<div class="rv-card">' + header + body + traceHTML +
+      '<div style="margin-top:6px;font-weight:700;color:var(--ink)">' + esc(t('trainingDirectionLabel')) + '</div>' + prescHTML +
+      workflowHTML + reassessHTML + '</div>';
+  }
+
+  function renderSection7(model) {
+    var d = model.dashboard || { items: [], item_count: 0 };
+    var body = (d.items && d.items.length)
+      ? '<div class="rv-grid">' + d.items.map(dashboardItemCard).join('') + '</div>'
+      : '<div class="rv-mut">' + esc(t('noActiveRecommendation')) + '</div>';
+    return '<div class="rv-section"><div class="rv-h">' + t('section7') + '</div>' + body + '</div>';
+  }
+
   function renderModelHTML(model) {
-    if (model.emptyState) return '<div class="rv-mut" style="margin-top:10px">' + esc(model.message) + '</div>';
+    if (model.emptyState) return '<div class="rv-mut" style="margin-top:10px">' + esc(model.message) + '</div>' + renderSection7(model);
     var warn = model.versionMixed ? '<div class="rv-banner" style="border-color:var(--part);background:#fff8e8">' + esc(t('versionMixedWarning')) + '</div>' : '';
-    return warn + renderSection1(model) + renderSection2(model) + renderSection3(model) + renderSection4(model) + renderSection5(model) + renderSection6(model);
+    return warn + renderSection1(model) + renderSection2(model) + renderSection3(model) + renderSection4(model) + renderSection5(model) + renderSection6(model) + renderSection7(model);
+  }
+
+  // ---- S10-B-R1 orchestration: locate this player's most recent S9-A Match Observation session
+  // (test_id ASMT-10 / feed_mode live_match) using the existing PBNamespace.isMatchCapture /
+  // PBStore.assessmentsByPlayer / sessionsByAssessment public APIs — no new query/store, no
+  // duplicated S9 matching logic. ----
+  function dashboardEnginesReady() {
+    return typeof PBDiagnosis !== 'undefined' && typeof PBRecommendationPriority !== 'undefined' &&
+      typeof PBTrainingPrescription !== 'undefined' && typeof PBDashboard !== 'undefined' &&
+      typeof PBNamespace !== 'undefined';
+  }
+
+  function findLatestMatchSessionId(player_id) {
+    return PBStore.assessmentsByPlayer(player_id).then(function (assessments) {
+      return Promise.all((assessments || []).map(function (a) { return PBStore.sessionsByAssessment(a.assessment_id); }));
+    }).then(function (sessionLists) {
+      var sessions = [].concat.apply([], sessionLists).filter(function (s) {
+        return s && PBNamespace.isMatchCapture(s.test_id);
+      });
+      sessions.sort(function (a, b) { return (a.started_at || '') < (b.started_at || '') ? 1 : -1; }); // most recent first
+      return sessions.length ? sessions[0].test_session_id : null;
+    });
+  }
+
+  // Runs the existing, accepted S9 chain via its own public entry points only (diagnoseMatch is
+  // storage-backed; prioritizeDiagnosis/prescribeRecommendations are the same pure functions S9-E/F
+  // already expose) and projects the result through PBDashboard — never recomputing any of it.
+  // No S10-A Workflow Cycle is persisted anywhere in this repo yet (S10-A shipped deliberately
+  // without persistence), so `workflow` is left unset here; PBDashboard's own contract already
+  // renders that honestly as workflow_state: 'UNRESOLVED' rather than inventing a storage layer.
+  function loadDashboardData(player_id) {
+    if (!dashboardEnginesReady()) return Promise.resolve(null);
+    return findLatestMatchSessionId(player_id).then(function (matchSessionId) {
+      if (!matchSessionId) return PBDashboard.projectDashboardList([]);
+      return PBDiagnosis.diagnoseMatch(matchSessionId, player_id).then(function (diagnosisResult) {
+        var recommendationResult = PBRecommendationPriority.prioritizeDiagnosis(diagnosisResult);
+        var prescriptionResult = PBTrainingPrescription.prescribeRecommendations(recommendationResult);
+        var items = recommendationResult.recommendations.map(function (r) {
+          var prescription = prescriptionResult.prescriptions.filter(function (p) { return p.source_recommendation_id === r.recommendation_id; })[0] || null;
+          return { recommendation: r, prescription: prescription, skill_gaps: diagnosisResult.skill_gaps };
+        });
+        return PBDashboard.projectDashboardList(items);
+      });
+    }).catch(function () {
+      // A dashboard-pipeline failure (e.g. an unreadable session) must never blank out the rest
+      // of the Review page — degrade honestly to the same empty state PBDashboard itself defines.
+      return PBDashboard.projectDashboardList([]);
+    });
   }
 
   function loadReviewData(player_id) {
@@ -421,9 +575,10 @@
       PBTrend.forPlayer(player_id),
       PBRetest.getLatestReviewSnapshotForPlayer(player_id),
       PBRetest.prescriptionsForPlayer(player_id),
-      PBRetest.getReassessmentSignalForPlayer(player_id)
+      PBRetest.getReassessmentSignalForPlayer(player_id),
+      loadDashboardData(player_id)
     ]).then(function (r) {
-      var trend = r[0], latestSnapRec = r[1], prescriptions = (r[2] || []).slice(), reassessment = r[3];
+      var trend = r[0], latestSnapRec = r[1], prescriptions = (r[2] || []).slice(), reassessment = r[3], dashboardResult = r[4];
       prescriptions.sort(function (a, b) { return (a.created_at || '') < (b.created_at || '') ? -1 : ((a.created_at || '') > (b.created_at || '') ? 1 : 0); });
       var latestPrescription = prescriptions.length ? prescriptions[prescriptions.length - 1] : null;
       var summaryPromise = latestPrescription ? PBRetest.getPrescriptionRetestSummary(latestPrescription.prescription_id) : Promise.resolve(null);
@@ -442,7 +597,8 @@
           retestSummary: retestSummary,
           reassessment: reassessment,
           latestRetestEntry: latestRetestEntry,
-          validatedTrainingLevel: assessmentRec ? assessmentRec.validated_training_level : null
+          validatedTrainingLevel: assessmentRec ? assessmentRec.validated_training_level : null,
+          dashboardResult: dashboardResult
         });
       });
     });
@@ -500,9 +656,16 @@
     buildPrescriptionModel: buildPrescriptionModel,
     buildReassessmentModel: buildReassessmentModel,
     buildDomainSeriesModel: buildDomainSeriesModel,
+    buildDashboardModel: buildDashboardModel,
     stateBadgeMeta: stateBadgeMeta,
     sparklineSVG: sparklineSVG,
     fmtLevel: fmtLevel,
+
+    // S10-B-R1：HTML 拼接也是纯函数（输入 view model，输出字符串，不碰 DOM），
+    // 与既有 sparklineSVG 同类，可在 Node 下单测渲染输出
+    dashboardItemCard: dashboardItemCard,
+    renderSection7: renderSection7,
+    renderModelHTML: renderModelHTML,
 
     // 供页面刷新调用（在浏览器环境挂载后可用）
     refresh: function () { render(); },
