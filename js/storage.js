@@ -17,6 +17,10 @@
  * S8-B：新增 listTrainingCyclesByPrescription（复用既有 by_prescription 索引），
  * 供 js/training-plan-engine.js 做同一 Prescription 的重复建周期保护查询；
  * 不新增 store/index，不改既有校验逻辑 —— 详见 docs/S8-B-ADAPTIVE-PLAN-ENGINE.md。
+ * S8-C：新增 getFinalSessionLogByPlan（复用既有 by_session_plan 索引），供
+ * js/session-execution-engine.js 做"每个 SessionPlan 最多一条终态 SessionLog"
+ * 的判重查询；不新增 store/index，不改既有校验逻辑 —— 详见
+ * docs/S8-C-SESSION-EXECUTION-ENGINE.md。
  * ============================================================ */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -456,6 +460,11 @@
   function getSessionLog(session_log_id) { return get('session_logs', session_log_id); }
   function listSessionLogsBySessionPlan(session_plan_id) { return getByIndex('session_logs', 'by_session_plan', session_plan_id); }
   function listSessionLogsByCycle(cycle_id) { return getByIndex('session_logs', 'by_cycle', cycle_id); }
+  // S8-C single-final-log lookup: reuses the by_session_plan index; a SessionPlan has at most one
+  // finalized SessionLog under the S8-C engine's own enforcement, so the first match is authoritative.
+  function getFinalSessionLogByPlan(session_plan_id) {
+    return getByIndex('session_logs', 'by_session_plan', session_plan_id).then(function (rows) { return rows[0] || null; });
+  }
 
   // -- Cycle Summary (stores fields only; adherence/retest-readiness calc is a future S8-D concern) --
   function createCycleSummary(opts) {
@@ -531,6 +540,7 @@
     updateSessionPlan: updateSessionPlan,
     createSessionLog: createSessionLog, getSessionLog: getSessionLog,
     listSessionLogsBySessionPlan: listSessionLogsBySessionPlan, listSessionLogsByCycle: listSessionLogsByCycle,
+    getFinalSessionLogByPlan: getFinalSessionLogByPlan,
     createCycleSummary: createCycleSummary, getCycleSummary: getCycleSummary,
     getCycleSummaryByCycle: getCycleSummaryByCycle, updateCycleSummary: updateCycleSummary,
     S8_ENUMS: {

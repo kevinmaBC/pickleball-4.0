@@ -144,6 +144,15 @@ through the S8-A storage API. See
 `SessionLog`, `CycleSummary`, adherence, and `RETEST_READY` remain
 entirely unimplemented, per the invariants below.
 
+**Update (S8-C):** the `SessionPlan → SessionLog` step is now implemented
+as `js/session-execution-engine.js`/`PBSessionExecution` — a
+START/ACTIVE/COMPLETE|PARTIAL|SKIPPED lifecycle that turns an existing
+`SessionPlan` into a persisted `SessionLog` through the S8-A storage API.
+See [`docs/S8-C-SESSION-EXECUTION-ENGINE.md`](S8-C-SESSION-EXECUTION-ENGINE.md).
+`CycleSummary`, adherence, training-exposure scoring, and `RETEST_READY`
+remain entirely unimplemented — S8-C only records session-level
+execution facts.
+
 ## Service Worker (TD-SW-01)
 
 Resolved in this commit. See `docs/SW-CACHE-POLICY.md` for the full
