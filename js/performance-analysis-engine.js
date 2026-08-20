@@ -190,15 +190,12 @@
 
   function calculateSequenceMetrics(trials) {
     var rows = rowsOf(trials);
-    var total = rows.length;
 
     var thirdRows = rows.filter(function (r) { return r.phase === 'third'; });
     var thirdSuccess = thirdRows.filter(function (r) { return r.quality === 'good' || r.quality === 'neutral'; }).length;
 
     var transitionRows = rows.filter(function (r) { return r.phase === 'transition'; });
     var transitionSurvive = transitionRows.filter(function (r) { return r.result !== 'transition_lost' && r.result !== 'ue'; }).length;
-
-    var nvzRows = rows.filter(function (r) { return r.phase === 'nvz'; });
 
     return [
       {
@@ -218,9 +215,16 @@
         survival_rate: pct(transitionSurvive, transitionRows.length)
       },
       {
+        // S9-C Semantic Correction V1: `phase === 'nvz'` alone does not reliably prove
+        // baseline/transition -> successful NVZ arrival (a rally can be coded 'nvz' without
+        // the intra-rally progression that "arrival" implies). Per GPT QA correction #3, this
+        // is no longer computed as nvz-phase-rallies/total-rallies; it is unavailable,
+        // consistent with the third_to_fifth_continuation policy above. True NVZ arrival
+        // requires intra-rally progression data S9-B does not capture.
         sequence_type: 'nvz_arrival',
-        attempts: total,
-        arrival_rate: pct(nvzRows.length, total)
+        attempts: null,
+        arrival_rate: null,
+        unavailable_reason: 'phase===nvz alone does not reliably prove baseline/transition -> successful NVZ arrival; requires intra-rally progression data not present in S9-B'
       }
     ];
   }
@@ -231,13 +235,37 @@
   // documented, never scattered magic numbers).
   // ================================================================
 
+  // Full V1 vocabulary (§13). Three of these — repeated_positioning_error, pressure_failure,
+  // sequence_breakdown — have NO active trigger rule as of the S9-C Semantic Correction V1 pass
+  // (see UNSUPPORTED_PATTERN_TYPES below): their prior proxies were judged semantically invalid
+  // by GPT QA and removed rather than left in place. They remain valid, selectable pattern_type
+  // values (the vocabulary itself is preserved) but detectPatterns() never emits them until a
+  // later stage adds a genuine, S9-B-field-backed rule for each.
   var PATTERN_TYPES = [
     'low_success_rate', 'high_error_rate', 'poor_shot_selection', 'repeated_positioning_error',
     'transition_breakdown', 'pressure_failure', 'inconsistency', 'sequence_breakdown'
   ];
 
+  // S9-C Semantic Correction V1 (GPT QA, corrections #1-#3): documents which vocabulary entries
+  // currently have no active detection rule, and exactly why, so this isn't silently rediscovered.
+  var UNSUPPORTED_PATTERN_TYPES = {
+    pressure_failure: 'intent === \'pressure\' means the player intends to pressure the opponent, ' +
+      'not that the player is under pressure. No direct S9-B field represents "player is in a ' +
+      'defensive/disadvantaged state" at the pattern-detection layer (§24/neutralize_opportunity ' +
+      'is a per-rally coded judgment, not a situational bucket usable here without inventing a ' +
+      'formula). Left unsupported in V1 rather than mislabeled.',
+    repeated_positioning_error: 'A high UE/error rate in a phase does not by itself prove a ' +
+      'positioning error (it could be shot selection, execution, or pressure). Left unsupported ' +
+      'in V1 until a later frozen rule explicitly maps S9-B movement evidence to positioning.',
+    sequence_breakdown: 'Its only V1 trigger was the nvz_arrival proxy, itself removed for the ' +
+      'same reason nvz_arrival_rate is now unavailable (see calculateSequenceMetrics) — no other ' +
+      'S9-B-backed trigger exists yet.'
+  };
+
   // §19 Impact Weight — single source of truth. 0.0-1.0. Point-ending/structural failures score
   // highest; ordinary single-shot execution misses score lowest. Deterministic, no LLM judgment.
+  // Kept complete for all 8 vocabulary entries (including the currently-unsupported three) so the
+  // config is ready the moment a genuine trigger rule is added for any of them.
   var IMPACT_WEIGHTS = {
     transition_breakdown: 0.90,        // point-ending / critical structural failure
     pressure_failure: 0.80,            // high-leverage situational failure
@@ -247,6 +275,21 @@
     repeated_positioning_error: 0.60,
     low_success_rate: 0.50,            // ordinary execution miss
     inconsistency: 0.45
+  };
+
+  // S9-C Semantic Correction V1 (GPT QA, correction #4): centralized, provisional pattern-TRIGGER
+  // thresholds — previously scattered as magic numbers inline in detectPatterns(). These are S9-C
+  // V1 detection heuristics for this measurement layer ONLY. They are NOT 3.0/3.5/4.0/4.5/5.0
+  // player-level benchmarks, NOT Master Control V2 Hard Gate thresholds, and NOT rating standards
+  // of any kind. Do not wire them into player-level benchmark/rating logic.
+  var PATTERN_THRESHOLDS = {
+    LOW_SUCCESS_RATE_MAX: 50,                  // success_rate below this -> low_success_rate
+    HIGH_ERROR_RATE_MIN: 30,                   // error_rate above this -> high_error_rate
+    POOR_SHOT_SELECTION_WINNER_RATE_MAX: 10,   // winner_rate below this AND ...
+    POOR_SHOT_SELECTION_ERROR_RATE_MIN: 20,    // ... error_rate above this -> poor_shot_selection
+    INCONSISTENCY_MIN: 40,                     // success_rate within [MIN, MAX] -> inconsistency
+    INCONSISTENCY_MAX: 60,
+    TRANSITION_BREAKDOWN_SURVIVAL_MAX: 50      // transition survival_rate below this -> transition_breakdown
   };
 
   // ================================================================
@@ -347,7 +390,7 @@
       var shotRows = rows.filter(function (r) { return r.shot === sm.shot_type; });
       var evidence = evidenceFor(function (r) { return r.shot === sm.shot_type; });
 
-      if (sm.success_rate != null && sm.success_rate < 50) {
+      if (sm.success_rate != null && sm.success_rate < PATTERN_THRESHOLDS.LOW_SUCCESS_RATE_MAX) {
         candidates.push(buildCandidate({
           match_id: match_id, player_id: player_id, pattern_type: 'low_success_rate', category: 'execution',
           shot_type: sm.shot_type, sample_size: sm.attempts, success_rate: sm.success_rate, error_rate: sm.error_rate,
@@ -355,7 +398,7 @@
           completeness_rows: shotRows, completeness_fields: completenessFieldsShot
         }));
       }
-      if (sm.error_rate != null && sm.error_rate > 30) {
+      if (sm.error_rate != null && sm.error_rate > PATTERN_THRESHOLDS.HIGH_ERROR_RATE_MIN) {
         candidates.push(buildCandidate({
           match_id: match_id, player_id: player_id, pattern_type: 'high_error_rate', category: 'execution',
           shot_type: sm.shot_type, sample_size: sm.attempts, success_rate: sm.success_rate, error_rate: sm.error_rate,
@@ -363,7 +406,8 @@
           completeness_rows: shotRows, completeness_fields: completenessFieldsShot
         }));
       }
-      if (sm.winner_rate != null && sm.winner_rate < 10 && sm.error_rate != null && sm.error_rate > 20) {
+      if (sm.winner_rate != null && sm.winner_rate < PATTERN_THRESHOLDS.POOR_SHOT_SELECTION_WINNER_RATE_MAX &&
+          sm.error_rate != null && sm.error_rate > PATTERN_THRESHOLDS.POOR_SHOT_SELECTION_ERROR_RATE_MIN) {
         candidates.push(buildCandidate({
           match_id: match_id, player_id: player_id, pattern_type: 'poor_shot_selection', category: 'execution',
           shot_type: sm.shot_type, sample_size: sm.attempts, success_rate: sm.success_rate, error_rate: sm.error_rate,
@@ -371,7 +415,7 @@
           completeness_rows: shotRows, completeness_fields: completenessFieldsShot
         }));
       }
-      if (sm.success_rate != null && sm.success_rate >= 40 && sm.success_rate <= 60) {
+      if (sm.success_rate != null && sm.success_rate >= PATTERN_THRESHOLDS.INCONSISTENCY_MIN && sm.success_rate <= PATTERN_THRESHOLDS.INCONSISTENCY_MAX) {
         candidates.push(buildCandidate({
           match_id: match_id, player_id: player_id, pattern_type: 'inconsistency', category: 'execution',
           shot_type: sm.shot_type, sample_size: sm.attempts, success_rate: sm.success_rate, error_rate: sm.error_rate,
@@ -381,24 +425,16 @@
       }
     });
 
-    // ---- Situation-level (situational): repeated_positioning_error ----
-    calculateSituationMetrics(trials).forEach(function (sitm) {
-      if (sitm.error_rate != null && sitm.error_rate > 30) {
-        var sitRows = rows.filter(function (r) { return r.phase === sitm.situation; });
-        var evidence = evidenceFor(function (r) { return r.phase === sitm.situation; });
-        candidates.push(buildCandidate({
-          match_id: match_id, player_id: player_id, pattern_type: 'repeated_positioning_error', category: 'situational',
-          situation: sitm.situation, sample_size: sitm.sample_size, success_rate: sitm.success_rate, error_rate: sitm.error_rate,
-          failure_rate: sitm.error_rate / 100, evidence: evidence,
-          completeness_rows: sitRows, completeness_fields: ['phase', 'quality', 'result']
-        }));
-      }
-    });
+    // ---- Situation-level: repeated_positioning_error is UNSUPPORTED in V1 (see
+    // UNSUPPORTED_PATTERN_TYPES) — S9-C Semantic Correction V1, GPT QA correction #2. A high
+    // UE/error rate in a phase does not by itself prove a positioning error, so no trigger is
+    // implemented here. calculateSituationMetrics() itself is untouched and still measures
+    // per-phase success_rate/error_rate; only the pattern-detection use of it was removed.
 
-    // ---- Sequence-level (sequence): transition_breakdown, sequence_breakdown ----
+    // ---- Sequence-level: transition_breakdown (active — untouched by this correction pass) ----
     var seqMetrics = calculateSequenceMetrics(trials);
     var transitionSeq = seqMetrics.filter(function (s) { return s.sequence_type === 'transition'; })[0];
-    if (transitionSeq && transitionSeq.survival_rate != null && transitionSeq.survival_rate < 50) {
+    if (transitionSeq && transitionSeq.survival_rate != null && transitionSeq.survival_rate < PATTERN_THRESHOLDS.TRANSITION_BREAKDOWN_SURVIVAL_MAX) {
       var transRows = rows.filter(function (r) { return r.phase === 'transition'; });
       var evidence = evidenceFor(function (r) { return r.phase === 'transition'; });
       candidates.push(buildCandidate({
@@ -408,33 +444,17 @@
         evidence: evidence, completeness_rows: transRows, completeness_fields: ['phase', 'result']
       }));
     }
-    var nvzSeq = seqMetrics.filter(function (s) { return s.sequence_type === 'nvz_arrival'; })[0];
-    if (nvzSeq && nvzSeq.arrival_rate != null && nvzSeq.arrival_rate < 20) {
-      var evidence = trials.map(function (t) { return t.trial_event_id; });
-      candidates.push(buildCandidate({
-        match_id: match_id, player_id: player_id, pattern_type: 'sequence_breakdown', category: 'sequence',
-        situation: 'nvz_arrival', sample_size: nvzSeq.attempts, success_rate: nvzSeq.arrival_rate, error_rate: null,
-        failure_rate: (100 - nvzSeq.arrival_rate) / 100, evidence: evidence,
-        completeness_rows: rows, completeness_fields: ['phase']
-      }));
-    }
+    // sequence_breakdown is UNSUPPORTED in V1 (see UNSUPPORTED_PATTERN_TYPES) — S9-C Semantic
+    // Correction V1, GPT QA correction #3. Its only V1 trigger was the nvz_arrival proxy
+    // (phase==='nvz' rallies / total rallies), which GPT QA judged unreliable as proof of actual
+    // NVZ arrival; nvz_arrival is now unavailable (null) in calculateSequenceMetrics, so there is
+    // no S9-B-backed signal left to trigger sequence_breakdown from in V1.
 
-    // ---- Intent-level (situational): pressure_failure (intent === 'pressure' subset) ----
-    var pressureRows = rows.filter(function (r) { return r.intent === 'pressure'; });
-    if (pressureRows.length) {
-      var pErrors = pressureRows.filter(function (r) { return r.result === 'ue'; }).length;
-      var pErrorRate = pct(pErrors, pressureRows.length);
-      if (pErrorRate != null && pErrorRate > 30) {
-        var evidence = evidenceFor(function (r) { return r.intent === 'pressure'; });
-        candidates.push(buildCandidate({
-          match_id: match_id, player_id: player_id, pattern_type: 'pressure_failure', category: 'situational',
-          situation: 'under_pressure', sample_size: pressureRows.length,
-          success_rate: pct(pressureRows.length - pErrors, pressureRows.length), error_rate: pErrorRate,
-          failure_rate: pErrorRate / 100, evidence: evidence,
-          completeness_rows: pressureRows, completeness_fields: ['intent', 'result']
-        }));
-      }
-    }
+    // pressure_failure is UNSUPPORTED in V1 (see UNSUPPORTED_PATTERN_TYPES) — S9-C Semantic
+    // Correction V1, GPT QA correction #1. intent==='pressure' means the player intends to
+    // pressure the opponent, not that the player is under pressure; no direct S9-B field
+    // represents "player is in a defensive/disadvantaged state" at this layer, so no
+    // under_pressure proxy is used and no trigger is implemented here.
 
     return candidates.filter(function (c) { return c != null; });
   }
@@ -493,7 +513,9 @@
 
   return {
     PATTERN_TYPES: PATTERN_TYPES.slice(),
+    UNSUPPORTED_PATTERN_TYPES: JSON.parse(JSON.stringify(UNSUPPORTED_PATTERN_TYPES)),
     IMPACT_WEIGHTS: JSON.parse(JSON.stringify(IMPACT_WEIGHTS)),
+    PATTERN_THRESHOLDS: JSON.parse(JSON.stringify(PATTERN_THRESHOLDS)),
     MIN_SAMPLE_FOR_CANDIDATE: MIN_SAMPLE_FOR_CANDIDATE,
 
     // Pure, individually testable calculation functions (§25/§28).

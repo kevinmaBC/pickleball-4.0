@@ -166,9 +166,13 @@ function run() {
       var transition = seq.filter(function (s) { return s.sequence_type === 'transition'; })[0];
       assert.strictEqual(transition.attempts, 2);
       assert.strictEqual(transition.survival_rate, 50, '1 of 2 transition rallies survives (not transition_lost/ue)');
+      // S9-C Semantic Correction V1 (GPT QA #3): nvz_arrival is no longer computed as
+      // nvz-phase-rallies/total-rallies — phase==='nvz' alone does not reliably prove
+      // baseline/transition -> successful NVZ arrival. Always unavailable now.
       var nvzArrival = seq.filter(function (s) { return s.sequence_type === 'nvz_arrival'; })[0];
-      assert.strictEqual(nvzArrival.attempts, 4);
-      assert.strictEqual(nvzArrival.arrival_rate, 25, '1 of 4 total rallies reaches nvz');
+      assert.strictEqual(nvzArrival.attempts, null, 'nvz_arrival is unavailable, never computed from the phase===nvz proxy');
+      assert.strictEqual(nvzArrival.arrival_rate, null);
+      assert.ok(nvzArrival.unavailable_reason, 'nvz_arrival documents why it is unavailable');
     })
 
     // ==== Unit: partial data — unknown shot excluded from shot metric only, does not crash ====
@@ -251,6 +255,96 @@ function run() {
       assert.strictEqual(PA.dataCompleteness(partialRows, ['a', 'b']), 0.75, '3 of 4 expected field-values present -> 0.75');
       var emptyRows = [{ a: null, b: null }, { a: null, b: null }];
       assert.strictEqual(PA.dataCompleteness(emptyRows, ['a', 'b']), 0, 'nothing present -> 0.0');
+    })
+
+    // ================================================================
+    // S9-C Semantic Correction V1 (GPT QA) — corrections #1-#4
+    // ================================================================
+
+    // ==== Correction #1: intent === 'pressure' does NOT create pressure_failure ====
+    .then(function () {
+      var trials = [];
+      // 10 rallies, all intent==='pressure', all result==='ue' -> would have triggered the
+      // old (now-removed) intent-based pressure_failure proxy at a 100% error rate.
+      for (var i = 0; i < 10; i++) {
+        trials.push({ trial_event_id: 't' + i, raw_json: baseRally({ intent: 'pressure', result: 'ue', quality: 'error' }) });
+      }
+      var patterns = PA.detectPatterns('m1', 'p1', trials);
+      assert.strictEqual(patterns.filter(function (p) { return p.pattern_type === 'pressure_failure'; }).length, 0,
+        'pressure_failure must never be generated from intent===\'pressure\', even at a 100% error rate');
+      assert.strictEqual(patterns.some(function (p) { return p.situation === 'under_pressure'; }), false,
+        'no candidate may be labeled situation=\'under_pressure\' from the removed intent-based proxy');
+      assert.ok(PA.PATTERN_TYPES.indexOf('pressure_failure') !== -1, 'pressure_failure remains in the vocabulary, just unsupported');
+      assert.ok(PA.UNSUPPORTED_PATTERN_TYPES.pressure_failure, 'the limitation is documented in UNSUPPORTED_PATTERN_TYPES');
+    })
+
+    // ==== Correction #2: phase error rate alone does NOT create repeated_positioning_error ====
+    .then(function () {
+      var trials = [];
+      // 10 rallies in the same phase, all high error rate -> would have triggered the old
+      // (now-removed) situation-level repeated_positioning_error proxy.
+      for (var i = 0; i < 10; i++) {
+        trials.push({ trial_event_id: 't' + i, raw_json: baseRally({ phase: 'defense', quality: 'error', result: 'ue' }) });
+      }
+      var patterns = PA.detectPatterns('m1', 'p1', trials);
+      assert.strictEqual(patterns.filter(function (p) { return p.pattern_type === 'repeated_positioning_error'; }).length, 0,
+        'repeated_positioning_error must never be generated from phase-level error rate alone');
+      // calculateSituationMetrics itself is untouched and still legitimately measures the phase.
+      var sitm = PA.calculateSituationMetrics(trials);
+      var defense = sitm.filter(function (s) { return s.situation === 'defense'; })[0];
+      assert.strictEqual(defense.error_rate, 100, 'the underlying situation MEASUREMENT is preserved — only the pattern trigger was removed');
+      assert.ok(PA.PATTERN_TYPES.indexOf('repeated_positioning_error') !== -1, 'repeated_positioning_error remains in the vocabulary, just unsupported');
+      assert.ok(PA.UNSUPPORTED_PATTERN_TYPES.repeated_positioning_error, 'the limitation is documented in UNSUPPORTED_PATTERN_TYPES');
+    })
+
+    // ==== Correction #3: nvz_arrival is unavailable/null and cannot trigger sequence_breakdown ====
+    .then(function () {
+      var trials = [];
+      // 20 rallies, none in nvz phase -> old proxy (0/20=0% arrival, well under the old <20%
+      // trigger) would have fired sequence_breakdown. Must not fire now.
+      for (var i = 0; i < 20; i++) {
+        trials.push({ trial_event_id: 't' + i, raw_json: baseRally({ phase: 'baseline_placeholder', result: 'continue' }) });
+      }
+      var seq = PA.calculateSequenceMetrics(trials);
+      var nvzArrival = seq.filter(function (s) { return s.sequence_type === 'nvz_arrival'; })[0];
+      assert.strictEqual(nvzArrival.attempts, null);
+      assert.strictEqual(nvzArrival.arrival_rate, null);
+      var patterns = PA.detectPatterns('m1', 'p1', trials);
+      assert.strictEqual(patterns.filter(function (p) { return p.pattern_type === 'sequence_breakdown'; }).length, 0,
+        'sequence_breakdown must never be generated from the removed nvz_arrival proxy');
+      assert.ok(PA.PATTERN_TYPES.indexOf('sequence_breakdown') !== -1, 'sequence_breakdown remains in the vocabulary, just unsupported');
+      assert.ok(PA.UNSUPPORTED_PATTERN_TYPES.sequence_breakdown, 'the limitation is documented in UNSUPPORTED_PATTERN_TYPES');
+    })
+
+    // ==== Correction #4: pattern thresholds come from one centralized config ====
+    .then(function () {
+      var required = [
+        'LOW_SUCCESS_RATE_MAX', 'HIGH_ERROR_RATE_MIN',
+        'POOR_SHOT_SELECTION_WINNER_RATE_MAX', 'POOR_SHOT_SELECTION_ERROR_RATE_MIN',
+        'INCONSISTENCY_MIN', 'INCONSISTENCY_MAX', 'TRANSITION_BREAKDOWN_SURVIVAL_MAX'
+      ];
+      required.forEach(function (key) {
+        assert.strictEqual(typeof PA.PATTERN_THRESHOLDS[key], 'number', 'PATTERN_THRESHOLDS.' + key + ' is a centralized numeric config value');
+      });
+      // Behavioral proof the detector actually reads this config, not a duplicate hardcoded copy:
+      // exactly at LOW_SUCCESS_RATE_MAX (50) a shot must NOT trigger (threshold is "<", not "<=").
+      var atThreshold = [];
+      for (var i = 0; i < 10; i++) {
+        atThreshold.push({ trial_event_id: 't' + i, raw_json: baseRally({ shot: 'reset', quality: (i < 5 ? 'good' : 'error'), result: 'continue' }) });
+      }
+      var patternsAt = PA.detectPatterns('m1', 'p1', atThreshold); // success_rate exactly 50
+      assert.strictEqual(patternsAt.filter(function (p) { return p.pattern_type === 'low_success_rate' && p.shot_type === 'reset'; }).length, 0,
+        'success_rate exactly at LOW_SUCCESS_RATE_MAX (50) must not trigger low_success_rate');
+      var belowThreshold = [];
+      for (var i = 0; i < 10; i++) {
+        belowThreshold.push({ trial_event_id: 't' + i, raw_json: baseRally({ shot: 'reset', quality: (i < 4 ? 'good' : 'error'), result: 'continue' }) });
+      }
+      var patternsBelow = PA.detectPatterns('m1', 'p1', belowThreshold); // success_rate = 40, below 50
+      assert.strictEqual(patternsBelow.filter(function (p) { return p.pattern_type === 'low_success_rate' && p.shot_type === 'reset'; }).length, 1,
+        'success_rate below LOW_SUCCESS_RATE_MAX (50) must trigger low_success_rate');
+      // Not a player-level benchmark: PATTERN_THRESHOLDS must be structurally separate from any
+      // validated-level vocabulary (3.0/3.5/4.0/4.5/5.0 never appear as threshold keys/values here).
+      assert.strictEqual(Object.keys(PA.PATTERN_THRESHOLDS).some(function (k) { return /^\d/.test(k); }), false);
     })
 
     // ==== Unit: pattern classification + severity != confidence ====

@@ -31,9 +31,11 @@ rather than recomputing it.
   `under_pressure`) have no directly coded equivalent in the frozen S9-B
   rally schema, so the real existing dimension is used instead of a
   fabricated one, per the task's own "if not existing, don't invent"
-  instruction. `pressure_failure` pattern detection separately uses the
-  existing `intent === 'pressure'` subset, since that is the closest
-  existing field to "under pressure."
+  instruction. (`intent === 'pressure'` was initially used as a
+  `pressure_failure` proxy for "under pressure"; this was removed in the
+  Semantic Correction V1 pass below — `intent==='pressure'` means the
+  player *intends to pressure the opponent*, not that the player is
+  under pressure themselves. It is a different concept.)
 - **Points won/lost**: `result` values `winner`, `forced_error_created`,
   `opponent_ue`, `attack_converted` count as points won; `ue`,
   `transition_lost` count as points lost. `continue`/`weak_reply` are
@@ -50,6 +52,11 @@ rather than recomputing it.
   reason: it requires knowing whether a rally's 3rd shot was followed by
   a 5th shot *within that same rally*, which needs intra-rally
   shot-sequence data S9-B does not capture.
+- **`nvz_arrival`** sequence metric is likewise always
+  `attempts: null, arrival_rate: null` as of the Semantic Correction V1
+  pass — `phase === 'nvz'` alone does not reliably prove baseline/
+  transition → *successful arrival* at the NVZ; that requires
+  intra-rally progression data S9-B does not capture.
 - Sequences with no reliable computation path at all (NVZ Exchange,
   Speed-up→Counter, Defense→Reset, Reset→Kitchen Recovery) are omitted
   from `sequence_metrics` entirely rather than emitted as fabricated
@@ -68,15 +75,62 @@ output in the test suite.
 
 Reuses no existing pattern/severity system (none existed in the repo —
 confirmed by repo-wide search before implementation). `PATTERN_TYPES`
-implements exactly the required V1 set: `low_success_rate`,
+implements exactly the required V1 vocabulary: `low_success_rate`,
 `high_error_rate`, `poor_shot_selection`, `repeated_positioning_error`,
 `transition_breakdown`, `pressure_failure`, `inconsistency`,
-`sequence_breakdown`. Each has one deterministic, documented trigger
-rule in `detectPatterns` (source comments), operating only on already-
-computed metrics — never a second parallel enum.
+`sequence_breakdown`.
+
+### Semantic Correction V1 (GPT independent QA on commit `f19d73b`)
+
+Three of the eight vocabulary entries have **no active trigger rule** as
+of this pass. Their original V1 proxies were reviewed and judged to
+over-claim what the underlying S9-B field actually proves, and were
+removed rather than left in place. The pattern type stays in
+`PATTERN_TYPES` (selectable, valid) and in `IMPACT_WEIGHTS` (ready the
+moment a genuine rule exists); `detectPatterns()` simply never emits it
+today. Each reason is also captured verbatim in the exported
+`UNSUPPORTED_PATTERN_TYPES` map:
+
+| pattern_type | why it was removed |
+|---|---|
+| `pressure_failure` | Its proxy was `intent === 'pressure'` — but that field means the player *intends to pressure the opponent*, not that the player is under pressure. No direct S9-B field represents "player is in a defensive/disadvantaged state" at this layer. Left unsupported rather than mislabeled. |
+| `repeated_positioning_error` | Its proxy was a phase's error rate — but a high UE/error rate in a phase does not by itself prove a *positioning* error (could equally be shot selection, execution, or pressure). Left unsupported until a later frozen rule explicitly maps S9-B movement evidence to positioning. |
+| `sequence_breakdown` | Its only V1 trigger was the `nvz_arrival` proxy below, itself removed for the same reason. No other S9-B-backed trigger exists yet. |
+
+The five remaining pattern types (`low_success_rate`, `high_error_rate`,
+`poor_shot_selection`, `inconsistency`, `transition_breakdown`) were
+**not** flagged by QA and are unchanged — each still has one
+deterministic, documented trigger rule in `detectPatterns` (source
+comments), operating only on already-computed metrics.
+
+### Pattern trigger thresholds (`PATTERN_THRESHOLDS`)
+
+Previously scattered as inline magic numbers (`< 50`, `> 30`, `< 10`,
+…); centralized in this pass into one config object per GPT QA
+correction #4:
+
+```js
+PATTERN_THRESHOLDS = {
+  LOW_SUCCESS_RATE_MAX: 50,
+  HIGH_ERROR_RATE_MIN: 30,
+  POOR_SHOT_SELECTION_WINNER_RATE_MAX: 10,
+  POOR_SHOT_SELECTION_ERROR_RATE_MIN: 20,
+  INCONSISTENCY_MIN: 40,
+  INCONSISTENCY_MAX: 60,
+  TRANSITION_BREAKDOWN_SURVIVAL_MAX: 50
+}
+```
+
+**These are S9-C V1 provisional pattern-detection thresholds for this
+measurement layer only.** They are explicitly **not** 3.0/3.5/4.0/4.5/5.0
+player-level benchmarks, **not** Master Control V2 Hard Gate thresholds,
+and **not** rating standards of any kind — no player-level benchmark
+logic reads or references this config, and the test suite asserts none
+of its keys resemble a validated-level identifier.
 
 `IMPACT_WEIGHTS` is the single centralized config the task spec
-requires (§19), used by nothing else:
+requires (§19), used by nothing else, unchanged by this pass and kept
+complete for all 8 vocabulary entries:
 
 | pattern_type | impact_weight | rationale |
 |---|---|---|
@@ -109,7 +163,7 @@ requires (§19), used by nothing else:
   0.20×ImpactWeight)`, clamped to `[0, 100]`.
 - **Severity and Confidence never share a formula or derive from one
   another.** A 3-sample, 100%-error shot type produces `severity_score`
-  ≈ 94 (numerically high) alongside `confidence_band: 'LOW'` — verified
+  = 73 (numerically high, `>= 70`) alongside `confidence_band: 'LOW'` — verified
   directly in the test suite (AC-08).
 
 ## Evidence
@@ -158,5 +212,17 @@ severity scoring + clamp, severity-independent-of-confidence, pattern
 classification, evidence references, deterministic repeated execution,
 a full NaN/Infinity scan, and three integration flows (Observation →
 Metrics, Observation → Pattern Candidate, Match → AnalysisSummary) built
-directly on `PBMatchObservation`'s public API. Full existing regression
-suite (S1 through S9-B) re-verified passing alongside it.
+directly on `PBMatchObservation`'s public API.
+
+Semantic Correction V1 adds four dedicated tests: `intent==='pressure'`
+(even at 100% error rate) never produces `pressure_failure`; phase-level
+error rate alone never produces `repeated_positioning_error` (while
+confirming `calculateSituationMetrics` itself still measures it
+correctly); `nvz_arrival` is unavailable/null and never triggers
+`sequence_breakdown`; and `PATTERN_THRESHOLDS` is proven to be the
+actual live config the detector reads (a boundary-value behavioral
+test, not just a shape check), with a structural check that no
+threshold key resembles a player-level benchmark.
+
+Full existing regression suite (S1 through S9-B) re-verified passing
+alongside it.
