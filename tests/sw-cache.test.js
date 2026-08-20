@@ -127,6 +127,21 @@ function run() {
           return activatePromise.then(function () {
             assert.deepStrictEqual(env5.deletedKeys, ['pb40-v-obsolete-fixture'], 'activate should purge obsolete cache versions only');
             assert.deepStrictEqual(env5.cacheKeys(), [env5.currentCache], 'current CACHE version should survive activate cleanup');
+
+            // 6. S8-F Scenario Q: every script index.html actually loads (including the S8-E
+            // additions) must be covered by sw.js's own CORE precache list -- parsed from the
+            // real index.html/sw.js, not a hand-maintained duplicate, so this catches any future
+            // script added to one file and forgotten in the other.
+            var html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+            var htmlScripts = [], scriptRe = /<script src="\.\/(js\/[^"]+)"><\/script>/g, sm;
+            while ((sm = scriptRe.exec(html))) htmlScripts.push(sm[1]);
+            assert.ok(htmlScripts.length >= 15, 'sanity: index.html should reference all expected scripts');
+            var swCode = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+            var coreMatch = /const\s+CORE\s*=\s*\[([\s\S]*?)\];/.exec(swCode);
+            assert.ok(coreMatch, 'sw.js must declare a CORE precache list');
+            var missingFromCore = htmlScripts.filter(function (s) { return coreMatch[1].indexOf("'./" + s + "'") === -1; });
+            assert.deepStrictEqual(missingFromCore, [], 'every script index.html loads must be precached by sw.js CORE: ' + missingFromCore.join(', '));
+
             console.log('sw-cache.test.js: all assertions passed');
           });
         });

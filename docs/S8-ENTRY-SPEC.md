@@ -175,6 +175,15 @@ adherence/exposure/R1-R4/threshold logic of its own. See
 field on `training-readiness-engine.js`'s existing output (documented
 there and in the S8-E doc).
 
+**Update (S8-F):** full-system QA / final acceptance gate for S8.
+TD-REG-01 is now **CLOSED** — see
+[`docs/S8-F-FINAL-QA.md`](S8-F-FINAL-QA.md) for the full test inventory,
+closure evidence, cross-layer integration QA, Master Control V2 and S8
+invariant audits, and the one MAJOR mobile-viewport defect found and
+fixed (a pre-existing Home-tab table missing a horizontal-scroll
+wrapper — unrelated to S1–S8 logic, two-line `index.html` fix with
+regression coverage added). No S8 engine or storage logic was changed.
+
 ## Service Worker (TD-SW-01)
 
 Resolved in this commit. See `docs/SW-CACHE-POLICY.md` for the full
