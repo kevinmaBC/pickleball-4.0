@@ -129,8 +129,19 @@ exists. Therefore:
   honestly (never fabricates/infers a MATCH value from TRAINING data).
 
 S10-FINAL
-Status: IMPLEMENTED / GPT FINAL ACCEPTANCE PENDING
-Implementation Record: docs/S10-FINAL-ACCEPTANCE.md
+Status: CLOSED / ACCEPTED
+Acceptance Commit: 4024f67
+Full SHA: 4024f6773122a1b047605c583addb4ea07d84b18
+Acceptance Record: docs/S10-FINAL-ACCEPTANCE.md
+
+S10
+Status: CLOSED / ACCEPTED
+Final Acceptance Commit: 4024f67
+Full SHA: 4024f6773122a1b047605c583addb4ea07d84b18
+
+S11-A
+Status: IMPLEMENTED / GPT QA PENDING
+Implementation Record: docs/S11-A-PRODUCT-JOURNEY-ORCHESTRATOR.md
 ```
 
 S7 and S8 acceptance commit SHAs were confirmed directly from local Git
