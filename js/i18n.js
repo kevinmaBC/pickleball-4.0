@@ -116,6 +116,7 @@
     if (window.PBAssessment && typeof window.PBAssessment.refresh === 'function') window.PBAssessment.refresh();
     if (window.PBTrainingUI && typeof window.PBTrainingUI.refresh === 'function') window.PBTrainingUI.refresh();
     if (window.PBHomeDashboardUI && typeof window.PBHomeDashboardUI.refresh === 'function') window.PBHomeDashboardUI.refresh();
+    if (window.PBGuidedTrainingUI && typeof window.PBGuidedTrainingUI.refresh === 'function') window.PBGuidedTrainingUI.refresh();
   }
 
   function setLang(lang) {

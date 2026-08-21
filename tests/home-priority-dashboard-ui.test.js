@@ -53,13 +53,17 @@ function run() {
   // ==================================================================
   (function () {
     var known = ['START_ASSESSMENT', 'REVIEW_RECOMMENDATION', 'ACTIVATE_PRESCRIPTION', 'START_TRAINING', 'CONTINUE_TRAINING', 'RESUME_SESSION', 'REVIEW_PROGRESS', 'RECORD_REAL_MATCH', 'REVIEW_REASSESSMENT', 'START_NEXT_CYCLE'];
-    var existingViews = ['home', 'learn', 'drill', 'measure', 'review', 'compete', 'team'];
+    // 'guided' (S11-C) added alongside the pre-existing bottom-nav-tab views.
+    var existingViews = ['home', 'learn', 'drill', 'measure', 'review', 'compete', 'team', 'guided'];
     known.forEach(function (code) {
       var route = UI.routeForNextAction(code);
       assert.ok(existingViews.indexOf(route) !== -1, code + ' must route to an existing app view (got ' + route + ')');
     });
     assert.strictEqual(UI.routeForNextAction('NONE'), null, 'NONE routes nowhere');
-    assert.strictEqual(UI.routeForNextAction('ACTIVATE_PRESCRIPTION'), 'review', 'ACTIVATE_PRESCRIPTION never performs a domain mutation, only navigates to existing detail');
+    // S11-C: these four route into the Guided Training Action Flow, never the old S8 `drill` flow.
+    ['ACTIVATE_PRESCRIPTION', 'START_TRAINING', 'CONTINUE_TRAINING', 'RESUME_SESSION'].forEach(function (code) {
+      assert.strictEqual(UI.routeForNextAction(code), 'guided', code + ' routes into S11-C Guided Training');
+    });
   })();
 
   // ==================================================================

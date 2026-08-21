@@ -88,19 +88,24 @@
     return en ? m.en : m.zh;
   }
 
+  // §29 (S11-C): ACTIVATE_PRESCRIPTION/START_TRAINING/CONTINUE_TRAINING/RESUME_SESSION route into
+  // the S11-C Guided Training Action Flow (js/guided-training-ui.js) instead of the old S8 `drill`
+  // flow — S9/S10 Prescription Workflow lineage is a different FK lineage than S8 TrainingCycle/
+  // SessionPlan, and S11-C is the only place authorized to drive that lineage's mutations.
   var NEXT_ACTION_ROUTES = {
     START_ASSESSMENT: 'measure',
     REVIEW_RECOMMENDATION: 'review',
-    ACTIVATE_PRESCRIPTION: 'review',
-    START_TRAINING: 'drill',
-    CONTINUE_TRAINING: 'drill',
-    RESUME_SESSION: 'drill',
+    ACTIVATE_PRESCRIPTION: 'guided',
+    START_TRAINING: 'guided',
+    CONTINUE_TRAINING: 'guided',
+    RESUME_SESSION: 'guided',
     REVIEW_PROGRESS: 'review',
     RECORD_REAL_MATCH: 'measure',
     REVIEW_REASSESSMENT: 'review',
     START_NEXT_CYCLE: 'measure',
     NONE: null
   };
+  var GUIDED_TRAINING_ACTIONS = ['ACTIVATE_PRESCRIPTION', 'START_TRAINING', 'CONTINUE_TRAINING', 'RESUME_SESSION'];
   function routeForNextAction(code) {
     return Object.prototype.hasOwnProperty.call(NEXT_ACTION_ROUTES, code) ? NEXT_ACTION_ROUTES[code] : null;
   }
@@ -223,7 +228,7 @@
       .join('');
 
     var ctaLabel = esc(nextActionLabel(na.code, en));
-    var ctaHTML = '<button class="btn solid hpd-cta" data-act="cta" data-code="' + esc(na.code) + '" data-primary-cta="1"' + (na.enabled ? '' : ' disabled') + '>' + ctaLabel + '</button>' +
+    var ctaHTML = '<button class="btn solid hpd-cta" data-act="cta" data-code="' + esc(na.code) + '" data-target-ref="' + esc(na.target_ref) + '" data-primary-cta="1"' + (na.enabled ? '' : ' disabled') + '>' + ctaLabel + '</button>' +
       (!na.enabled ? '<div class="hpd-mut" style="margin-top:6px">' + (en ? 'Not available yet.' : '暂不可用。') + '</div>' : '');
 
     return journeyHTML +
@@ -287,6 +292,13 @@
     if (act === 'cta') {
       if (node.hasAttribute('disabled')) return;
       var code = node.getAttribute('data-code');
+      var targetRef = node.getAttribute('data-target-ref');
+      // §29: hand off to the S11-C Guided Training Action Flow for the four guided actions —
+      // this file never performs the mutation itself, only routes with the minimal context
+      // (workflow_id/player_id) PBGuidedTrainingUI needs to resolve state on its own.
+      if (GUIDED_TRAINING_ACTIONS.indexOf(code) !== -1 && window.PBGuidedTrainingUI && typeof window.PBGuidedTrainingUI.openForAction === 'function') {
+        window.PBGuidedTrainingUI.openForAction({ code: code, workflow_id: targetRef, player_id: SELECTED_PLAYER_ID });
+      }
       gotoTab(routeForNextAction(code));
     }
   }

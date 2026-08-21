@@ -285,3 +285,17 @@
 #home-priority-dashboard-app .hpd-banner.hpd-warn{background:#fff8e8;border-color:var(--part);color:#7a5c00}
 #home-priority-dashboard-app .hpd-cta{display:block;width:100%;padding:14px;font-size:15.5px;border-radius:12px;text-align:center}
 #home-priority-dashboard-app .hpd-cta[disabled]{opacity:.5;cursor:not-allowed}
+
+/* ===== S11-C Guided Training UI (gt-), reuses the hpd- primitives scoped to its own root ===== */
+#guided-training-app{font-family:var(--sans)}
+#guided-training-app .hpd-mut{font-size:12.5px;color:var(--muted);line-height:1.5}
+#guided-training-app .hpd-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+#guided-training-app .hpd-row:last-child{border-bottom:none}
+#guided-training-app .hpd-banner{background:#f1fbf5;border-left:3px solid var(--pass);border-radius:0 10px 10px 0;padding:10px 12px;font-size:13px;margin-bottom:8px;font-weight:700}
+#guided-training-app .hpd-banner.hpd-warn{background:#fff8e8;border-color:var(--part);color:#7a5c00}
+#guided-training-app .hpd-cta{display:block;width:100%;padding:14px;font-size:15.5px;border-radius:12px;text-align:center}
+#guided-training-app .hpd-cta[disabled]{opacity:.5;cursor:not-allowed}
+#guided-training-app .gt-card{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafcf9;margin-bottom:8px}
+#guided-training-app .gt-form{display:flex;flex-direction:column;gap:4px;margin:10px 0}
+#guided-training-app .gt-input{margin-bottom:8px}
+#guided-training-app .gt-cta{margin-top:8px}
