@@ -82,22 +82,26 @@ Acceptance Record:
 docs/S10-C-PRESCRIPTION-WORKFLOW.md
 
 S10-D
-Status: IMPLEMENTED / GPT QA PENDING
-Core Implementation Commit: bab2382
-Full SHA: bab238241594da444565919065d8a05dcacbedfa
-R1 Persistence Implementation: pending GPT acceptance / see Git history
-Implementation Records:
+Status: CLOSED / ACCEPTED
+Acceptance Commit: 920eea4
+Full SHA: 920eea4b9936c534e615aa277f115d55e0e21508
+Core Commit: bab2382
+Persistence R1 Commit: 920eea4
+Acceptance Records:
 docs/S10-D-SESSION-EVIDENCE.md
 docs/S10-D-R1-DURABLE-PERSISTENCE.md
 
 S10-D-R1
-Status: IMPLEMENTED / GPT QA PENDING
-Purpose: Durable S10 Persistence + Reload Idempotency
-Baseline: bab2382
-Implementation Record: docs/S10-D-R1-DURABLE-PERSISTENCE.md
+Status: CLOSED / ACCEPTED
+Acceptance Commit: 920eea4
 
 S10-E
-Status: PLANNED
+Status: BLOCKED
+Reason: BASELINE RESOLUTION CONTRACT REQUIRED (no existing accepted
+data path resolves development_cycle.baseline_ref into a
+kpi_profile_code-keyed numeric baseline value — see
+docs/S10-E-PROGRESS-REASSESSMENT.md for full repository evidence)
+Baseline: 920eea4
 
 S10-F
 Status: PLANNED
@@ -111,9 +115,12 @@ history (`git log --oneline`, cross-checked with `git show --stat`
 against the exact acceptance doc each commit introduced) — not
 reconstructed or guessed.
 
-## S10-A Carry-Forward Requirement (remains visible until S10-D acceptance)
+## S10-A Carry-Forward Requirement
 
 ```
+FULFILLED BY S10-D / S10-D-R1
+Acceptance Commit: 920eea4
+
 S10-D MUST explicitly bridge:
 
 Completed Training Session
