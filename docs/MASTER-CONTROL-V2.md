@@ -96,26 +96,35 @@ Status: CLOSED / ACCEPTED
 Acceptance Commit: 920eea4
 
 S10-E
-Previous Status: BLOCKED
+Status: CLOSED / ACCEPTED
+Acceptance Commit: 3050b1f
+Full SHA: 3050b1f6725ac91e42c7d64e34f4516e3f095323
 Blocking Audit Commit: 08de42a
-Reason: BASELINE RESOLUTION CONTRACT REQUIRED (no existing accepted
-data path resolves development_cycle.baseline_ref into a
+Reason (historical): BASELINE RESOLUTION CONTRACT REQUIRED (no existing
+accepted data path resolves development_cycle.baseline_ref into a
 kpi_profile_code-keyed numeric baseline value — see
 docs/S10-E-PROGRESS-REASSESSMENT.md for full repository evidence)
-Status: IMPLEMENTED / GPT QA PENDING
-Core Unblock / R1 Implementation: pending GPT acceptance / see Git history
-Implementation Records:
+R1 Implementation Commit: 3050b1f
+Acceptance Records:
 docs/S10-E-PROGRESS-REASSESSMENT.md
 docs/S10-E-R1-PROGRESS-REASSESSMENT.md
 
 S10-E-R1
-Status: IMPLEMENTED / GPT QA PENDING
-Purpose: Baseline Resolution + Progress/Reassessment Architecture Unblock
-Baseline: 08de42a
-Implementation Record: docs/S10-E-R1-PROGRESS-REASSESSMENT.md
+Status: CLOSED / ACCEPTED
+Acceptance Commit: 3050b1f
 
 S10-F
-Status: PLANNED
+Status: IMPLEMENTED / GPT QA PENDING
+Implementation Record: docs/S10-F-CROSS-WORKFLOW-QA.md
+
+KNOWN LIMITATION — MATCH PROGRESS
+No durable kpi_profile_code-aligned MATCH Evidence store currently
+exists. Therefore:
+- numeric MATCH progress may remain UNRESOLVED / INSUFFICIENT_DATA;
+- TRAINING Evidence must never be substituted for MATCH Evidence;
+- real Match Observation remains valid for reassessment through S9;
+- this limitation is non-blocking only while the system behaves
+  honestly (never fabricates/infers a MATCH value from TRAINING data).
 
 S10-FINAL
 Status: PLANNED
