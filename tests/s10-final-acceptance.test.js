@@ -448,12 +448,15 @@ function run() {
     // FA24 — no unauthorized next-stage work.
     // ================================================================
     .then(function () { return gate('FA24_NO_S11_WORK', function () {
-      // S11-A-R2/S11-B/S11-C/S11-D/S11-E: FA24 originally asserted "no S11-named file exists" —
-      // valid only at the S10-FINAL QA moment, before S11-A..E were GPT-authorized and
-      // implemented. It is now a strict allowlist instead: the specifically authorized
-      // S11-A + S11-B + S11-C + S11-D + S11-E footprint passes, but any other S11-named file
-      // (S11-F/FINAL, or an unexpected extra file from an already-accepted stage) still fails —
-      // the governance purpose ("no unauthorized next-stage work") is preserved, not removed.
+      // S11-A-R2/S11-B/S11-C/S11-D/S11-E/S11-F0: FA24 originally asserted "no S11-named file
+      // exists" — valid only at the S10-FINAL QA moment, before S11-A..F0 were GPT-authorized. It
+      // is now a strict allowlist instead: the specifically authorized S11-A + S11-B + S11-C +
+      // S11-D + S11-E + S11-F0 footprint passes, but any other S11-named file (a real S11-F
+      // implementation file, S11-FINAL, or an unexpected extra file from an already-accepted
+      // stage) still fails — the governance purpose ("no unauthorized next-stage work") is
+      // preserved, not removed. S11-F0 is a narrow, audit-only blocking-repair pass (see
+      // docs/S11-F0-PRESCRIPTION-LINEAGE-AUDIT.md) — only its own exact documentation filename is
+      // allowlisted here; S11-F itself remains explicitly unauthorized until GPT clears the block.
       var authorizedS11Files = [
         'product-journey-orchestrator.js',
         'product-journey-orchestrator.test.js',
@@ -477,14 +480,15 @@ function run() {
         'history-explainability-ui.js',
         'history-explainability-adapter.test.js',
         'history-explainability-ui.test.js',
-        'S11-E-HISTORY-EXPLAINABILITY-RECOVERY.md'
+        'S11-E-HISTORY-EXPLAINABILITY-RECOVERY.md',
+        'S11-F0-PRESCRIPTION-LINEAGE-AUDIT.md'
       ];
       var jsFiles = fs.readdirSync(path.join(ROOT, 'js'));
       var testFiles = fs.readdirSync(path.join(ROOT, 'tests'));
       var docFiles = fs.readdirSync(path.join(ROOT, 'docs'));
       [].concat(jsFiles, testFiles, docFiles).forEach(function (f) {
         if (/s11/i.test(f)) {
-          assert.ok(authorizedS11Files.indexOf(f) !== -1, 'only the GPT-authorized S11-A/S11-B/S11-C/S11-D/S11-E footprint may exist, unauthorized S11-named file: ' + f);
+          assert.ok(authorizedS11Files.indexOf(f) !== -1, 'only the GPT-authorized S11-A/S11-B/S11-C/S11-D/S11-E/S11-F0 footprint may exist, unauthorized S11-named file: ' + f);
         }
       });
       authorizedS11Files.forEach(function (f) {

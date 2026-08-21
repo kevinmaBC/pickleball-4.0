@@ -164,8 +164,14 @@ Full SHA: f9d9af3c1086af276d656fffc651acf09faf15d7
 Acceptance Record: docs/S11-D-PROGRESS-REASSESSMENT-EXPERIENCE.md
 
 S11-E
-Status: IMPLEMENTED / GPT QA PENDING
-Implementation Record: docs/S11-E-HISTORY-EXPLAINABILITY-RECOVERY.md
+Status: CLOSED / ACCEPTED
+Acceptance Commit: aa507fb
+Full SHA: aa507fb87d7568d97f2221a3318897de2f33eb2d
+Acceptance Record: docs/S11-E-HISTORY-EXPLAINABILITY-RECOVERY.md
+
+S11-F0
+Status: BLOCKING REPAIR IN PROGRESS
+Finding: PRESCRIPTION_WORKFLOW_CYCLE_LINK_MISSING
 ```
 
 S7 and S8 acceptance commit SHAs were confirmed directly from local Git
