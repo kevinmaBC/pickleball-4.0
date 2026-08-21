@@ -124,8 +124,13 @@ function run() {
       });
       assert.ok(mc.indexOf('Blocking Audit Commit: 08de42a') !== -1, 'S10-E historical BLOCKED audit preserved');
       assert.ok(mc.indexOf('KNOWN LIMITATION — MATCH PROGRESS') !== -1, 'known MATCH limitation preserved');
-      assert.ok(mc.indexOf('S10-FINAL\nStatus: FINAL QA IN PROGRESS') !== -1, 'S10-FINAL correctly recorded as FINAL QA IN PROGRESS during this QA pass');
-      assert.ok(mc.indexOf('S10-FINAL\nStatus: CLOSED') === -1 && mc.indexOf('S10 CLOSED / ACCEPTED') === -1, 'Claude never self-declares S10/S10-FINAL closed');
+      // Post GPT Independent Final Acceptance (S11-A-R1): S10-FINAL/S10 are now legitimately
+      // CLOSED / ACCEPTED at 4024f67 — the prior "FINAL QA IN PROGRESS" transient-state
+      // assertion is obsolete and is replaced with the final accepted governance state.
+      var s10FinalRe = /S10-FINAL\s*\nStatus: CLOSED \/ ACCEPTED\s*\nAcceptance Commit: 4024f67\s*\nFull SHA: 4024f6773122a1b047605c583addb4ea07d84b18\s*\nAcceptance Record: docs\/S10-FINAL-ACCEPTANCE\.md/;
+      assert.ok(s10FinalRe.test(mc), 'S10-FINAL correctly recorded as CLOSED / ACCEPTED @ 4024f67');
+      var s10Re = /S10\s*\nStatus: CLOSED \/ ACCEPTED\s*\nFinal Acceptance Commit: 4024f67\s*\nFull SHA: 4024f6773122a1b047605c583addb4ea07d84b18/;
+      assert.ok(s10Re.test(mc), 'S10 overall stage correctly recorded as CLOSED / ACCEPTED @ 4024f67');
     }); })
 
     // ================================================================
@@ -443,11 +448,27 @@ function run() {
     // FA24 — no unauthorized next-stage work.
     // ================================================================
     .then(function () { return gate('FA24_NO_S11_WORK', function () {
+      // S11-A-R2: FA24 originally asserted "no S11-named file exists" — valid only at the
+      // S10-FINAL QA moment, before S11-A was GPT-authorized and implemented. It is now a strict
+      // allowlist instead: the specifically authorized S11-A footprint passes, but any other
+      // S11-named file (S11-B/C/D/E/F/FINAL, or an unexpected extra S11-A file) still fails —
+      // the governance purpose ("no unauthorized next-stage work") is preserved, not removed.
+      var authorizedS11Files = [
+        'product-journey-orchestrator.js',
+        'product-journey-orchestrator.test.js',
+        'S11-A-PRODUCT-JOURNEY-ORCHESTRATOR.md'
+      ];
       var jsFiles = fs.readdirSync(path.join(ROOT, 'js'));
       var testFiles = fs.readdirSync(path.join(ROOT, 'tests'));
       var docFiles = fs.readdirSync(path.join(ROOT, 'docs'));
       [].concat(jsFiles, testFiles, docFiles).forEach(function (f) {
-        assert.ok(!/s11/i.test(f), 'no S11-named file exists: ' + f);
+        if (/s11/i.test(f)) {
+          assert.ok(authorizedS11Files.indexOf(f) !== -1, 'only the GPT-authorized S11-A footprint may exist, unauthorized S11-named file: ' + f);
+        }
+      });
+      authorizedS11Files.forEach(function (f) {
+        var found = jsFiles.indexOf(f) !== -1 || testFiles.indexOf(f) !== -1 || docFiles.indexOf(f) !== -1;
+        assert.ok(found, 'authorized S11-A file is present: ' + f);
       });
       var storageSrc = stripComments(readSrc('js/storage.js'));
       assert.ok(!/DB_VERSION\s*=\s*6/.test(storageSrc), 'no DB_VERSION 6');
