@@ -192,6 +192,58 @@ function journeyFor(overrides) {
 })();
 
 // ================================================================
+// S11-B-R1 required test cases (package §15) — explicit named coverage; several overlap in
+// substance with the A1-A8 cases above but are named/asserted here verbatim per the repair spec.
+// ================================================================
+
+// R1-T01 — No prepared Dashboard: Home View Model still produced, focus/training null, no crash,
+// no fabricated recommendation.
+(function () {
+  var journey = journeyFor();
+  var out = A.composeHomeDashboard({ player_id: 'p1', journey: journey, dashboard: dashboard([]) });
+  var h = out.home_dashboard;
+  assert.ok(h, 'R1-T01 Home View Model produced');
+  assert.strictEqual(h.focus, null, 'R1-T01 focus = null');
+  assert.strictEqual(h.training, null, 'R1-T01 training = null');
+  assert.strictEqual(h.why, null, 'R1-T01 why = null');
+})();
+
+// R1-T02 — Prepared Dashboard supplied: focus = dashboard.items[0], training = prescription
+// summary, rank unchanged, no reranking.
+(function () {
+  var journey = journeyFor();
+  var items = [
+    dashboardItem({ recommendation_id: 'rec_2', rank: 2, skill: 'serve', prescription_ref: null }),
+    dashboardItem({ recommendation_id: 'rec_1', rank: 1, skill: 'drop', prescription_ref: 'rx_1', prescription_status: 'AVAILABLE', prescription_summary: prescriptionSummary() })
+  ];
+  var out = A.composeHomeDashboard({ player_id: 'p1', journey: journey, dashboard: dashboard(items) });
+  var h = out.home_dashboard;
+  assert.strictEqual(h.focus.recommendation_id, 'rec_2', 'R1-T02 focus is dashboard.items[0] verbatim');
+  assert.strictEqual(h.focus.rank, 2, 'R1-T02 rank copied unchanged, never reranked to 1');
+  assert.strictEqual(h.training, null, 'R1-T02 training reflects items[0] (no prescription), not items[1]');
+})();
+
+// R1-T03 — Reassessment without Dashboard: development_cycle REASSESSMENT_READY + empty
+// dashboard -> READY_TO_REASSESS / RECORD_REAL_MATCH.
+(function () {
+  var cycle = { cycle_id: 'cyc_1', player_id: 'p1', baseline_ref: 'asm_1', evidence_refs: ['ev_1'], recommendation_refs: ['rec_1'], priority_ref: null, prescription_refs: ['rx_1'], training_session_refs: [], progress_evidence_refs: [], reassessment_ref: null, state: 'REASSESSMENT_READY', schema_version: '1.0' };
+  var journey = PJ.projectJourney({ player: { player_id: 'p1' }, development_cycle: cycle }).journey;
+  var out = A.composeHomeDashboard({ player_id: 'p1', journey: journey, dashboard: dashboard([]) });
+  assert.strictEqual(out.home_dashboard.journey.stage, 'READY_TO_REASSESS', 'R1-T03 stage');
+  assert.strictEqual(out.home_dashboard.next_action.code, 'RECORD_REAL_MATCH', 'R1-T03 next_action');
+  assert.strictEqual(out.home_dashboard.focus, null, 'R1-T03 no Dashboard focus, yet reassessment CTA still fires');
+})();
+
+// R1-T05 — Deterministic composition: same prepared inputs -> same Home View Model
+// (also see the pre-existing "Determinism" case above, using a non-empty dashboard fixture).
+(function () {
+  var journey = journeyFor();
+  var out1 = A.composeHomeDashboard({ player_id: 'p1', journey: journey, dashboard: dashboard([]) });
+  var out2 = A.composeHomeDashboard({ player_id: 'p1', journey: journey, dashboard: dashboard([]) });
+  assert.strictEqual(JSON.stringify(out1), JSON.stringify(out2), 'R1-T05 identical prepared input yields identical Home View Model');
+})();
+
+// ================================================================
 // Structurally invalid input -> explicit error, never a silent guess
 // ================================================================
 (function () {
@@ -223,25 +275,29 @@ function journeyFor(overrides) {
 })();
 
 // ================================================================
-// Architecture protection — structural source scan. The adapter's only legitimate decision
-// engines are the same accepted S9 public entry points js/review-ui.js's own loadDashboardData
-// already uses, plus the two accepted projection layers (PBDashboard/PBProductJourney) — it must
-// never call a workflow transition, session-evidence, progress, or reassessment engine.
+// R1-T04 — No S9 execution. Architecture protection — structural source scan. The adapter's
+// only legitimate engines are the two accepted projection layers (PBDashboard/PBProductJourney)
+// plus read-only PBStore access — it must never call the S9 decision pipeline, a workflow
+// transition, session-evidence, progress, or reassessment engine (S11-B-R1 repair: the adapter
+// previously re-ran the S9 chain on every render, which was itself a form of deciding the
+// recommendation/prescription, not merely projecting an already-decided one).
 // ================================================================
 var SRC = fs.readFileSync(path.join(__dirname, '../js/home-dashboard-adapter.js'), 'utf8');
 var STRIPPED = SRC.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
 (function () {
   var forbidden = [
+    'PBDiagnosis', 'PBRecommendationPriority', 'PBTrainingPrescription',
+    'diagnoseMatch', 'prioritizeDiagnosis', 'prescribeRecommendations',
     'PBWorkflow', 'PBPrescriptionWorkflow', 'PBSessionEvidence', 'PBProgressTracking',
-    'PBReassessment', 'PBProgressReassessmentPersistence', 'PBCycleBaseline',
-    '.transition(', 'startTraining(', 'supersede(', 'computeProgress', 'runReassessment',
-    'checkReassessmentEligibility'
+    'PBReassessment', 'PBProgressReassessmentPersistence', 'PBCycleBaseline', 'PBNamespace',
+    '.transition(', 'startTraining(', 'supersede(', 'computeProgress', 'computeProgressSnapshot',
+    'runReassessment', 'checkReassessmentEligibility'
   ];
   forbidden.forEach(function (token) {
     assert.ok(STRIPPED.indexOf(token) === -1, 'home-dashboard-adapter.js must never reference ' + token);
   });
-  // The only legitimate S9/S10/S11-A engine calls (mirrors js/review-ui.js's own accepted chain).
-  ['PBDiagnosis.diagnoseMatch', 'PBRecommendationPriority.prioritizeDiagnosis', 'PBTrainingPrescription.prescribeRecommendations', 'PBDashboard', 'PBProductJourney', 'PBStore'].forEach(function (token) {
+  // The only legitimate S10-B/S11-A engine calls, plus read-only PBStore access.
+  ['PBDashboard', 'PBProductJourney', 'PBStore'].forEach(function (token) {
     assert.ok(STRIPPED.indexOf(token) !== -1, 'home-dashboard-adapter.js should reference ' + token);
   });
 })();

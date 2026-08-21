@@ -146,7 +146,8 @@ Full SHA: e28c24c093bf050a8ce0a68e21cfaaa44f71ad6f
 Acceptance Record: docs/S11-A-PRODUCT-JOURNEY-ORCHESTRATOR.md
 
 S11-B
-Status: IMPLEMENTATION IN PROGRESS
+Status: IMPLEMENTED / GPT QA PENDING
+Implementation Record: docs/S11-B-HOME-PRIORITY-DASHBOARD.md
 ```
 
 S7 and S8 acceptance commit SHAs were confirmed directly from local Git

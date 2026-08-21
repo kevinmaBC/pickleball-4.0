@@ -1,17 +1,32 @@
 /* ============================================================
- * home-dashboard-adapter.js — Pickleball App 2.0 Alpha · S11-B
+ * home-dashboard-adapter.js — Pickleball App 2.0 Alpha · S11-B / S11-B-R1
  * Home / Priority Dashboard Experience — HOME VIEW MODEL ADAPTER.
  *
- * Thin product/presentation integration layer: reads already-accepted
- * stored data (js/storage.js), runs the accepted S9 pipeline the exact
- * same way js/review-ui.js's own loadDashboardData already does, and
+ * Thin product/presentation integration layer: reads already-persisted
+ * S10 workflow/session/reassessment records (js/storage.js) and
  * composes S10-B's Dashboard Projection (js/dashboard-integration-
  * engine.js) together with S11-A's Journey Projection (js/product-
  * journey-orchestrator.js) into one disposable Home Experience View
- * Model. It never decides a recommendation, priority, prescription,
- * progress value, reassessment outcome, workflow transition, or product
- * journey stage — those stay exactly where S9/S10/S11-A already put
- * them.
+ * Model. It never decides a diagnosis, recommendation, priority,
+ * prescription, progress value, reassessment outcome, workflow
+ * transition, or product journey stage — those stay exactly where
+ * S9/S10/S11-A already put them.
+ *
+ * S11-B-R1 architecture repair: this file no longer calls the S9
+ * decision pipeline (PBDiagnosis.diagnoseMatch /
+ * PBRecommendationPriority.prioritizeDiagnosis /
+ * PBTrainingPrescription.prescribeRecommendations) under any
+ * circumstance — regenerating a Recommendation/Prescription on every
+ * Home render was itself a form of deciding them, not merely
+ * projecting already-decided output. There is currently no accepted
+ * durable S9 Recommendation/Prescription store in this repository for
+ * S11-B to read (confirmed: js/storage.js has no such store); this file
+ * does not invent one, does not add a cache/localStorage workaround,
+ * and does not reconstruct a recommendation from unrelated data. When
+ * no prepared Dashboard data is available, `dashboard.items` is simply
+ * `[]` (via PBDashboard.projectDashboardList([]), never invented) and
+ * Home renders an honest partial state (`focus`/`training` = null) —
+ * see docs/S11-B-HOME-PRIORITY-DASHBOARD.md's "Known Limitation".
  *
  * Frozen boundary (do not cross):
  *   - No LLM, no ML, no randomness, no re-ranking. dashboard.items[0]
@@ -22,23 +37,24 @@
  *   - `next_action` is copied verbatim from PBProductJourney's own
  *     journey.next_action — this file never invents a second primary
  *     action and never decides CTA enablement itself.
- *   - This file never calls PBWorkflow.transition, PBPrescriptionWorkflow
- *     .transition/startTraining/supersede, PBSessionEvidence, PBProgress
- *     Tracking.computeProgressSnapshot, or PBReassessment/
- *     PBProgressReassessmentPersistence.runReassessment — no domain
- *     mutation and no progress/reassessment recalculation happen here.
- *   - The only decision engines invoked are the same accepted, public,
- *     already-wired S9 entry points js/review-ui.js's loadDashboardData
- *     already uses (PBDiagnosis.diagnoseMatch -> PBRecommendationPriority
- *     .prioritizeDiagnosis -> PBTrainingPrescription.prescribeRecommend
- *     ations), plus the two accepted projection layers
+ *   - This file has ZERO runtime dependency on PBDiagnosis,
+ *     PBRecommendationPriority, PBTrainingPrescription, PBWorkflow,
+ *     PBPrescriptionWorkflow, PBSessionEvidence, PBProgressTracking, or
+ *     PBReassessment/PBProgressReassessmentPersistence — it never
+ *     requires/reads any of their globals, and never calls
+ *     diagnoseMatch/prioritizeDiagnosis/prescribeRecommendations/
+ *     .transition/startTraining/supersede/computeProgress/
+ *     computeProgressSnapshot/runReassessment. No domain mutation and
+ *     no S9/progress/reassessment recalculation happen here.
+ *   - The only engines invoked are the two accepted projection layers
  *     (PBDashboard.projectDashboardList, PBProductJourney.projectJourney)
- *     — never a duplicated/local reimplementation of any of them.
+ *     — never a duplicated/local reimplementation of either.
  *   - No new persistence: every PBStore call here is a read; nothing is
  *     ever put()/created. The composed Home View Model itself is never
  *     persisted (disposable, regenerable from the same accepted data).
  *
- * See docs/S11-B-HOME-PRIORITY-DASHBOARD.md for the full field reference.
+ * See docs/S11-B-HOME-PRIORITY-DASHBOARD.md for the full field
+ * reference and the known-limitation writeup.
  * ============================================================ */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -79,7 +95,8 @@
     var items = Array.isArray(dashboard.items) ? dashboard.items : [];
 
     // §11: current focus is always dashboard.items[0] — S10-B's own upstream-rank ordering,
-    // never re-sorted here.
+    // never re-sorted here. An empty/unavailable dashboard (§6/§10) yields focus/why/training =
+    // null, never a fabricated recommendation.
     var focusItem = items.length ? items[0] : null;
 
     var focus = focusItem ? {
@@ -113,18 +130,20 @@
     } : null;
 
     // §15: exactly one primary next_action, copied verbatim from S11-A — never invented here.
+    // §11: REASSESSMENT_READY overrides a training CTA structurally, via S11-A's own frozen
+    // precedence, regardless of whether a Dashboard focus is available at all.
     var next_action = {
       code: journey.next_action.code,
       enabled: journey.next_action.enabled === true,
       target_ref: journey.next_action.target_ref != null ? journey.next_action.target_ref : null
     };
 
-    // §11/§15: journey.presentation_flags are copied verbatim (S11-A already decided them);
+    // §10/§15: journey.presentation_flags are copied verbatim (S11-A already decided them);
     // additive, presentation-only flags are appended, never replacing or reinterpreting them.
     var flags = Array.isArray(journey.presentation_flags) ? journey.presentation_flags.slice() : [];
     if (dashboard.message_code && flags.indexOf(dashboard.message_code) === -1) flags.push(dashboard.message_code);
 
-    // §20: MATCH Transfer honesty — a resolved MATCH progress snapshot (already computed
+    // §12/§20: MATCH Transfer honesty — a resolved MATCH progress snapshot (already computed
     // upstream, never here) must show IMPROVING/DECLINING/STABLE; anything else (absent,
     // UNRESOLVED, INSUFFICIENT_DATA) surfaces this additive flag so the UI never implies MATCH
     // transfer has been validated. TRAINING progress is read from a completely separate field
@@ -159,19 +178,14 @@
   }
 
   // ================================================================
-  // IO orchestration (browser-only; reads PBStore + runs the same
-  // accepted S9 chain js/review-ui.js's own loadDashboardData/
-  // findLatestMatchSessionId already use). No new query/store, no
-  // duplicated S9/S10/S11-A logic.
+  // IO orchestration (browser-only; reads persisted S10 records only —
+  // never re-runs S9). No new query/store, no duplicated S9/S10/S11-A
+  // logic.
   // ================================================================
 
   function storeEngine() {
     if (typeof PBStore === 'undefined') throw AdapterError('DEP_MISSING', 'PBStore not loaded');
     return PBStore;
-  }
-  function namespaceEngine() {
-    if (typeof PBNamespace === 'undefined') throw AdapterError('DEP_MISSING', 'PBNamespace not loaded');
-    return PBNamespace;
   }
   function dashboardEngine() {
     if (typeof PBDashboard === 'undefined') throw AdapterError('DEP_MISSING', 'PBDashboard not loaded');
@@ -183,44 +197,16 @@
   }
 
   function ioEnginesReady() {
-    return typeof PBStore !== 'undefined' && typeof PBNamespace !== 'undefined' &&
-      typeof PBDashboard !== 'undefined' && typeof PBProductJourney !== 'undefined' &&
-      typeof PBDiagnosis !== 'undefined' && typeof PBRecommendationPriority !== 'undefined' &&
-      typeof PBTrainingPrescription !== 'undefined';
+    return typeof PBStore !== 'undefined' && typeof PBDashboard !== 'undefined' && typeof PBProductJourney !== 'undefined';
   }
 
-  // Same lookup js/review-ui.js's findLatestMatchSessionId already performs — most recent
-  // Match Observation session (PBNamespace.isMatchCapture) for this player.
-  function findLatestMatchSessionId(player_id) {
-    var store = storeEngine(), ns = namespaceEngine();
-    return store.assessmentsByPlayer(player_id).then(function (assessments) {
-      return Promise.all((assessments || []).map(function (a) { return store.sessionsByAssessment(a.assessment_id); }));
-    }).then(function (sessionLists) {
-      var sessions = [].concat.apply([], sessionLists).filter(function (s) { return s && ns.isMatchCapture(s.test_id); });
-      sessions.sort(function (a, b) { return (a.started_at || '') < (b.started_at || '') ? 1 : -1; });
-      return sessions.length ? sessions[0].test_session_id : null;
-    });
-  }
-
-  // Runs the real, accepted S9 chain (never duplicated) and projects it through PBDashboard —
-  // identical pattern to js/review-ui.js's own loadDashboardData.
-  function loadDashboard(player_id) {
-    return findLatestMatchSessionId(player_id).then(function (matchSessionId) {
-      if (!matchSessionId) return dashboardEngine().projectDashboardList([]);
-      return PBDiagnosis.diagnoseMatch(matchSessionId, player_id).then(function (diagnosisResult) {
-        var recommendationResult = PBRecommendationPriority.prioritizeDiagnosis(diagnosisResult);
-        var prescriptionResult = PBTrainingPrescription.prescribeRecommendations(recommendationResult);
-        var items = recommendationResult.recommendations.map(function (r) {
-          var prescription = prescriptionResult.prescriptions.filter(function (p) { return p.source_recommendation_id === r.recommendation_id; })[0] || null;
-          return { recommendation: r, prescription: prescription, skill_gaps: diagnosisResult.skill_gaps };
-        });
-        return dashboardEngine().projectDashboardList(items);
-      });
-    }).catch(function () {
-      // A pipeline failure must never blank the Home panel — degrade to PBDashboard's own
-      // honest empty state, matching js/review-ui.js's existing fallback.
-      return dashboardEngine().projectDashboardList([]);
-    });
+  // §6/§7: no accepted durable S9 Recommendation/Prescription store exists yet in this
+  // repository, so there is currently no "genuinely available prepared Dashboard data" for this
+  // file to read — it honestly projects an empty item list (PBDashboard's own accepted empty-
+  // state contract) rather than regenerating one via the S9 pipeline. When a future stage adds
+  // durable S9 output, this is the single place that would start reading it.
+  function loadDashboard() {
+    return dashboardEngine().projectDashboardList([]);
   }
 
   // Picks the most recently updated development_cycle for the player (or none). All 9 workflow
@@ -234,7 +220,7 @@
     return sorted[0];
   }
 
-  // Reads only already-persisted, already-accepted records (§23: adapter may read PBStore, never
+  // Reads only already-persisted, already-accepted records (adapter may read PBStore, never
   // decide). No cycle_kpi_baselines/reassessment progress is recomputed here — since no
   // development_cycle writer exists in this app yet, `progress` stays [] (an honest read of what
   // is actually persisted), which PBProductJourney itself already handles gracefully
@@ -260,9 +246,12 @@
     if (!ioEnginesReady()) return Promise.reject(AdapterError('DEP_MISSING', 'required modules not loaded'));
     if (player_id == null) return Promise.reject(AdapterError('INVALID_INPUT', 'player_id is required'));
 
-    return Promise.all([loadDashboard(player_id), loadJourneyInputs(player_id)]).then(function (r) {
-      var dashboardResult = r[0], journeyInputs = r[1];
+    return loadJourneyInputs(player_id).then(function (journeyInputs) {
+      var dashboardResult = loadDashboard();
       var items = dashboardResult.dashboard.items;
+      // If a future stage supplies prepared Dashboard items, their already-computed
+      // recommendation/prescription refs are read verbatim into the journey input — never
+      // recomputed. Today `items` is always [], so these are always [] too.
       var recommendations = items.map(function (it) {
         return { recommendation_id: it.recommendation_id, rank: it.rank, status: it.engine_status, source_skill_gap_ids: (it.traceability || {}).source_skill_gap_ids };
       });

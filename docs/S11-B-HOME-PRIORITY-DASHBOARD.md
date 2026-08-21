@@ -71,17 +71,19 @@ S11-B Home UI (js/home-priority-dashboard-ui.js)
 
 Recommendations/prescriptions are **not persisted anywhere** in this
 repository (confirmed: `js/storage.js` has no recommendation/S9-shaped-
-prescription store). The adapter's `loadDashboard` function replicates
-the exact same accepted, already-shipped bridge
-`js/review-ui.js`'s own `loadDashboardData`/`findLatestMatchSessionId`
-already use: find the player's latest Match Observation session, run
-the real `PBDiagnosis.diagnoseMatch -> PBRecommendationPriority
-.prioritizeDiagnosis -> PBTrainingPrescription.prescribeRecommendations`
-chain, and project the result through `PBDashboard`. This is not a
-duplicated decision — it is the same public entry points, called the
-same way, a second time (once per accepted UI panel), exactly as
-`js/training-ui.js` and `js/review-ui.js` already independently read
-`PBStore` for their own panels.
+prescription store). **S11-B-R1 architecture repair:** S11-B never
+regenerates S9 decisions to work around that gap. The adapter's
+`loadDashboard` function does not call `PBDiagnosis`/
+`PBRecommendationPriority`/`PBTrainingPrescription` at all — re-running
+the S9 chain on every Home render (the original S11-B implementation's
+approach, matching `js/review-ui.js`'s own `loadDashboardData`) was
+itself a form of *deciding* the Recommendation/Prescription on S11-B's
+own initiative, not merely projecting an already-decided one, and broke
+the frozen "Home Dashboard Adapter may not decide" boundary. Instead,
+`loadDashboard` always calls `PBDashboard.projectDashboardList([])` —
+the same accepted, honest empty-state contract S10-B itself already
+defines — since there is currently no prepared Dashboard data
+available to read. See §16 "Known Limitation" below.
 
 `development_cycle` is read via `PBStore.listDevelopmentCyclesByPlayer`
 (picking the most recently updated one, any state — all 9 states are
@@ -127,8 +129,13 @@ PBHomeDashboardAdapter.loadHomeDashboard(player_id) // browser-only IO orchestra
 in `tests/home-dashboard-adapter.test.js`. `loadHomeDashboard` is the
 thin IO layer: read `PBStore` (development cycle, prescription
 workflows, session results, reassessments — all reads, never writes),
-run the accepted S9 chain, call `PBDashboard.projectDashboardList` and
+call `PBDashboard.projectDashboardList([])` (no prepared Dashboard data
+is currently available to read — see §16) and
 `PBProductJourney.projectJourney`, then call `composeHomeDashboard`.
+`js/home-dashboard-adapter.js` has **zero runtime dependency** on
+`PBDiagnosis`, `PBRecommendationPriority`, or `PBTrainingPrescription`
+— structurally verified by `tests/home-dashboard-adapter.test.js`'s
+R1-T04 source scan.
 
 ## 6. UI Contract (`js/home-priority-dashboard-ui.js`)
 
@@ -232,9 +239,13 @@ node tests/home-priority-dashboard-ui.test.js
 
 Adapter suite covers A1–A8 (new player, recommendation ready,
 prescription ready, training active, progress recorded, reassessment
-ready, drill unresolved, MATCH insufficient data), next_action/rank-
-order preservation, determinism, structurally-invalid-input error
-codes, and forbidden-engine-call source scans. UI suite covers
+ready, drill unresolved, MATCH insufficient data) plus the S11-B-R1
+required cases R1-T01–R1-T05 (no prepared Dashboard, prepared Dashboard
+supplied with rank/no-reranking preserved, reassessment without a
+Dashboard focus, no-S9-execution structural scan, deterministic
+composition), next_action/rank-order preservation, determinism,
+structurally-invalid-input error codes, and forbidden-engine-call
+source scans. UI suite covers
 bilingual stage labels, the CTA route table, exactly-one-primary-CTA +
 disabled handling, the UNRESOLVED/reassessment/MATCH-transfer/new-
 player wording, determinism, the thin-UI structural scan, and the
@@ -272,14 +283,45 @@ works end-to-end.
 | B17 | No DB schema change | PASS |
 | B18 | Full regression PASS | see final report |
 
-## 16. Findings
+## 16. Known Limitation
 
-None new. `tests/s10-final-acceptance.test.js` continues to run clean
-after the FA24 allowlist update (adds the exact 5 new S11-B files
-alongside the existing 3 S11-A files); it still rejects any other
-S11-named file, including a hypothetical S11-C+.
+Prepared Recommendation / Dashboard data may not always be available
+after reload, because durable S9 Recommendation / Prescription
+persistence has not yet been architected anywhere in this repository
+(`js/storage.js` has no such store, and no such store is added here —
+see §19 "Database Freeze").
 
-## 17. Implementation Verdict
+**Classification:** NON-BLOCKING for S11-B.
+
+**Condition:** HOME must represent the missing state honestly —
+`focus`/`why`/`training` render as "not available yet" (never a
+fabricated recommendation, never presented as "everything is fine")
+whenever `dashboard.items` is empty. This is the correct, accepted
+behavior for S11-B; a future stage that adds durable S9 output is the
+right place to close this gap, not S11-B re-running S9 on every render
+(the defect S11-B-R1 repairs — see §3).
+
+## 17. Findings
+
+**S11-B-R1 (this repair):** the original S11-B implementation called
+`PBDiagnosis.diagnoseMatch -> PBRecommendationPriority
+.prioritizeDiagnosis -> PBTrainingPrescription.prescribeRecommendations`
+inside `js/home-dashboard-adapter.js` on every `loadHomeDashboard`
+call, reasoning it mirrored `js/review-ui.js`'s own accepted pattern.
+On review this was found to violate S11-B's own frozen boundary
+("Home Dashboard Adapter may not decide a recommendation/priority/
+prescription") — regenerating a decision on demand is still deciding
+it, not projecting an already-decided one, regardless of precedent
+elsewhere in the repo. Repaired: the adapter now has zero runtime
+dependency on the S9 decision pipeline and always projects an honest
+empty Dashboard when no prepared data exists (§16).
+
+`tests/s10-final-acceptance.test.js` continues to run clean after the
+FA24 allowlist update from the original S11-B implementation (adds the
+exact 5 S11-B files alongside the existing 3 S11-A files); it still
+rejects any other S11-named file, including a hypothetical S11-C+.
+
+## 18. Implementation Verdict
 
 `IMPLEMENTED` — ready for GPT independent QA. This document does not
 self-declare S11-B `CLOSED / ACCEPTED`; GPT owns final acceptance per
