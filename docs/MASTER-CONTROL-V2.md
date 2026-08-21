@@ -75,12 +75,16 @@ docs/S10-B-DASHBOARD-INTEGRATION.md
 docs/S10-B-R1-DASHBOARD-UI-WIRING.md
 
 S10-C
-Status: IMPLEMENTED / GPT QA PENDING
-Implementation Commit: pending GPT acceptance / see Git history
-Implementation Record: docs/S10-C-PRESCRIPTION-WORKFLOW.md
+Status: CLOSED / ACCEPTED
+Acceptance Commit: ca3e732
+Full SHA: ca3e7322f8cd02210e9c6fb867742c4520e32f8e
+Acceptance Record:
+docs/S10-C-PRESCRIPTION-WORKFLOW.md
 
 S10-D
-Status: PLANNED
+Status: IMPLEMENTED / GPT QA PENDING
+Implementation Commit: pending GPT acceptance / see Git history
+Implementation Record: docs/S10-D-SESSION-EVIDENCE.md
 
 S10-E
 Status: PLANNED
