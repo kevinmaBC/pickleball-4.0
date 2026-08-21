@@ -114,8 +114,10 @@ Status: CLOSED / ACCEPTED
 Acceptance Commit: 3050b1f
 
 S10-F
-Status: IMPLEMENTED / GPT QA PENDING
-Implementation Record: docs/S10-F-CROSS-WORKFLOW-QA.md
+Status: CLOSED / ACCEPTED
+Acceptance Commit: 947b41d
+Full SHA: 947b41dd9581fcbaeec55913548c7edf89f21277
+QA Record: docs/S10-F-CROSS-WORKFLOW-QA.md
 
 KNOWN LIMITATION — MATCH PROGRESS
 No durable kpi_profile_code-aligned MATCH Evidence store currently
@@ -127,7 +129,8 @@ exists. Therefore:
   honestly (never fabricates/infers a MATCH value from TRAINING data).
 
 S10-FINAL
-Status: PLANNED
+Status: IMPLEMENTED / GPT FINAL ACCEPTANCE PENDING
+Implementation Record: docs/S10-FINAL-ACCEPTANCE.md
 ```
 
 S7 and S8 acceptance commit SHAs were confirmed directly from local Git
