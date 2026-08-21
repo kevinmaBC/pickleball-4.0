@@ -1,9 +1,10 @@
-/* tests/storage.test.js — S7-A/S8-A/S10-D-R1: Safe IndexedDB upgrade (v1 -> v4)
+/* tests/storage.test.js — S7-A/S8-A/S10-D-R1/S10-E-R1: Safe IndexedDB upgrade (v1 -> v5)
  * Verifies: existing S1-S6 stores/records survive the upgrade untouched,
  * review_snapshots / prescriptions / retests (S7-A) are created empty,
  * training_cycles / weekly_plans / session_plans / session_logs /
- * cycle_summaries (S8-A) are created empty, and development_cycles /
+ * cycle_summaries (S8-A) are created empty, development_cycles /
  * prescription_workflows / session_results / training_evidence (S10-D-R1)
+ * are created empty, and cycle_kpi_baselines / reassessments (S10-E-R1)
  * are created empty — all in a single additive upgrade from a
  * pre-existing v1 database (as a real user's device would see, having
  * never opened the app between S1 and now).
@@ -44,11 +45,11 @@ var PBStore = require('../js/storage.js');
 
 function run() {
   return PBStore.open().then(function () {
-    // 1. DB version bumped to 4 (S10-D-R1), without destroying prior data.
-    assert.strictEqual(PBStore.DB_VERSION, 4);
+    // 1. DB version bumped to 5 (S10-E-R1), without destroying prior data.
+    assert.strictEqual(PBStore.DB_VERSION, 5);
 
     var dump = fakeIDB._dump()['pb_v2'];
-    assert.strictEqual(dump.version, 4);
+    assert.strictEqual(dump.version, 5);
 
     // 2. Existing S1-S6 stores preserved with their original records intact.
     ['players', 'assessments', 'test_sessions', 'trial_events'].forEach(function (name) {
@@ -104,6 +105,17 @@ function run() {
     assert.ok(dump.stores.training_evidence.indexes.by_session, 'training_evidence.by_session index exists');
     assert.ok(dump.stores.training_evidence.indexes.by_prescription, 'training_evidence.by_prescription index exists');
     assert.ok(dump.stores.training_evidence.indexes.by_source, 'training_evidence.by_source index exists');
+
+    // 3d. New S10-E-R1 stores created, empty, in the same single additive upgrade.
+    ['cycle_kpi_baselines', 'reassessments'].forEach(function (name) {
+      assert.ok(dump.stores[name], 'store created: ' + name);
+      assert.strictEqual(dump.stores[name].data.size, 0, name + ' starts empty');
+    });
+    assert.ok(dump.stores.cycle_kpi_baselines.indexes.by_cycle, 'cycle_kpi_baselines.by_cycle index exists');
+    assert.ok(dump.stores.cycle_kpi_baselines.indexes.by_player, 'cycle_kpi_baselines.by_player index exists');
+    assert.ok(dump.stores.reassessments.indexes.by_cycle, 'reassessments.by_cycle index exists');
+    assert.ok(dump.stores.reassessments.indexes.by_player, 'reassessments.by_player index exists');
+    assert.ok(dump.stores.reassessments.indexes.by_status, 'reassessments.by_status index exists');
 
     // 4. Existing S1-S6 reads/writes still work post-upgrade.
     return PBStore.listPlayers();
@@ -194,11 +206,38 @@ function run() {
     return PBStore.listTrainingEvidenceBySource('TRAINING');
   }).then(function (list) {
     assert.strictEqual(list.length, 1);
+    // 7. Minimal CRUD helpers for the new S10-E-R1 stores work end-to-end.
+    return PBStore.putCycleKpiBaseline({ baseline_id: 'cb:cyc_1', cycle_id: 'cyc_1', player_id: 'plr_1', tracks: {}, schema_version: '1.0' });
+  }).then(function () {
+    return PBStore.getCycleKpiBaseline('cb:cyc_1');
+  }).then(function (b) {
+    assert.strictEqual(b.cycle_id, 'cyc_1');
+    return Promise.all([
+      PBStore.listCycleKpiBaselinesByCycle('cyc_1'),
+      PBStore.listCycleKpiBaselinesByPlayer('plr_1')
+    ]);
+  }).then(function (r) {
+    assert.strictEqual(r[0].length, 1);
+    assert.strictEqual(r[1].length, 1);
+    return PBStore.putReassessment({ reassessment_id: 're:cyc_1:mses_1', cycle_id: 'cyc_1', player_id: 'plr_1', status: 'COMPLETED', schema_version: '1.0' });
+  }).then(function () {
+    return PBStore.getReassessment('re:cyc_1:mses_1');
+  }).then(function (r) {
+    assert.strictEqual(r.status, 'COMPLETED');
+    return Promise.all([
+      PBStore.listReassessmentsByCycle('cyc_1'),
+      PBStore.listReassessmentsByPlayer('plr_1'),
+      PBStore.listReassessmentsByStatus('COMPLETED')
+    ]);
+  }).then(function (r) {
+    r.forEach(function (list) { assert.strictEqual(list.length, 1); });
     return Promise.all([
       PBStore.putDevelopmentCycle({ player_id: 'plr_1' }).catch(function (e) { return e; }),
       PBStore.putPrescriptionWorkflow({ player_id: 'plr_1' }).catch(function (e) { return e; }),
       PBStore.putSessionResult({ player_id: 'plr_1' }).catch(function (e) { return e; }),
-      PBStore.putTrainingEvidence({ player_id: 'plr_1' }).catch(function (e) { return e; })
+      PBStore.putTrainingEvidence({ player_id: 'plr_1' }).catch(function (e) { return e; }),
+      PBStore.putCycleKpiBaseline({ player_id: 'plr_1' }).catch(function (e) { return e; }),
+      PBStore.putReassessment({ player_id: 'plr_1' }).catch(function (e) { return e; })
     ]);
   }).then(function (errs) {
     errs.forEach(function (e) { assert.ok(e instanceof Error, 'missing keyPath field must reject, never silently write a keyless record'); });

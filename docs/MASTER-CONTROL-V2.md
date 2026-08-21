@@ -96,12 +96,23 @@ Status: CLOSED / ACCEPTED
 Acceptance Commit: 920eea4
 
 S10-E
-Status: BLOCKED
+Previous Status: BLOCKED
+Blocking Audit Commit: 08de42a
 Reason: BASELINE RESOLUTION CONTRACT REQUIRED (no existing accepted
 data path resolves development_cycle.baseline_ref into a
 kpi_profile_code-keyed numeric baseline value — see
 docs/S10-E-PROGRESS-REASSESSMENT.md for full repository evidence)
-Baseline: 920eea4
+Status: IMPLEMENTED / GPT QA PENDING
+Core Unblock / R1 Implementation: pending GPT acceptance / see Git history
+Implementation Records:
+docs/S10-E-PROGRESS-REASSESSMENT.md
+docs/S10-E-R1-PROGRESS-REASSESSMENT.md
+
+S10-E-R1
+Status: IMPLEMENTED / GPT QA PENDING
+Purpose: Baseline Resolution + Progress/Reassessment Architecture Unblock
+Baseline: 08de42a
+Implementation Record: docs/S10-E-R1-PROGRESS-REASSESSMENT.md
 
 S10-F
 Status: PLANNED

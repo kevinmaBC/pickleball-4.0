@@ -59,8 +59,9 @@ function run() {
     // Schema / migration
     // ================================================================
     (function () {
-      // 1. DB_VERSION == 4
-      assert.strictEqual(PBStore.DB_VERSION, 4);
+      // 1. DB_VERSION == current baseline (5, per S10-E-R1's later, unrelated additive migration —
+      // see docs/S10-E-R1-PROGRESS-REASSESSMENT.md); this suite's own S10-D-R1 stores are unaffected.
+      assert.strictEqual(PBStore.DB_VERSION, 5);
       var dump = fakeIDB._dump()['pb_v2'];
       // 2. all previous stores still exist
       ['players', 'assessments', 'test_sessions', 'trial_events', 'review_snapshots', 'prescriptions', 'retests',
@@ -106,7 +107,7 @@ function run() {
     });
     return SeedStore.open().then(function () {
       var dump = seeded._dump()[origDbName];
-      assert.strictEqual(dump.version, 4, 'seeded v3 database upgrades to v4');
+      assert.strictEqual(dump.version, 5, 'seeded v3 database upgrades to the current baseline (5)');
       assert.strictEqual(dump.stores.players.data.get('plr_seed').display_name, 'Seed Player', 'pre-existing v3 record survives the v4 upgrade unchanged');
       global.indexedDB = savedIDB;
       SEP = freshRuntime(); // restore the shared runtime/IDB for the rest of this suite

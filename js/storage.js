@@ -40,6 +40,10 @@
  * 不清空、不改写、不删除任何既有 store 或记录。本阶段仅提供 CRUD，不在
  * storage.js 内新增/修改任何 S10 业务规则——那些规则仍完全归属各自的纯函数
  * 引擎，详见 docs/S10-D-R1-DURABLE-PERSISTENCE.md。
+ * S10-E-R1：DB_VERSION 4 -> 5，新增 cycle_kpi_baselines / reassessments 两个
+ * 存储，供 S10-E-R1 已冻结的 Cycle KPI Baseline Snapshot / Reassessment 记录
+ * 获得跨 reload 的持久化。同样纯增量、schema/CRUD 仅，不在 storage.js 内新增/
+ * 修改任何业务规则——详见 docs/S10-E-R1-PROGRESS-REASSESSMENT.md。
  * ============================================================ */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -48,7 +52,7 @@
   'use strict';
 
   var DB_NAME = 'pb_v2';
-  var DB_VERSION = 4;
+  var DB_VERSION = 5;
 
   // 版本基线（V2.3.1）；若 PBConfig 已加载则以其为准
   var VERSIONS = { schema_version: '2.3.1', benchmark_version: '2.1.1', protocol_version: '2.2.1' };
@@ -108,6 +112,16 @@
     training_evidence: {
       keyPath: 'evidence_id',
       indexes: [['by_player', 'player_id'], ['by_session', 'session_ref'], ['by_prescription', 'prescription_ref'], ['by_source', 'source']]
+    },
+    // S10-E-R1 新增：Cycle KPI Baseline Snapshot / Reassessment 持久化（schema/CRUD 仅，
+    // 不新增/不复制任何业务规则 —— 详见 docs/S10-E-R1-PROGRESS-REASSESSMENT.md）
+    cycle_kpi_baselines: {
+      keyPath: 'baseline_id',
+      indexes: [['by_cycle', 'cycle_id'], ['by_player', 'player_id']]
+    },
+    reassessments: {
+      keyPath: 'reassessment_id',
+      indexes: [['by_cycle', 'cycle_id'], ['by_player', 'player_id'], ['by_status', 'status']]
     }
   };
 
@@ -609,6 +623,27 @@
   function listTrainingEvidenceByPrescription(prescription_ref) { return getByIndex('training_evidence', 'by_prescription', prescription_ref); }
   function listTrainingEvidenceBySource(source) { return getByIndex('training_evidence', 'by_source', source); }
 
+  // ---- S10-E-R1：Cycle KPI Baseline Snapshot / Reassessment 持久化（schema/CRUD 仅）。
+  // 持久化对象来自各自纯函数引擎（PBCycleBaseline / PBReassessment）已产出的完整合法
+  // 对象，storage.js 本身不重新校验/不重算其业务字段，只要求各自的 keyPath 字段存在
+  // 即可 put。----
+  function putCycleKpiBaseline(obj) {
+    if (!obj || obj.baseline_id == null) return fail('putCycleKpiBaseline: baseline_id is required');
+    return put('cycle_kpi_baselines', obj);
+  }
+  function getCycleKpiBaseline(baseline_id) { return get('cycle_kpi_baselines', baseline_id); }
+  function listCycleKpiBaselinesByCycle(cycle_id) { return getByIndex('cycle_kpi_baselines', 'by_cycle', cycle_id); }
+  function listCycleKpiBaselinesByPlayer(player_id) { return getByIndex('cycle_kpi_baselines', 'by_player', player_id); }
+
+  function putReassessment(obj) {
+    if (!obj || obj.reassessment_id == null) return fail('putReassessment: reassessment_id is required');
+    return put('reassessments', obj);
+  }
+  function getReassessment(reassessment_id) { return get('reassessments', reassessment_id); }
+  function listReassessmentsByCycle(cycle_id) { return getByIndex('reassessments', 'by_cycle', cycle_id); }
+  function listReassessmentsByPlayer(player_id) { return getByIndex('reassessments', 'by_player', player_id); }
+  function listReassessmentsByStatus(status) { return getByIndex('reassessments', 'by_status', status); }
+
   function clearAll() {
     return open().then(function (db) {
       return Promise.all(Object.keys(STORES).map(function (name) {
@@ -671,6 +706,13 @@
     putTrainingEvidence: putTrainingEvidence, getTrainingEvidence: getTrainingEvidence,
     listTrainingEvidenceByPlayer: listTrainingEvidenceByPlayer, listTrainingEvidenceBySession: listTrainingEvidenceBySession,
     listTrainingEvidenceByPrescription: listTrainingEvidenceByPrescription, listTrainingEvidenceBySource: listTrainingEvidenceBySource,
+
+    // S10-E-R1: Cycle KPI Baseline Snapshot / Reassessment persistence
+    putCycleKpiBaseline: putCycleKpiBaseline, getCycleKpiBaseline: getCycleKpiBaseline,
+    listCycleKpiBaselinesByCycle: listCycleKpiBaselinesByCycle, listCycleKpiBaselinesByPlayer: listCycleKpiBaselinesByPlayer,
+    putReassessment: putReassessment, getReassessment: getReassessment,
+    listReassessmentsByCycle: listReassessmentsByCycle, listReassessmentsByPlayer: listReassessmentsByPlayer,
+    listReassessmentsByStatus: listReassessmentsByStatus,
 
     _uid: uid
   };

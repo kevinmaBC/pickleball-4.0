@@ -2,9 +2,9 @@
  *
  * Verifies the S9-A design freeze was implemented as pure plumbing:
  *   - no new IndexedDB store from S9-A itself; the expected DB_VERSION
- *     below is the current repository baseline (bumped to 4 by
- *     S10-D-R1's unrelated, later, additive migration — see
- *     docs/S10-D-R1-DURABLE-PERSISTENCE.md) and must be kept in sync
+ *     below is the current repository baseline (bumped to 5 by
+ *     S10-E-R1's unrelated, later, additive migration — see
+ *     docs/S10-E-R1-PROGRESS-REASSESSMENT.md) and must be kept in sync
  *     with js/storage.js's DB_VERSION whenever that baseline changes;
  *   - createMatchObservationSession reuses test_sessions/trial_events,
  *     forces test_id='ASMT-10' + feed_mode='live_match', rejects any
@@ -37,8 +37,8 @@ var namespaceSrc = fs.readFileSync(path.join(ROOT, 'js', 'namespace.js'), 'utf8'
 
 function run() {
   return PBStore.open().then(function () {
-    // ---- No new store added by S9-A itself (current repo baseline: 4, per S10-D-R1) ----
-    assert.strictEqual(PBStore.DB_VERSION, 4, 'DB_VERSION must match the current repository baseline — S9-A itself adds no new store');
+    // ---- No new store added by S9-A itself (current repo baseline: 5, per S10-E-R1) ----
+    assert.strictEqual(PBStore.DB_VERSION, 5, 'DB_VERSION must match the current repository baseline — S9-A itself adds no new store');
 
     return PBStore.createPlayer('S9-A Test Player');
   }).then(function (player) {
@@ -150,7 +150,9 @@ function createFakeStoreCheck() {
       'review_snapshots', 'prescriptions', 'retests',
       'training_cycles', 'weekly_plans', 'session_plans', 'session_logs', 'cycle_summaries',
       // S10-D-R1 (later, unrelated additive migration — see docs/S10-D-R1-DURABLE-PERSISTENCE.md)
-      'development_cycles', 'prescription_workflows', 'session_results', 'training_evidence'
+      'development_cycles', 'prescription_workflows', 'session_results', 'training_evidence',
+      // S10-E-R1 (later, unrelated additive migration — see docs/S10-E-R1-PROGRESS-REASSESSMENT.md)
+      'cycle_kpi_baselines', 'reassessments'
     ];
     assert.strictEqual(stores.length, expected.length, 'S9-A must not create any new object store beyond the current repository baseline (expected exactly these ' + expected.length + ' stores, found: ' + stores.join(', ') + ')');
     expected.forEach(function (name) {
