@@ -313,3 +313,23 @@
 #progress-reassessment-app .hpd-cta[disabled]{opacity:.5;cursor:not-allowed}
 #progress-reassessment-app .gt-card{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafcf9;margin-bottom:8px}
 #progress-reassessment-app .pr-cta{margin-top:8px}
+
+/* ===== S11-E History / Explainability / Recovery UI (he-), reuses the hpd-/gt- primitives scoped to its own root ===== */
+#history-explainability-app{font-family:var(--sans)}
+#history-explainability-app .hpd-label{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+#history-explainability-app .hpd-mut{font-size:12.5px;color:var(--muted);line-height:1.5}
+#history-explainability-app .hpd-section{margin-bottom:14px}
+#history-explainability-app .hpd-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+#history-explainability-app .hpd-row:last-child{border-bottom:none}
+#history-explainability-app .hpd-chip{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:6px 13px;margin:4px 6px 4px 0;cursor:pointer;font-size:13px;background:var(--card);color:var(--ink)}
+#history-explainability-app .hpd-chip.sel{background:var(--lime-deep,#2f6f5f);color:#fff;border-color:transparent}
+#history-explainability-app .hpd-badge{display:inline-block;font-weight:800;font-size:14px;padding:6px 12px;border-radius:10px;background:var(--ink);color:var(--lime)}
+#history-explainability-app .hpd-banner{background:#f1fbf5;border-left:3px solid var(--pass);border-radius:0 10px 10px 0;padding:10px 12px;font-size:13px;margin-bottom:8px;font-weight:700}
+#history-explainability-app .hpd-banner.hpd-warn{background:#fff8e8;border-color:var(--part);color:#7a5c00}
+#history-explainability-app .hpd-cta{display:block;width:100%;padding:14px;font-size:15.5px;border-radius:12px;text-align:center}
+#history-explainability-app .gt-card{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafcf9;margin-bottom:8px}
+#history-explainability-app .he-cyclist{display:flex;flex-wrap:wrap}
+#history-explainability-app .he-event{border-top:1px solid var(--line);padding:8px 0}
+#history-explainability-app .he-event:first-child{border-top:none}
+#history-explainability-app .he-event-row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+#history-explainability-app .he-detail{font-family:var(--mono);font-size:10.5px;margin-top:3px;word-break:break-all}

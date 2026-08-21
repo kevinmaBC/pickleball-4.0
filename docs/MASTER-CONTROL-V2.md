@@ -158,8 +158,14 @@ Full SHA: fa05c7050c760e2dfe6945da11f865813d75f86a
 Acceptance Record: docs/S11-C-GUIDED-TRAINING-ACTION-FLOW.md
 
 S11-D
+Status: CLOSED / ACCEPTED
+Acceptance Commit: f9d9af3
+Full SHA: f9d9af3c1086af276d656fffc651acf09faf15d7
+Acceptance Record: docs/S11-D-PROGRESS-REASSESSMENT-EXPERIENCE.md
+
+S11-E
 Status: IMPLEMENTED / GPT QA PENDING
-Implementation Record: docs/S11-D-PROGRESS-REASSESSMENT-EXPERIENCE.md
+Implementation Record: docs/S11-E-HISTORY-EXPLAINABILITY-RECOVERY.md
 ```
 
 S7 and S8 acceptance commit SHAs were confirmed directly from local Git

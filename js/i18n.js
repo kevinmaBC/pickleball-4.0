@@ -16,6 +16,8 @@
 
       'home.lead': '不靠力量打穿对手，而是用<b>弧线、旋转与判断</b>让对手无力回击。',
       'home.desc': '从 3.0 到稳定 4.0 冲 5.0 的一套闭环培训手册：学教材 → 练打卡 → 测评级 → 赛规则。全部记录只存在你自己的设备上。',
+      'home.historyLink': '查看历史',
+      'history.h2': '历史 <span class="en">History</span>',
       'home.gatesH3': '稳定 4.0 · 六道硬门槛 <span class="en">Six Hard Gates</span>',
       'home.gatesSub': '全绿才算稳定 4.0 —— 不能靠单项特别强来抵消短板。数据来自「测」页，实时联动。',
       'home.mapH3': '五份资料如何组成一套体系 <span class="en">System Map</span>',
@@ -55,6 +57,8 @@
 
       'home.lead': 'Don\'t overpower your opponent with raw strength — use <b>arc, spin, and judgment</b> to leave them unable to counter.',
       'home.desc': 'A closed-loop training system from 3.0 to a stable 4.0 and on to 5.0: Learn the material → Drill and log → Measure your level → Compete by the rules. All records stay only on your own device.',
+      'home.historyLink': 'View History',
+      'history.h2': 'History',
       'home.gatesH3': 'Stable 4.0 · Six Hard Gates',
       'home.gatesSub': 'All six must be green to count as a stable 4.0 — one strong skill can\'t offset a weak one. Data is live-linked from the Measure tab.',
       'home.mapH3': 'How the Five Documents Form One System',
@@ -118,6 +122,7 @@
     if (window.PBHomeDashboardUI && typeof window.PBHomeDashboardUI.refresh === 'function') window.PBHomeDashboardUI.refresh();
     if (window.PBGuidedTrainingUI && typeof window.PBGuidedTrainingUI.refresh === 'function') window.PBGuidedTrainingUI.refresh();
     if (window.PBProgressReassessmentUI && typeof window.PBProgressReassessmentUI.refresh === 'function') window.PBProgressReassessmentUI.refresh();
+    if (window.PBHistoryExplainabilityUI && typeof window.PBHistoryExplainabilityUI.refresh === 'function') window.PBHistoryExplainabilityUI.refresh();
   }
 
   function setLang(lang) {
