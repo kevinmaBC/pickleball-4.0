@@ -299,3 +299,17 @@
 #guided-training-app .gt-form{display:flex;flex-direction:column;gap:4px;margin:10px 0}
 #guided-training-app .gt-input{margin-bottom:8px}
 #guided-training-app .gt-cta{margin-top:8px}
+
+/* ===== S11-D Progress / Reassessment UI (pr-), reuses the hpd-/gt- primitives scoped to its own root ===== */
+#progress-reassessment-app{font-family:var(--sans)}
+#progress-reassessment-app .hpd-label{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+#progress-reassessment-app .hpd-mut{font-size:12.5px;color:var(--muted);line-height:1.5}
+#progress-reassessment-app .hpd-section{margin-bottom:14px}
+#progress-reassessment-app .hpd-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+#progress-reassessment-app .hpd-row:last-child{border-bottom:none}
+#progress-reassessment-app .hpd-banner{background:#f1fbf5;border-left:3px solid var(--pass);border-radius:0 10px 10px 0;padding:10px 12px;font-size:13px;margin-bottom:8px;font-weight:700}
+#progress-reassessment-app .hpd-banner.hpd-warn{background:#fff8e8;border-color:var(--part);color:#7a5c00}
+#progress-reassessment-app .hpd-cta{display:block;width:100%;padding:14px;font-size:15.5px;border-radius:12px;text-align:center}
+#progress-reassessment-app .hpd-cta[disabled]{opacity:.5;cursor:not-allowed}
+#progress-reassessment-app .gt-card{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafcf9;margin-bottom:8px}
+#progress-reassessment-app .pr-cta{margin-top:8px}

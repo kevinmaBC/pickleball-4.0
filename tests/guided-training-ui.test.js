@@ -113,6 +113,26 @@ function run() {
   })();
 
   // ==================================================================
+  // S11-D §22 — post-completion CTA driven by the refreshed Journey's own next_action,
+  // never a locally-invented "Back to Home" when a real next action exists.
+  // ==================================================================
+  (function () {
+    var withNext = { mode: 'COMPLETED', evidence_recorded: true, next_action: { code: 'REVIEW_PROGRESS', enabled: true, target_ref: null } };
+    var zh = UI.renderGuidedTrainingHTML(withNext, false), en = UI.renderGuidedTrainingHTML(withNext, true);
+    assert.ok(zh.indexOf('data-code="REVIEW_PROGRESS"') !== -1, 'CTA carries the refreshed next_action code');
+    assert.ok(zh.indexOf('查看进步') !== -1, 'zh label for REVIEW_PROGRESS');
+    assert.ok(en.indexOf('View Progress') !== -1, 'en label for REVIEW_PROGRESS');
+    var matches = zh.match(/data-primary-cta="1"/g) || [];
+    assert.strictEqual(matches.length, 1, 'still exactly one primary CTA when a next_action is supplied');
+
+    var recordMatch = { mode: 'COMPLETED', evidence_recorded: true, next_action: { code: 'RECORD_REAL_MATCH', enabled: true, target_ref: null } };
+    assert.ok(UI.renderGuidedTrainingHTML(recordMatch, false).indexOf('记录真实比赛') !== -1, 'zh label for RECORD_REAL_MATCH');
+
+    var noNext = { mode: 'COMPLETED', evidence_recorded: true, next_action: null };
+    assert.ok(UI.renderGuidedTrainingHTML(noNext, false).indexOf('data-act="back-home"') !== -1, 'falls back to Back to Home when no refreshed next_action is available');
+  })();
+
+  // ==================================================================
   // Active-session-lost wording (Section 28) — exact, never pretends recovery
   // ==================================================================
   (function () {

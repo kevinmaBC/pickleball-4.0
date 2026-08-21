@@ -53,8 +53,8 @@ function run() {
   // ==================================================================
   (function () {
     var known = ['START_ASSESSMENT', 'REVIEW_RECOMMENDATION', 'ACTIVATE_PRESCRIPTION', 'START_TRAINING', 'CONTINUE_TRAINING', 'RESUME_SESSION', 'REVIEW_PROGRESS', 'RECORD_REAL_MATCH', 'REVIEW_REASSESSMENT', 'START_NEXT_CYCLE'];
-    // 'guided' (S11-C) added alongside the pre-existing bottom-nav-tab views.
-    var existingViews = ['home', 'learn', 'drill', 'measure', 'review', 'compete', 'team', 'guided'];
+    // 'guided' (S11-C) / 'progress' (S11-D) added alongside the pre-existing bottom-nav-tab views.
+    var existingViews = ['home', 'learn', 'drill', 'measure', 'review', 'compete', 'team', 'guided', 'progress'];
     known.forEach(function (code) {
       var route = UI.routeForNextAction(code);
       assert.ok(existingViews.indexOf(route) !== -1, code + ' must route to an existing app view (got ' + route + ')');
@@ -64,6 +64,11 @@ function run() {
     ['ACTIVATE_PRESCRIPTION', 'START_TRAINING', 'CONTINUE_TRAINING', 'RESUME_SESSION'].forEach(function (code) {
       assert.strictEqual(UI.routeForNextAction(code), 'guided', code + ' routes into S11-C Guided Training');
     });
+    // S11-D: REVIEW_PROGRESS/REVIEW_REASSESSMENT route into the Progress/Reassessment Experience;
+    // RECORD_REAL_MATCH keeps routing to Measure (S11-D does not own Match Observation).
+    assert.strictEqual(UI.routeForNextAction('REVIEW_PROGRESS'), 'progress');
+    assert.strictEqual(UI.routeForNextAction('REVIEW_REASSESSMENT'), 'progress');
+    assert.strictEqual(UI.routeForNextAction('RECORD_REAL_MATCH'), 'measure');
   })();
 
   // ==================================================================

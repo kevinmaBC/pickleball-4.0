@@ -448,12 +448,12 @@ function run() {
     // FA24 — no unauthorized next-stage work.
     // ================================================================
     .then(function () { return gate('FA24_NO_S11_WORK', function () {
-      // S11-A-R2/S11-B/S11-C: FA24 originally asserted "no S11-named file exists" — valid only at
-      // the S10-FINAL QA moment, before S11-A/S11-B/S11-C were GPT-authorized and implemented. It
-      // is now a strict allowlist instead: the specifically authorized S11-A + S11-B + S11-C
-      // footprint passes, but any other S11-named file (S11-D/E/F/FINAL, or an unexpected extra
-      // S11-A/S11-B/S11-C file) still fails — the governance purpose ("no unauthorized
-      // next-stage work") is preserved, not removed.
+      // S11-A-R2/S11-B/S11-C/S11-D: FA24 originally asserted "no S11-named file exists" — valid
+      // only at the S10-FINAL QA moment, before S11-A/S11-B/S11-C/S11-D were GPT-authorized and
+      // implemented. It is now a strict allowlist instead: the specifically authorized
+      // S11-A + S11-B + S11-C + S11-D footprint passes, but any other S11-named file
+      // (S11-E/F/FINAL, or an unexpected extra file from an already-accepted stage) still fails —
+      // the governance purpose ("no unauthorized next-stage work") is preserved, not removed.
       var authorizedS11Files = [
         'product-journey-orchestrator.js',
         'product-journey-orchestrator.test.js',
@@ -467,19 +467,24 @@ function run() {
         'guided-training-ui.js',
         'guided-training-action-controller.test.js',
         'guided-training-ui.test.js',
-        'S11-C-GUIDED-TRAINING-ACTION-FLOW.md'
+        'S11-C-GUIDED-TRAINING-ACTION-FLOW.md',
+        'progress-reassessment-adapter.js',
+        'progress-reassessment-ui.js',
+        'progress-reassessment-adapter.test.js',
+        'progress-reassessment-ui.test.js',
+        'S11-D-PROGRESS-REASSESSMENT-EXPERIENCE.md'
       ];
       var jsFiles = fs.readdirSync(path.join(ROOT, 'js'));
       var testFiles = fs.readdirSync(path.join(ROOT, 'tests'));
       var docFiles = fs.readdirSync(path.join(ROOT, 'docs'));
       [].concat(jsFiles, testFiles, docFiles).forEach(function (f) {
         if (/s11/i.test(f)) {
-          assert.ok(authorizedS11Files.indexOf(f) !== -1, 'only the GPT-authorized S11-A/S11-B/S11-C footprint may exist, unauthorized S11-named file: ' + f);
+          assert.ok(authorizedS11Files.indexOf(f) !== -1, 'only the GPT-authorized S11-A/S11-B/S11-C/S11-D footprint may exist, unauthorized S11-named file: ' + f);
         }
       });
       authorizedS11Files.forEach(function (f) {
         var found = jsFiles.indexOf(f) !== -1 || testFiles.indexOf(f) !== -1 || docFiles.indexOf(f) !== -1;
-        assert.ok(found, 'authorized S11-A/S11-B/S11-C file is present: ' + f);
+        assert.ok(found, 'authorized S11-A/S11-B/S11-C/S11-D file is present: ' + f);
       });
       var storageSrc = stripComments(readSrc('js/storage.js'));
       assert.ok(!/DB_VERSION\s*=\s*6/.test(storageSrc), 'no DB_VERSION 6');

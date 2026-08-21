@@ -82,6 +82,28 @@
     return en ? 'Something went wrong. Please try again.' : '操作失败，请重试。';
   }
 
+  // §22 (S11-D): post-completion CTA — driven entirely by the refreshed S11-A Journey's own
+  // next_action, never decided locally. Only the codes that can legitimately follow a completed
+  // Guided Training session are labeled/routed; anything else falls back to "Back to Home".
+  var POST_COMPLETION_LABELS = {
+    REVIEW_PROGRESS: { zh: '查看进步', en: 'View Progress' },
+    REVIEW_REASSESSMENT: { zh: '查看复测结果', en: 'Review Reassessment' },
+    RECORD_REAL_MATCH: { zh: '记录真实比赛', en: 'Record Real Match' },
+    CONTINUE_TRAINING: { zh: '继续训练', en: 'Continue Training' },
+    START_NEXT_CYCLE: { zh: '开始下一周期', en: 'Start Next Cycle' }
+  };
+  var POST_COMPLETION_ROUTES = {
+    REVIEW_PROGRESS: 'progress', REVIEW_REASSESSMENT: 'progress', RECORD_REAL_MATCH: 'measure',
+    CONTINUE_TRAINING: 'guided', START_NEXT_CYCLE: 'measure'
+  };
+  function postCompletionLabel(code, en) {
+    var m = POST_COMPLETION_LABELS[code];
+    return m ? (en ? m.en : m.zh) : (en ? 'Back to Home' : '返回首页');
+  }
+  function postCompletionRoute(code) {
+    return Object.prototype.hasOwnProperty.call(POST_COMPLETION_ROUTES, code) ? POST_COMPLETION_ROUTES[code] : 'home';
+  }
+
   // ================================================================
   // §16-§18 Pure Training Direction view-model — read verbatim from the
   // persisted prescription_snapshot, nothing recomputed.
@@ -164,8 +186,11 @@
         '<button class="btn hpd-cta gt-cta" data-act="back-home" data-primary-cta="1">' + (en ? 'Back to Home' : '返回首页') + '</button>';
     }
     if (mode === 'COMPLETED') {
+      var na = state.next_action;
+      var ctaAttrs = na ? ('data-act="cta" data-code="' + esc(na.code) + '"') : 'data-act="back-home"';
+      var ctaLabel = na ? postCompletionLabel(na.code, en) : (en ? 'Back to Home' : '返回首页');
       return '<div class="hpd-banner">' + esc(tr('resultSaved', en)) + (state.evidence_recorded ? ' · ' + esc(tr('evidenceRecorded', en)) : '') + '</div>' +
-        '<button class="btn solid hpd-cta gt-cta" data-act="back-home" data-primary-cta="1">' + (en ? 'Back to Home' : '返回首页') + '</button>';
+        '<button class="btn solid hpd-cta gt-cta" ' + ctaAttrs + ' data-primary-cta="1">' + esc(ctaLabel) + '</button>';
     }
     return '<div class="hpd-mut">' + (en ? 'Unknown state.' : '未知状态。') + '</div>';
   }
@@ -251,6 +276,10 @@
 
     if (act === 'retry' || act === 'back-home') { if (act === 'back-home') gotoTab('home'); else render(); return; }
 
+    // §22: the COMPLETED screen's CTA is driven by the refreshed Journey's own next_action —
+    // this is pure navigation (same handoff pattern as HOME's own CTA), never a new decision.
+    if (act === 'cta') { gotoTab(postCompletionRoute(node.getAttribute('data-code'))); return; }
+
     if (BUSY) return;
 
     if (act === 'activate') {
@@ -285,14 +314,21 @@
       var active = C.getActiveSession();
       if (!active) { renderState({ mode: 'SESSION_LOST' }); return; }
       BUSY = true;
+      var resolvedCycleId = null;
       C.resolveCurrentCycle({ player_id: CONTEXT.player_id }).then(function (cycle) {
-        return C.completeSession({
-          attempts: attempts, successful_attempts: successful,
-          development_cycle_id: cycle ? cycle.cycle_id : null
-        });
+        resolvedCycleId = cycle ? cycle.cycle_id : null;
+        return C.completeSession({ attempts: attempts, successful_attempts: successful, development_cycle_id: resolvedCycleId });
       }).then(function (result) {
-        BUSY = false;
-        renderState({ mode: 'COMPLETED', evidence_recorded: !!result.evidence });
+        // §24: reload cycle + refresh S11-A Journey is the controller's own refreshJourney;
+        // the next primary action is never decided locally here, only displayed.
+        return C.refreshJourney({ player_id: CONTEXT.player_id, development_cycle_id: resolvedCycleId }).then(function (journeyResult) {
+          BUSY = false;
+          renderState({ mode: 'COMPLETED', evidence_recorded: !!result.evidence, next_action: journeyResult.journey.next_action });
+        }).catch(function () {
+          // A refresh failure must never hide the fact that completion itself already succeeded.
+          BUSY = false;
+          renderState({ mode: 'COMPLETED', evidence_recorded: !!result.evidence, next_action: null });
+        });
       }).catch(function (e) {
         BUSY = false;
         var last = rootEl && rootEl._lastState;

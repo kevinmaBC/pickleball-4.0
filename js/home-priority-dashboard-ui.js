@@ -92,6 +92,9 @@
   // the S11-C Guided Training Action Flow (js/guided-training-ui.js) instead of the old S8 `drill`
   // flow — S9/S10 Prescription Workflow lineage is a different FK lineage than S8 TrainingCycle/
   // SessionPlan, and S11-C is the only place authorized to drive that lineage's mutations.
+  // §21 (S11-D): REVIEW_PROGRESS/REVIEW_REASSESSMENT route into the S11-D Progress/Reassessment
+  // Experience (js/progress-reassessment-ui.js); RECORD_REAL_MATCH stays on `measure` — S11-D
+  // does not own Match Observation.
   var NEXT_ACTION_ROUTES = {
     START_ASSESSMENT: 'measure',
     REVIEW_RECOMMENDATION: 'review',
@@ -99,9 +102,9 @@
     START_TRAINING: 'guided',
     CONTINUE_TRAINING: 'guided',
     RESUME_SESSION: 'guided',
-    REVIEW_PROGRESS: 'review',
+    REVIEW_PROGRESS: 'progress',
     RECORD_REAL_MATCH: 'measure',
-    REVIEW_REASSESSMENT: 'review',
+    REVIEW_REASSESSMENT: 'progress',
     START_NEXT_CYCLE: 'measure',
     NONE: null
   };

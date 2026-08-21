@@ -152,8 +152,14 @@ Full SHA: e06c0a0451108bcee70ecd5a19ce3b0e94aa6552
 Acceptance Record: docs/S11-B-HOME-PRIORITY-DASHBOARD.md
 
 S11-C
+Status: CLOSED / ACCEPTED
+Acceptance Commit: fa05c70
+Full SHA: fa05c7050c760e2dfe6945da11f865813d75f86a
+Acceptance Record: docs/S11-C-GUIDED-TRAINING-ACTION-FLOW.md
+
+S11-D
 Status: IMPLEMENTED / GPT QA PENDING
-Implementation Record: docs/S11-C-GUIDED-TRAINING-ACTION-FLOW.md
+Implementation Record: docs/S11-D-PROGRESS-REASSESSMENT-EXPERIENCE.md
 ```
 
 S7 and S8 acceptance commit SHAs were confirmed directly from local Git
