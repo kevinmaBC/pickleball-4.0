@@ -267,3 +267,21 @@
 .tr-app .tr-exec-row:first-child{border-top:none}
 .tr-app .tr-exec-fields{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
 .tr-app .tr-exec-fields input.fld{min-width:0;flex:1 1 90px}
+
+/* ===== S11-B Home / Priority Dashboard UI (hpd-) ===== */
+#home-priority-dashboard-app{font-family:var(--sans)}
+#home-priority-dashboard-app .hpd-h{font-weight:800;font-size:15px;margin:2px 0 8px;color:var(--ink)}
+#home-priority-dashboard-app .hpd-label{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+#home-priority-dashboard-app .hpd-mut{font-size:12.5px;color:var(--muted);line-height:1.5}
+#home-priority-dashboard-app .hpd-section{margin-bottom:14px}
+#home-priority-dashboard-app .hpd-chip{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:6px 13px;margin:4px 6px 4px 0;cursor:pointer;font-size:13px;background:var(--card);color:var(--ink)}
+#home-priority-dashboard-app .hpd-chip.sel{background:var(--lime-deep,#2f6f5f);color:#fff;border-color:transparent}
+#home-priority-dashboard-app .hpd-stage-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#home-priority-dashboard-app .hpd-badge{display:inline-block;font-weight:800;font-size:14px;padding:6px 12px;border-radius:10px;background:var(--ink);color:var(--lime)}
+#home-priority-dashboard-app .hpd-card{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafcf9;margin-bottom:8px}
+#home-priority-dashboard-app .hpd-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+#home-priority-dashboard-app .hpd-row:last-child{border-bottom:none}
+#home-priority-dashboard-app .hpd-banner{background:#f1fbf5;border-left:3px solid var(--pass);border-radius:0 10px 10px 0;padding:10px 12px;font-size:13px;margin-bottom:8px;font-weight:700}
+#home-priority-dashboard-app .hpd-banner.hpd-warn{background:#fff8e8;border-color:var(--part);color:#7a5c00}
+#home-priority-dashboard-app .hpd-cta{display:block;width:100%;padding:14px;font-size:15.5px;border-radius:12px;text-align:center}
+#home-priority-dashboard-app .hpd-cta[disabled]{opacity:.5;cursor:not-allowed}
