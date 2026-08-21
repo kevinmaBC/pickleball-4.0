@@ -1,10 +1,12 @@
-/* tests/storage.test.js — S7-A/S8-A: Safe IndexedDB upgrade (v1 -> v3)
+/* tests/storage.test.js — S7-A/S8-A/S10-D-R1: Safe IndexedDB upgrade (v1 -> v4)
  * Verifies: existing S1-S6 stores/records survive the upgrade untouched,
- * review_snapshots / prescriptions / retests (S7-A) are created empty, and
+ * review_snapshots / prescriptions / retests (S7-A) are created empty,
  * training_cycles / weekly_plans / session_plans / session_logs /
- * cycle_summaries (S8-A) are created empty — all in a single additive
- * upgrade from a pre-existing v1 database (as a real user's device would
- * see, having never opened the app between S1 and now).
+ * cycle_summaries (S8-A) are created empty, and development_cycles /
+ * prescription_workflows / session_results / training_evidence (S10-D-R1)
+ * are created empty — all in a single additive upgrade from a
+ * pre-existing v1 database (as a real user's device would see, having
+ * never opened the app between S1 and now).
  * Run: node tests/storage.test.js
  */
 var assert = require('assert');
@@ -42,11 +44,11 @@ var PBStore = require('../js/storage.js');
 
 function run() {
   return PBStore.open().then(function () {
-    // 1. DB version bumped to 3 (S8-A), without destroying prior data.
-    assert.strictEqual(PBStore.DB_VERSION, 3);
+    // 1. DB version bumped to 4 (S10-D-R1), without destroying prior data.
+    assert.strictEqual(PBStore.DB_VERSION, 4);
 
     var dump = fakeIDB._dump()['pb_v2'];
-    assert.strictEqual(dump.version, 3);
+    assert.strictEqual(dump.version, 4);
 
     // 2. Existing S1-S6 stores preserved with their original records intact.
     ['players', 'assessments', 'test_sessions', 'trial_events'].forEach(function (name) {
@@ -84,6 +86,25 @@ function run() {
     assert.ok(dump.stores.cycle_summaries.indexes.by_cycle, 'cycle_summaries.by_cycle index exists');
     assert.ok(dump.stores.cycle_summaries.indexes.by_retest_readiness, 'cycle_summaries.by_retest_readiness index exists');
 
+    // 3c. New S10-D-R1 stores created, empty, in the same single additive upgrade.
+    ['development_cycles', 'prescription_workflows', 'session_results', 'training_evidence'].forEach(function (name) {
+      assert.ok(dump.stores[name], 'store created: ' + name);
+      assert.strictEqual(dump.stores[name].data.size, 0, name + ' starts empty');
+    });
+    // Required indexes exist on each new S10-D-R1 store.
+    assert.ok(dump.stores.development_cycles.indexes.by_player, 'development_cycles.by_player index exists');
+    assert.ok(dump.stores.development_cycles.indexes.by_state, 'development_cycles.by_state index exists');
+    assert.ok(dump.stores.prescription_workflows.indexes.by_player, 'prescription_workflows.by_player index exists');
+    assert.ok(dump.stores.prescription_workflows.indexes.by_prescription, 'prescription_workflows.by_prescription index exists');
+    assert.ok(dump.stores.prescription_workflows.indexes.by_state, 'prescription_workflows.by_state index exists');
+    assert.ok(dump.stores.session_results.indexes.by_player, 'session_results.by_player index exists');
+    assert.ok(dump.stores.session_results.indexes.by_prescription, 'session_results.by_prescription index exists');
+    assert.ok(dump.stores.session_results.indexes.by_status, 'session_results.by_status index exists');
+    assert.ok(dump.stores.training_evidence.indexes.by_player, 'training_evidence.by_player index exists');
+    assert.ok(dump.stores.training_evidence.indexes.by_session, 'training_evidence.by_session index exists');
+    assert.ok(dump.stores.training_evidence.indexes.by_prescription, 'training_evidence.by_prescription index exists');
+    assert.ok(dump.stores.training_evidence.indexes.by_source, 'training_evidence.by_source index exists');
+
     // 4. Existing S1-S6 reads/writes still work post-upgrade.
     return PBStore.listPlayers();
   }).then(function (players) {
@@ -114,6 +135,73 @@ function run() {
     return PBStore.retestsByAssessment('asm_1');
   }).then(function (retests) {
     assert.strictEqual(retests.length, 1);
+
+    // 6. Minimal CRUD helpers for the new S10-D-R1 stores work end-to-end.
+    return PBStore.putDevelopmentCycle({ cycle_id: 'cyc_1', player_id: 'plr_1', baseline_ref: 'asm_1', evidence_refs: [], state: 'BASELINE_READY', schema_version: '1.0' });
+  }).then(function () {
+    return PBStore.getDevelopmentCycle('cyc_1');
+  }).then(function (cyc) {
+    assert.strictEqual(cyc.player_id, 'plr_1');
+    assert.strictEqual(cyc.state, 'BASELINE_READY');
+    return PBStore.listDevelopmentCyclesByPlayer('plr_1');
+  }).then(function (list) {
+    assert.strictEqual(list.length, 1);
+    return PBStore.listDevelopmentCyclesByState('BASELINE_READY');
+  }).then(function (list) {
+    assert.strictEqual(list.length, 1);
+    return PBStore.putPrescriptionWorkflow({ workflow_id: 'wf_1', player_id: 'plr_1', prescription_ref: 'rx_1', state: 'DRAFTED', schema_version: '1.0' });
+  }).then(function () {
+    return PBStore.getPrescriptionWorkflow('wf_1');
+  }).then(function (wf) {
+    assert.strictEqual(wf.prescription_ref, 'rx_1');
+    return PBStore.listPrescriptionWorkflowsByPlayer('plr_1');
+  }).then(function (list) {
+    assert.strictEqual(list.length, 1);
+    return PBStore.listPrescriptionWorkflowsByPrescription('rx_1');
+  }).then(function (list) {
+    assert.strictEqual(list.length, 1);
+    return PBStore.listPrescriptionWorkflowsByState('DRAFTED');
+  }).then(function (list) {
+    assert.strictEqual(list.length, 1);
+    return PBStore.putSessionResult({ session_id: 'sint_1', player_id: 'plr_1', prescription_ref: 'rx_1', status: 'COMPLETED', schema_version: '1.0' });
+  }).then(function () {
+    return PBStore.getSessionResult('sint_1');
+  }).then(function (sr) {
+    assert.strictEqual(sr.status, 'COMPLETED');
+    return PBStore.listSessionResultsByPlayer('plr_1');
+  }).then(function (list) {
+    assert.strictEqual(list.length, 1);
+    return PBStore.listSessionResultsByPrescription('rx_1');
+  }).then(function (list) {
+    assert.strictEqual(list.length, 1);
+    return PBStore.listSessionResultsByStatus('COMPLETED');
+  }).then(function (list) {
+    assert.strictEqual(list.length, 1);
+    return PBStore.putTrainingEvidence({ evidence_id: 'ev:sint_1:KPI', player_id: 'plr_1', session_ref: 'sint_1', prescription_ref: 'rx_1', source: 'TRAINING', schema_version: '1.0' });
+  }).then(function () {
+    return PBStore.getTrainingEvidence('ev:sint_1:KPI');
+  }).then(function (ev) {
+    assert.strictEqual(ev.source, 'TRAINING');
+    return PBStore.listTrainingEvidenceByPlayer('plr_1');
+  }).then(function (list) {
+    assert.strictEqual(list.length, 1);
+    return PBStore.listTrainingEvidenceBySession('sint_1');
+  }).then(function (list) {
+    assert.strictEqual(list.length, 1);
+    return PBStore.listTrainingEvidenceByPrescription('rx_1');
+  }).then(function (list) {
+    assert.strictEqual(list.length, 1);
+    return PBStore.listTrainingEvidenceBySource('TRAINING');
+  }).then(function (list) {
+    assert.strictEqual(list.length, 1);
+    return Promise.all([
+      PBStore.putDevelopmentCycle({ player_id: 'plr_1' }).catch(function (e) { return e; }),
+      PBStore.putPrescriptionWorkflow({ player_id: 'plr_1' }).catch(function (e) { return e; }),
+      PBStore.putSessionResult({ player_id: 'plr_1' }).catch(function (e) { return e; }),
+      PBStore.putTrainingEvidence({ player_id: 'plr_1' }).catch(function (e) { return e; })
+    ]);
+  }).then(function (errs) {
+    errs.forEach(function (e) { assert.ok(e instanceof Error, 'missing keyPath field must reject, never silently write a keyless record'); });
     console.log('storage.test.js: all assertions passed');
   });
 }

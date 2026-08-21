@@ -83,8 +83,18 @@ docs/S10-C-PRESCRIPTION-WORKFLOW.md
 
 S10-D
 Status: IMPLEMENTED / GPT QA PENDING
-Implementation Commit: pending GPT acceptance / see Git history
-Implementation Record: docs/S10-D-SESSION-EVIDENCE.md
+Core Implementation Commit: bab2382
+Full SHA: bab238241594da444565919065d8a05dcacbedfa
+R1 Persistence Implementation: pending GPT acceptance / see Git history
+Implementation Records:
+docs/S10-D-SESSION-EVIDENCE.md
+docs/S10-D-R1-DURABLE-PERSISTENCE.md
+
+S10-D-R1
+Status: IMPLEMENTED / GPT QA PENDING
+Purpose: Durable S10 Persistence + Reload Idempotency
+Baseline: bab2382
+Implementation Record: docs/S10-D-R1-DURABLE-PERSISTENCE.md
 
 S10-E
 Status: PLANNED

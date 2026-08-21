@@ -29,6 +29,17 @@
  * test_sessions 的普通嵌套字段，无 schema/索引变化）；实际的采集校验、去重、抽样
  * 完整度与描述性 Full-T10 指标计算全部位于新模块 js/match-observation-engine.js，
  * storage.js 本身不新增计算逻辑 —— 详见 docs/S9-B-MATCH-OBSERVATION-ENGINE.md。
+ * S10-D-R1：DB_VERSION 3 -> 4，新增 development_cycles / prescription_workflows /
+ * session_results / training_evidence 四个存储，供 S10-A/S10-C/S10-D 已冻结的
+ * 纯函数引擎（js/workflow-integration-engine.js /
+ * js/prescription-workflow-engine.js / js/session-evidence-engine.js）产出的
+ * 对象获得跨 reload 的持久化，不强行塞入语义不符的 S7/S8 既有 store（那些
+ * store 的 FK 谱系是 S7 CAP/瓶颈周期化体系，S9/S10 数据是另一条谱系——详见
+ * docs/S10-C-PRESCRIPTION-WORKFLOW.md §6 与 docs/S10-D-SESSION-EVIDENCE.md §6
+ * 的既有证据）。与既往每一次升级同样：纯增量（只新建缺失的 store/index），
+ * 不清空、不改写、不删除任何既有 store 或记录。本阶段仅提供 CRUD，不在
+ * storage.js 内新增/修改任何 S10 业务规则——那些规则仍完全归属各自的纯函数
+ * 引擎，详见 docs/S10-D-R1-DURABLE-PERSISTENCE.md。
  * ============================================================ */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -37,7 +48,7 @@
   'use strict';
 
   var DB_NAME = 'pb_v2';
-  var DB_VERSION = 3;
+  var DB_VERSION = 4;
 
   // 版本基线（V2.3.1）；若 PBConfig 已加载则以其为准
   var VERSIONS = { schema_version: '2.3.1', benchmark_version: '2.1.1', protocol_version: '2.2.1' };
@@ -79,6 +90,24 @@
     cycle_summaries: {
       keyPath: 'cycle_summary_id',
       indexes: [['by_cycle', 'cycle_id'], ['by_retest_readiness', 'retest_readiness']]
+    },
+    // S10-D-R1 新增：S10-A/S10-C/S10-D 纯函数引擎产出对象的持久化（schema/CRUD 仅，
+    // 不新增/不复制任何业务规则 —— 详见 docs/S10-D-R1-DURABLE-PERSISTENCE.md）
+    development_cycles: {
+      keyPath: 'cycle_id',
+      indexes: [['by_player', 'player_id'], ['by_state', 'state']]
+    },
+    prescription_workflows: {
+      keyPath: 'workflow_id',
+      indexes: [['by_player', 'player_id'], ['by_prescription', 'prescription_ref'], ['by_state', 'state']]
+    },
+    session_results: {
+      keyPath: 'session_id',
+      indexes: [['by_player', 'player_id'], ['by_prescription', 'prescription_ref'], ['by_status', 'status']]
+    },
+    training_evidence: {
+      keyPath: 'evidence_id',
+      indexes: [['by_player', 'player_id'], ['by_session', 'session_ref'], ['by_prescription', 'prescription_ref'], ['by_source', 'source']]
     }
   };
 
@@ -540,6 +569,46 @@
     });
   }
 
+  // ---- S10-D-R1：Development Cycle / Prescription Workflow / Session Result / Training
+  // Evidence 持久化（schema/CRUD 仅）。持久化对象来自各自纯函数引擎（PBWorkflow /
+  // PBPrescriptionWorkflow / PBSessionEvidence）已产出的完整合法对象，storage.js 本身
+  // 不重新校验/不重算其业务字段，只要求各自的 keyPath 字段存在即可 put。----
+  function putDevelopmentCycle(obj) {
+    if (!obj || obj.cycle_id == null) return fail('putDevelopmentCycle: cycle_id is required');
+    return put('development_cycles', obj);
+  }
+  function getDevelopmentCycle(cycle_id) { return get('development_cycles', cycle_id); }
+  function listDevelopmentCyclesByPlayer(player_id) { return getByIndex('development_cycles', 'by_player', player_id); }
+  function listDevelopmentCyclesByState(state) { return getByIndex('development_cycles', 'by_state', state); }
+
+  function putPrescriptionWorkflow(obj) {
+    if (!obj || obj.workflow_id == null) return fail('putPrescriptionWorkflow: workflow_id is required');
+    return put('prescription_workflows', obj);
+  }
+  function getPrescriptionWorkflow(workflow_id) { return get('prescription_workflows', workflow_id); }
+  function listPrescriptionWorkflowsByPlayer(player_id) { return getByIndex('prescription_workflows', 'by_player', player_id); }
+  function listPrescriptionWorkflowsByPrescription(prescription_ref) { return getByIndex('prescription_workflows', 'by_prescription', prescription_ref); }
+  function listPrescriptionWorkflowsByState(state) { return getByIndex('prescription_workflows', 'by_state', state); }
+
+  function putSessionResult(obj) {
+    if (!obj || obj.session_id == null) return fail('putSessionResult: session_id is required');
+    return put('session_results', obj);
+  }
+  function getSessionResult(session_id) { return get('session_results', session_id); }
+  function listSessionResultsByPlayer(player_id) { return getByIndex('session_results', 'by_player', player_id); }
+  function listSessionResultsByPrescription(prescription_ref) { return getByIndex('session_results', 'by_prescription', prescription_ref); }
+  function listSessionResultsByStatus(status) { return getByIndex('session_results', 'by_status', status); }
+
+  function putTrainingEvidence(obj) {
+    if (!obj || obj.evidence_id == null) return fail('putTrainingEvidence: evidence_id is required');
+    return put('training_evidence', obj);
+  }
+  function getTrainingEvidence(evidence_id) { return get('training_evidence', evidence_id); }
+  function listTrainingEvidenceByPlayer(player_id) { return getByIndex('training_evidence', 'by_player', player_id); }
+  function listTrainingEvidenceBySession(session_ref) { return getByIndex('training_evidence', 'by_session', session_ref); }
+  function listTrainingEvidenceByPrescription(prescription_ref) { return getByIndex('training_evidence', 'by_prescription', prescription_ref); }
+  function listTrainingEvidenceBySource(source) { return getByIndex('training_evidence', 'by_source', source); }
+
   function clearAll() {
     return open().then(function (db) {
       return Promise.all(Object.keys(STORES).map(function (name) {
@@ -588,6 +657,20 @@
       RETEST_READINESS_VALUES: RETEST_READINESS_VALUES.slice(),
       NEXT_ACTION_VALUES: NEXT_ACTION_VALUES.slice()
     },
+
+    // S10-D-R1: Development Cycle / Prescription Workflow / Session Result / Training Evidence persistence
+    putDevelopmentCycle: putDevelopmentCycle, getDevelopmentCycle: getDevelopmentCycle,
+    listDevelopmentCyclesByPlayer: listDevelopmentCyclesByPlayer, listDevelopmentCyclesByState: listDevelopmentCyclesByState,
+    putPrescriptionWorkflow: putPrescriptionWorkflow, getPrescriptionWorkflow: getPrescriptionWorkflow,
+    listPrescriptionWorkflowsByPlayer: listPrescriptionWorkflowsByPlayer,
+    listPrescriptionWorkflowsByPrescription: listPrescriptionWorkflowsByPrescription,
+    listPrescriptionWorkflowsByState: listPrescriptionWorkflowsByState,
+    putSessionResult: putSessionResult, getSessionResult: getSessionResult,
+    listSessionResultsByPlayer: listSessionResultsByPlayer, listSessionResultsByPrescription: listSessionResultsByPrescription,
+    listSessionResultsByStatus: listSessionResultsByStatus,
+    putTrainingEvidence: putTrainingEvidence, getTrainingEvidence: getTrainingEvidence,
+    listTrainingEvidenceByPlayer: listTrainingEvidenceByPlayer, listTrainingEvidenceBySession: listTrainingEvidenceBySession,
+    listTrainingEvidenceByPrescription: listTrainingEvidenceByPrescription, listTrainingEvidenceBySource: listTrainingEvidenceBySource,
 
     _uid: uid
   };
