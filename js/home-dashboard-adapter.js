@@ -53,6 +53,12 @@
  *     ever put()/created. The composed Home View Model itself is never
  *     persisted (disposable, regenerable from the same accepted data).
  *
+ * POST-S11-R3B-2: `assessment` (from js/assessment-journey-bridge.js's read-only Assessment
+ * Context, threaded through S11-A as journey.assessment_context — a third accepted read-only
+ * source alongside PBDashboard/PBProductJourney) is added to the Home View Model. It is read
+ * verbatim and never allowed to influence focus/why/training/next_action — see
+ * js/assessment-journey-bridge.js's own frozen-boundary comment for what it may/may not do.
+ *
  * See docs/S11-B-HOME-PRIORITY-DASHBOARD.md for the full field
  * reference and the known-limitation writeup.
  * ============================================================ */
@@ -153,6 +159,13 @@
     var matchResolved = !!matchProgress && RESOLVED_TRENDS.indexOf(matchProgress.trend) !== -1;
     if (!matchResolved && flags.indexOf('MATCH_TRANSFER_NOT_VALIDATED') === -1) flags.push('MATCH_TRANSFER_NOT_VALIDATED');
 
+    // POST-S11-R3B-2: assessment (from js/assessment-journey-bridge.js, passed through verbatim by
+    // S11-A as journey.assessment_context) is read here only — never recomputed, never allowed to
+    // influence focus/why/training/next_action, which stay exactly as derived above. It exists so
+    // HOME can tell "assessment exists with partial evidence" apart from "no traceability at all"
+    // without fabricating a recommendation.
+    var assessment = isPlainObject(journey.assessment_context) ? journey.assessment_context : null;
+
     return {
       home_dashboard: {
         player_id: opts.player_id,
@@ -162,6 +175,8 @@
           status: journey.status,
           headline_code: journey.headline_code != null ? journey.headline_code : null
         },
+
+        assessment: assessment,
 
         focus: focus,
         why: why,
@@ -195,6 +210,12 @@
     if (typeof PBProductJourney === 'undefined') throw AdapterError('DEP_MISSING', 'PBProductJourney not loaded');
     return PBProductJourney;
   }
+  // POST-S11-R3B-2: soft dependency (never added to ioEnginesReady's hard-required list) so a
+  // page/test that loads this adapter without the bridge degrades to assessment_context = null
+  // rather than failing to load Home at all.
+  function bridgeEngine() {
+    return (typeof PBAssessmentJourneyBridge === 'undefined') ? null : PBAssessmentJourneyBridge;
+  }
 
   function ioEnginesReady() {
     return typeof PBStore !== 'undefined' && typeof PBDashboard !== 'undefined' && typeof PBProductJourney !== 'undefined';
@@ -227,17 +248,24 @@
   // (PARTIAL/PROGRESS_NOT_YET_AVAILABLE, never fabricated).
   function loadJourneyInputs(player_id) {
     var store = storeEngine();
+    var bridge = bridgeEngine();
+    // POST-S11-R3B-2: read-only Assessment Context from js/assessment-journey-bridge.js — a
+    // failure here (e.g. no gate table for this target level) must never fail the whole Home
+    // load, so it degrades to null exactly like the try/catch around projectJourney below does.
+    var assessmentContextPromise = bridge ? bridge.loadAssessmentContext(player_id).catch(function () { return null; }) : Promise.resolve(null);
     return Promise.all([
       store.listDevelopmentCyclesByPlayer(player_id),
       store.listPrescriptionWorkflowsByPlayer(player_id),
       store.listSessionResultsByPlayer(player_id),
-      store.listReassessmentsByPlayer(player_id)
+      store.listReassessmentsByPlayer(player_id),
+      assessmentContextPromise
     ]).then(function (r) {
       return {
         development_cycle: pickCurrentCycle(r[0] || []),
         prescription_workflows: r[1] || [],
         session_results: r[2] || [],
-        reassessment: r[3] || []
+        reassessment: r[3] || [],
+        assessment_context: r[4] || null
       };
     });
   }
@@ -269,6 +297,9 @@
         reassessment: journeyInputs.reassessment
       };
       if (journeyInputs.development_cycle) journeyOpts.development_cycle = journeyInputs.development_cycle;
+      // POST-S11-R3B-2: additive-only — see js/product-journey-orchestrator.js's own comment at
+      // its assessment_context read site; never influences stage/next_action derivation.
+      journeyOpts.assessment_context = journeyInputs.assessment_context;
 
       var journeyResult;
       try {

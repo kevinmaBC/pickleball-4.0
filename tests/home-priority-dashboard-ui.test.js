@@ -149,6 +149,25 @@ function run() {
   })();
 
   // ==================================================================
+  // POST-S11-R3B-2 — assessment with recorded evidence must never render "No traceability data
+  // yet" as if no assessment exists; it renders honest assessment-evidence copy instead.
+  // ==================================================================
+  (function () {
+    var m = baseModel({ assessment: { player_id: 'p1', assessment_id: 'asm_1', assessment_status: 'ASSESSMENT_IN_PROGRESS', assessment_exists: true, evidence_status: 'PARTIAL', traceability_available: true, recommendation_eligible: false } });
+    var zh = UI.renderHomePanelHTML(m, false), en = UI.renderHomePanelHTML(m, true);
+    assert.strictEqual(en.indexOf('No traceability data yet'), -1, 'must not report no-traceability when an assessment with evidence exists');
+    assert.strictEqual(zh.indexOf('暂无可追溯依据'), -1, 'zh: must not report no-traceability when an assessment with evidence exists');
+    assert.ok(en.indexOf('Assessment evidence recorded (PARTIAL)') !== -1, 'en honest partial-evidence copy present');
+    assert.ok(en.indexOf('Assessment Evidence') !== -1, 'en Assessment Evidence section present');
+    assert.ok(en.indexOf('Not yet') !== -1, 'en recommendation_eligible=false renders "Not yet"');
+  })();
+  // No assessment at all -> original "No traceability data yet" copy is preserved verbatim.
+  (function () {
+    var html = UI.renderHomePanelHTML(baseModel(), true);
+    assert.ok(html.indexOf('No traceability data yet') !== -1, 'original copy preserved when there is no assessment_context at all');
+  })();
+
+  // ==================================================================
   // Determinism — same input twice -> identical HTML
   // ==================================================================
   (function () {

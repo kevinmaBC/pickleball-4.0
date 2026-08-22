@@ -210,6 +210,26 @@ docs/S11-FINAL-ACCEPTANCE.md
 
 S11
 Status: FINAL ACCEPTANCE PENDING
+
+R3B-1
+Status: CLOSED / ACCEPTED
+Acceptance Commit:
+201dfde1810426b0e68a105f05477aab4da95882
+
+POST-S11-R3B-2
+Status:
+IMPLEMENTED / GPT QA PENDING
+Baseline:
+201dfde1810426b0e68a105f05477aab4da95882
+Scope:
+Read-side Assessment -> Journey Integration Bridge
+(js/assessment-journey-bridge.js), wired additively through
+js/product-journey-orchestrator.js (assessment_context
+passthrough, never influencing stage/next_action derivation)
+into js/home-dashboard-adapter.js / js/home-priority-
+dashboard-ui.js. No Development Cycle auto-created, no
+official rating, no validated_training_level written, no S9
+rerun. DB_VERSION unchanged (5), stores unchanged (18/18).
 ```
 
 S7 and S8 acceptance commit SHAs were confirmed directly from local Git

@@ -276,8 +276,9 @@ function journeyFor(overrides) {
 
 // ================================================================
 // R1-T04 — No S9 execution. Architecture protection — structural source scan. The adapter's
-// only legitimate engines are the two accepted projection layers (PBDashboard/PBProductJourney)
-// plus read-only PBStore access — it must never call the S9 decision pipeline, a workflow
+// only legitimate engines are the two accepted projection layers (PBDashboard/PBProductJourney),
+// the POST-S11-R3B-2 read-only Assessment Context bridge (PBAssessmentJourneyBridge), plus
+// read-only PBStore access — it must never call the S9 decision pipeline, a workflow
 // transition, session-evidence, progress, or reassessment engine (S11-B-R1 repair: the adapter
 // previously re-ran the S9 chain on every render, which was itself a form of deciding the
 // recommendation/prescription, not merely projecting an already-decided one).
@@ -296,10 +297,31 @@ var STRIPPED = SRC.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
   forbidden.forEach(function (token) {
     assert.ok(STRIPPED.indexOf(token) === -1, 'home-dashboard-adapter.js must never reference ' + token);
   });
-  // The only legitimate S10-B/S11-A engine calls, plus read-only PBStore access.
-  ['PBDashboard', 'PBProductJourney', 'PBStore'].forEach(function (token) {
+  // The only legitimate S10-B/S11-A/POST-S11-R3B-2 engine calls, plus read-only PBStore access.
+  ['PBDashboard', 'PBProductJourney', 'PBAssessmentJourneyBridge', 'PBStore'].forEach(function (token) {
     assert.ok(STRIPPED.indexOf(token) !== -1, 'home-dashboard-adapter.js should reference ' + token);
   });
+})();
+
+// ================================================================
+// POST-S11-R3B-2 (B2-12) — HOME consumes a prepared projection only: composeHomeDashboard reads
+// journey.assessment_context verbatim into home_dashboard.assessment, never recomputing it, and
+// never letting it influence focus/why/training/next_action.
+// ================================================================
+(function () {
+  var ctx = { player_id: 'p1', assessment_id: 'asm_1', assessment_status: 'ASSESSMENT_IN_PROGRESS', evidence_status: 'PARTIAL', traceability_available: true, recommendation_eligible: false };
+  var journey = journeyFor();
+  journey.assessment_context = ctx;
+  var out = A.composeHomeDashboard({ player_id: 'p1', journey: journey, dashboard: dashboard([]) });
+  assert.deepStrictEqual(out.home_dashboard.assessment, ctx, 'assessment field is journey.assessment_context verbatim');
+  assert.strictEqual(out.home_dashboard.focus, null, 'assessment_context never fabricates a focus');
+  assert.strictEqual(out.home_dashboard.why, null, 'assessment_context never fabricates a why');
+  assert.strictEqual(out.home_dashboard.training, null, 'assessment_context never fabricates training');
+  assert.strictEqual(out.home_dashboard.next_action.code, 'START_ASSESSMENT', 'assessment_context never overrides next_action');
+})();
+(function () {
+  var out = A.composeHomeDashboard({ player_id: 'p1', journey: journeyFor(), dashboard: dashboard([]) });
+  assert.strictEqual(out.home_dashboard.assessment, null, 'assessment field defaults to null when journey.assessment_context is absent');
 })();
 
 // ================================================================

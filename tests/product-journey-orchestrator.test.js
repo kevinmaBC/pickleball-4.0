@@ -451,6 +451,28 @@ function checkDbVersionAndStores() {
 })();
 
 // ================================================================
+// POST-S11-R3B-2: assessment_context is passed through verbatim, additive-only — never consulted
+// by stage/next_action derivation, absent (null) when the caller doesn't supply one.
+// ================================================================
+(function () {
+  var noCtx = PJ.projectJourney({ player: player() });
+  assert.strictEqual(noCtx.journey.assessment_context, null, 'assessment_context defaults to null when absent');
+
+  var ctx = { player_id: 'p1', assessment_id: 'asm_1', assessment_status: 'ASSESSMENT_IN_PROGRESS', traceability_available: true };
+  var withCtx = PJ.projectJourney({ player: player(), assessment_context: ctx });
+  assert.deepStrictEqual(withCtx.journey.assessment_context, ctx, 'assessment_context is passed through verbatim');
+  assert.strictEqual(withCtx.journey.stage, 'NEEDS_ASSESSMENT', 'assessment_context never influences stage (still NEEDS_ASSESSMENT with no development_cycle)');
+  assert.strictEqual(withCtx.journey.next_action.code, 'START_ASSESSMENT', 'assessment_context never influences next_action');
+
+  // Even with an active development_cycle in play, assessment_context must not perturb the
+  // frozen cycle.state-driven stage derivation.
+  var cyc = { cycle_id: 'cyc_1', player_id: 'p1', state: 'TRAINING_ACTIVE' };
+  var withBoth = PJ.projectJourney({ player: player(), development_cycle: cyc, assessment_context: ctx });
+  assert.strictEqual(withBoth.journey.stage, 'TRAINING_IN_PROGRESS', 'assessment_context does not override cycle.state-driven stage');
+  assert.deepStrictEqual(withBoth.journey.assessment_context, ctx, 'assessment_context still passed through verbatim alongside a real cycle');
+})();
+
+// ================================================================
 // Structurally invalid input -> explicit deterministic error, never a guess
 // ================================================================
 (function () {

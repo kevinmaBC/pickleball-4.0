@@ -191,8 +191,28 @@
         (w.evidence_pattern_ids.length ? (en ? 'Evidence patterns: ' : '证据模式：') + esc(w.evidence_pattern_ids.join(', ')) + '<br>' : '') +
         (w.evidence_refs.length ? (en ? 'Evidence: ' : '证据：') + esc(w.evidence_refs.join(', ')) : '') +
         '</div>';
+    } else if (m.assessment && m.assessment.assessment_exists && m.assessment.traceability_available) {
+      // POST-S11-R3B-2 §8: an assessment with recorded evidence must never be reported as
+      // "no traceability data" just because no recommendation has been produced yet.
+      whyHTML = '<div class="hpd-mut">' + (en
+        ? 'Assessment evidence recorded (' + esc(m.assessment.evidence_status) + ') — not yet linked to a training recommendation.'
+        : '已记录评估证据（' + esc(m.assessment.evidence_status) + '）— 尚未关联训练建议。') + '</div>';
     } else {
       whyHTML = '<div class="hpd-mut">' + (en ? 'No traceability data yet' : '暂无可追溯依据') + '</div>';
+    }
+
+    // POST-S11-R3B-2: honest, additive Assessment Evidence section — presentation-only branching
+    // over facts already decided by js/assessment-journey-bridge.js; renders nothing when there
+    // is no assessment_context at all (never fabricates one).
+    var assessmentHTML = '';
+    if (m.assessment && m.assessment.assessment_exists) {
+      var asmt = m.assessment;
+      assessmentHTML = '<div class="hpd-section"><div class="hpd-label">' + (en ? 'Assessment Evidence' : '评估证据') + '</div>' +
+        '<div class="hpd-mut">' +
+        (en ? 'Status: ' : '状态：') + esc(asmt.assessment_status) +
+        ' · ' + (en ? 'Evidence: ' : '证据：') + esc(asmt.evidence_status) +
+        ' · ' + (en ? 'Recommendation eligible: ' : '可生成训练建议：') + (asmt.recommendation_eligible ? (en ? 'Yes' : '是') : (en ? 'Not yet' : '尚未')) +
+        '</div></div>';
     }
 
     var trainingHTML;
@@ -235,6 +255,7 @@
       (!na.enabled ? '<div class="hpd-mut" style="margin-top:6px">' + (en ? 'Not available yet.' : '暂不可用。') + '</div>' : '');
 
     return journeyHTML +
+      assessmentHTML +
       '<div class="hpd-section"><div class="hpd-label">' + (en ? 'Current Focus' : '当前重点') + '</div>' + focusHTML + '</div>' +
       '<div class="hpd-section"><div class="hpd-label">' + (en ? 'Why This Matters' : '为什么重要') + '</div>' + whyHTML + '</div>' +
       '<div class="hpd-section"><div class="hpd-label">' + (en ? 'Training Direction' : '训练方向') + '</div>' + trainingHTML + '</div>' +

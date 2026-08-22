@@ -271,6 +271,12 @@
       : (cycle && cycle.player_id != null ? cycle.player_id : null);
     if (playerId == null) throw JourneyError('MISSING_PLAYER_ID', 'a player_id is required (via input.player.player_id or development_cycle.player_id)');
 
+    // POST-S11-R3B-2: assessment_context (from js/assessment-journey-bridge.js) is passed through
+    // verbatim, additive-only — it is never consulted by deriveStage/CYCLE_STATES and never
+    // influences stage/next_action/current_focus/workflow_context. It exists solely so a
+    // consumer (e.g. HOME) can know assessment/evidence facts even while cycle is null.
+    var assessmentContext = isPlainObject(input.assessment_context) ? input.assessment_context : null;
+
     var recommendations = Array.isArray(input.recommendations) ? input.recommendations : [];
     var prescriptions = Array.isArray(input.prescriptions) ? input.prescriptions : [];
     var prescriptionWorkflows = Array.isArray(input.prescription_workflows) ? input.prescription_workflows : [];
@@ -334,6 +340,8 @@
       },
 
       presentation_flags: flags,
+
+      assessment_context: assessmentContext,
 
       schema_version: SCHEMA_VERSION,
       journey_version: CONTRACT_VERSION
