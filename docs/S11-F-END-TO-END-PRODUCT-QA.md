@@ -1,8 +1,18 @@
 # S11-F — End-to-End Product Experience QA
 
 Stage: `S11-F`
-Status: `IMPLEMENTED / GPT QA PENDING`
+Status: `IMPLEMENTED / GPT RE-QA PENDING`
 Entry Baseline: `770667c` (`770667cd2274eacd76b082c6a59053e8a396e25e`)
+
+## S11-F-R1 Repair Addendum
+
+The initial S11-F pass (commit `76dece3`) left two items incomplete:
+F19 (Real Match reassessment path) had not been driven through a
+genuine second real match, and F22 (375px mobile) had two known
+horizontal-overflow findings. S11-F-R1 (this addendum) completes both,
+and only both — no other section of this document was re-derived or
+broadened. See §4 (F-T21..F-T26), §9 (updated finding #2), and §16
+(F19/F22 rows) below for exactly what changed.
 
 ## 1. Entry Baseline
 
@@ -82,6 +92,20 @@ all PASS:
 | F-T18 Reassessment precedence (`READY_TO_REASSESS` / `RECORD_REAL_MATCH`, never `START_TRAINING`/`CONTINUE_TRAINING`) | PASS |
 | F-T19 History lineage (timeline contains `CYCLE_CREATED`, `PRESCRIPTION_WORKFLOW_CREATED`, `TRAINING_EVIDENCE_RECORDED`) | PASS |
 | F-T20 current workflow: no `ORPHAN_WORKFLOW_REF` | PASS |
+| F-T21 second real Match Observation: `match_id` distinct from the original | PASS |
+| F-T22 second real Diagnosis (existing S9 API, no new logic) | PASS |
+| F-T23 second Recommendation: lineage references the second `match_id`, distinct from the original Recommendation | PASS |
+| F-T24 second Prescription: `source_recommendation_id` matches the second Recommendation, distinct from the original Prescription | PASS |
+| F-T25 original TRAINING Evidence byte-for-byte unchanged by running S9 again | PASS |
+| F-T26 original cycle (state, `recommendation_refs`, `prescription_refs`) and History timeline unchanged; still no `ORPHAN_WORKFLOW_REF` | PASS |
+
+**F19 (Real Match reassessment path, S11-F-R1): PASS** — F-T21..F-T26
+prove a second real Match Observation runs through the exact same,
+unmodified S9 Diagnosis → Recommendation/Priority → Training
+Prescription chain and produces output fully independent of (and
+non-destructive to) the first cycle's durable state — no old
+Recommendation/Evidence/Cycle record is overwritten, confirming S9
+remains the sole reassessment decision path with no new logic added.
 
 ## 5. Reload / Recovery Test
 
@@ -127,7 +151,7 @@ UI interaction for this stage:
 | History lineage | PASS — full timeline (cycle created → workflow created → activated → training started → training completed → evidence recorded → reassessment required) |
 | Current `ORPHAN_WORKFLOW_REF` absent | PASS — "数据一致性警告：未发现数据一致性问题" (no data-consistency issues found) |
 | Bilingual | PASS — toggled zh→en→zh; labels translated correctly; `next_action.code` verified unchanged (`RECORD_REAL_MATCH`) across the toggle |
-| 375px mobile | PARTIAL — see §9 (two overflow findings, both non-blocking) |
+| 375px mobile | PASS (S11-F-R1) — both overflow findings fixed, see §9 |
 | Console clean | PASS — zero console errors across the entire journey |
 
 ## 7. Idempotency Matrix
@@ -175,18 +199,30 @@ only, no repair unless explicitly authorized" rule.
    `F-T16`/`F-T17`/`F-R06` and by direct manual render). Reassessment
    precedence — the behavior this same fact drives — is correctly
    honored (§Phase 7), which is the more critical guarantee.
-2. **Mobile 375px horizontal overflow, two sources, both cosmetic:**
-   (a) the bottom `nav.tabs` bar (7 tabs) is ~443px wide at a 375px
-   viewport on every page — pre-existing app chrome, not introduced by
-   any S11 stage; (b) `js/history-explainability-ui.js`'s recommendation
-   reference string (a long colon-delimited machine id, e.g.
-   `rec:ses_...:IMPROVE_TRANSITION_EXECUTION:-:transition`) does not
-   wrap inside a `<b>` element, pushing History's `scrollWidth` to
-   ~640px. In both cases every primary CTA button remained fully
-   within the visible viewport and clickable (verified via
-   `getBoundingClientRect`) — buttons remain usable, per §30's more
-   important requirement. HOME/Guided Training/Progress had no
-   overflow at all.
+2. **Mobile 375px horizontal overflow — RESOLVED in S11-F-R1.** Two
+   sources were found and fixed, both CSS-only, in `css/app.css`:
+   (a) the bottom `nav.tabs` bar (7 tabs) was ~443px wide at a 375px
+   viewport on every page, because `nav.tabs button{flex:1}` items
+   have no `min-width:0` by default, so a flex item refuses to shrink
+   below its content's intrinsic min-content width even when the row
+   wraps — fixed by adding `min-width:0` to `nav.tabs button` (one
+   declaration; no navigation redesign). Verified post-fix: all 7
+   buttons render at an even 54px each, full label text intact
+   (`scrollWidth === width` for every `.te` label, no clipping/
+   truncation), still clickable, page `scrollWidth` exactly 375.
+   (b) `js/history-explainability-ui.js`'s recommendation reference
+   string (a long colon-delimited machine id, e.g.
+   `rec:ses_...:IMPROVE_TRANSITION_EXECUTION:-:transition`) did not
+   wrap inside its `<b>` element, pushing History's `scrollWidth` to
+   ~640px — fixed with a CSS-only rule,
+   `#history-explainability-app .hpd-row b{overflow-wrap:anywhere;
+   word-break:break-word;min-width:0}`; the raw machine id remains
+   fully present and traceable (verified via page text extraction), it
+   now simply wraps onto multiple lines instead of overflowing. No
+   `js/history-explainability-ui.js` change was needed. Both fixes
+   verified with zero desktop-width regression (nav bar unchanged at
+   51px/button on the app's own narrow-container desktop layout) and
+   zero new console errors.
 3. **Service Worker runtime cache appeared empty in this sandboxed
    preview environment** (`caches.keys()` returned `[]`) despite
    `sw.js`'s source correctly listing
@@ -253,7 +289,9 @@ See §6 and §9.2/§9.3 above.
 All suites in `tests/*.test.js` executed individually via
 `node tests/<file>.test.js`.
 
-Result: **46/46 suites PASS, 0 FAIL.**
+Result (S11-F original pass): **46/46 suites PASS, 0 FAIL.**
+Result (S11-F-R1 repair, re-run after the F19 test extension and the
+two CSS fixes): **46/46 suites PASS, 0 FAIL.**
 
 ## 16. S11-F 24 Acceptance Gates
 
@@ -277,10 +315,10 @@ Result: **46/46 suites PASS, 0 FAIL.**
 | F16 | TRAINING/MATCH separation preserved | PASS |
 | F17 | Progress != Validated Level | PASS |
 | F18 | Reassessment precedence works | PASS |
-| F19 | Real Match reassessment path works | PASS (routes to Measure; S9 pipeline remains the reassessment decision path, no new logic built) |
+| F19 | Real Match reassessment path works | PASS (S11-F-R1: F-T21..F-T26 drive a genuine second real Match Observation through the unmodified S9 chain end-to-end; old cycle/Evidence/History proven undisturbed) |
 | F20 | History / Explainability lineage works | PASS |
 | F21 | Reload / Recovery matrix passes | PASS |
-| F22 | Bilingual + 375px + console clean | PASS (375px: cosmetic overflow only, non-blocking — see §9.2) |
+| F22 | Bilingual + 375px + console clean | PASS (S11-F-R1: both 375px overflow findings fixed, CSS-only — see §9.2) |
 | F23 | DB_VERSION 5 / 18 stores unchanged | PASS |
 | F24 | Full regression PASS | PASS |
 
@@ -288,16 +326,22 @@ Result: **46/46 suites PASS, 0 FAIL.**
 
 ## 17. Production Code Modified
 
-**NO.** `git diff --name-only` against `770667c` touches only:
+**S11-F (original pass, commit `76dece3`): NO.** Touched only
 `docs/MASTER-CONTROL-V2.md`, `docs/S11-F-END-TO-END-PRODUCT-QA.md`,
 `tests/s11-full-product-journey.test.js`,
 `tests/s11-reload-recovery.test.js`, `tests/s10-final-acceptance.test.js`.
-No `js/*.js`, `css/*`, `index.html`, `sw.js`, or `storage.js` file was
-changed.
+
+**S11-F-R1 (this repair): CSS only.** `css/app.css` gained two
+declarations (`nav.tabs button{min-width:0}` and
+`#history-explainability-app .hpd-row b{overflow-wrap:anywhere;
+word-break:break-word;min-width:0}`) — see §9.2. No `js/*.js`,
+`index.html`, `sw.js`, or `storage.js` file was changed in either
+pass; no S9/S10 engine, DB schema, Progress architecture, MATCH
+persistence, or active-session persistence was touched.
 
 ## 18. Implementation Verdict
 
-`READY FOR GPT INDEPENDENT QA`. This document does not self-accept —
-S11-F remains `IMPLEMENTED / GPT QA PENDING` in
+`READY FOR GPT RE-QA`. This document does not self-accept — S11-F
+remains `IMPLEMENTED / GPT RE-QA PENDING` in
 `docs/MASTER-CONTROL-V2.md` until GPT performs Independent QA and
 records acceptance. S11-FINAL is not begun.

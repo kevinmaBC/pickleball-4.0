@@ -364,7 +364,78 @@ function run() {
     assert.strictEqual(ctx.history.integrity_flags.indexOf('ORPHAN_WORKFLOW_REF'), -1, 'F-T20 no ORPHAN_WORKFLOW_REF for the production-created workflow');
   }).then(function () {
 
-    console.log('s11-full-product-journey.test.js: F-T01..F-T20 all assertions passed');
+    // ================================================================
+    // F-T21..F-T26 — S11-F-R1 / Acceptance Gate F19: Real Match reassessment
+    // path, completed end-to-end. Continues the journey from
+    // READY_TO_REASSESS / RECORD_REAL_MATCH (F-T18): a second real Match
+    // Observation is recorded and run through the exact same, unmodified S9
+    // Diagnosis -> Recommendation/Priority -> Training Prescription chain —
+    // no new decision logic, only the existing S9 production APIs already
+    // exercised by F-T02..F-T05. Verifies the second match's decision output
+    // is genuinely independent of the first, and that nothing about the
+    // original (now-REASSESSMENT_READY) cycle's durable state is disturbed
+    // by simply running S9 again.
+    // ================================================================
+    return PBStore.createAssessment({ player_id: ctx.player.player_id, assessment_tier: 'lite', target_training_level: 4.0 }).then(function (assessment2) {
+      return PBMatchObservation.createMatchSession({ assessment_id: assessment2.assessment_id, assessment_tier: 'lite', match_context: { observer_role: 'SELF' } });
+    }).then(function (session2) {
+      ctx.match_session_2 = session2;
+      // F-T21: new match_id != original match_id.
+      assert.notStrictEqual(session2.test_session_id, ctx.match_session.test_session_id, 'F-T21 second Match Observation has a distinct match_id from the original');
+      var chain = Promise.resolve();
+      // A different rally shape (net/error/ue on 'drive') from the original ('drop'/error/ue)
+      // so the second match is genuinely distinct evidence, not a byte-for-byte replay.
+      for (var i = 1; i <= 8; i++) {
+        (function (i) {
+          chain = chain.then(function () {
+            return PBMatchObservation.addRallyObservation(session2.test_session_id, baseRally({ game_number: 1, rally_number: i, shot: 'drive', quality: 'error', result: 'ue' }));
+          });
+        })(i);
+      }
+      return chain;
+    }).then(function () {
+      return PBDiagnosis.diagnoseMatch(ctx.match_session_2.test_session_id, ctx.player.player_id);
+    }).then(function (diagnosis2) {
+      assert.ok(diagnosis2.skill_gaps.length > 0, 'F-T22 second real Diagnosis produced skill gaps (existing S9 API, no new logic)');
+      var recResult2 = PBRecommendationPriority.prioritizeDiagnosis(diagnosis2);
+      var primary2 = recResult2.recommendations.filter(function (r) { return r.rank === 1; })[0];
+      assert.ok(primary2, 'F-T23 second primary Recommendation exists');
+      // F-T23: new Recommendation lineage belongs to the second Match (recommendation_id is
+      // deterministically derived from its own source match_id — never the first match's).
+      assert.ok(primary2.recommendation_id.indexOf(ctx.match_session_2.test_session_id) !== -1, 'F-T23 new Recommendation lineage references the second match_id');
+      assert.notStrictEqual(primary2.recommendation_id, ctx.primaryRecommendation.recommendation_id, 'F-T23 new Recommendation is distinct from the original');
+      ctx.primaryRecommendation2 = primary2;
+
+      var rxResult2 = PBTrainingPrescription.prescribeRecommendations(recResult2);
+      var matching2 = rxResult2.prescriptions.filter(function (p) { return p.source_recommendation_id === primary2.recommendation_id; })[0];
+      // F-T24: new Prescription belongs to the new Recommendation.
+      assert.ok(matching2, 'F-T24 matching Prescription exists for the second Recommendation');
+      assert.strictEqual(matching2.source_recommendation_id, primary2.recommendation_id, 'F-T24 new Prescription.source_recommendation_id matches the new Recommendation');
+      assert.notStrictEqual(matching2.prescription_id, ctx.primaryPrescription.prescription_id, 'F-T24 new Prescription is distinct from the original');
+      ctx.primaryPrescription2 = matching2;
+    }).then(function () {
+      // F-T25: old TRAINING Evidence remains unchanged by simply running S9 again.
+      return PBStore.getTrainingEvidence(ctx.completion.evidence.evidence_id).then(function (persisted) {
+        assert.ok(persisted, 'F-T25 original TRAINING Evidence still durable');
+        assert.deepStrictEqual(persisted, ctx.completion.evidence, 'F-T25 original TRAINING Evidence byte-for-byte unchanged');
+      });
+    }).then(function () {
+      // F-T26: old cycle/history remains intact; no old recommendation is overwritten.
+      return PBStore.getDevelopmentCycle(ctx.cycle_id).then(function (persistedCycle) {
+        assert.strictEqual(persistedCycle.state, 'REASSESSMENT_READY', 'F-T26 original cycle state unchanged by running S9 again');
+        assert.deepStrictEqual(persistedCycle.recommendation_refs, [ctx.primaryRecommendation.recommendation_id], 'F-T26 original cycle.recommendation_refs not overwritten by the second match\'s recommendation');
+        assert.deepStrictEqual(persistedCycle.prescription_refs, [ctx.primaryPrescription.prescription_id], 'F-T26 original cycle.prescription_refs not overwritten by the second match\'s prescription');
+        return PBHistoryExplainabilityAdapter.loadHistoryExplainability(ctx.player.player_id);
+      }).then(function (result) {
+        var cycleView = result.history_explainability.cycles.filter(function (c) { return c.cycle_id === ctx.cycle_id; })[0];
+        assert.ok(cycleView, 'F-T26 original cycle still present in History after the second match');
+        assert.deepStrictEqual(cycleView.timeline, ctx.history.cycles.filter(function (c) { return c.cycle_id === ctx.cycle_id; })[0].timeline, 'F-T26 original cycle\'s timeline unchanged by the second match (no new registration was performed)');
+        assert.strictEqual(result.history_explainability.integrity_flags.indexOf('ORPHAN_WORKFLOW_REF'), -1, 'F-T26 still no ORPHAN_WORKFLOW_REF after the second match');
+      });
+    });
+  }).then(function () {
+
+    console.log('s11-full-product-journey.test.js: F-T01..F-T26 (incl. F19 second Real Match reassessment path) all assertions passed');
   });
 }
 
