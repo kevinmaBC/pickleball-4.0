@@ -177,11 +177,20 @@ Secondary Finding: PRESCRIPTION_WORKFLOW_CYCLE_LINK_MISSING
 Audit Record: docs/S11-F0-PRESCRIPTION-LINEAGE-AUDIT.md
 
 S11-F0-R1
+Status: CLOSED / ACCEPTED
+Acceptance Commit: 770667c
+Full SHA:
+770667cd2274eacd76b082c6a59053e8a396e25e
+Acceptance Record:
+docs/S11-F0-R1-PRODUCTION-REGISTRATION.md
+
+S11-F ENTRY BLOCK:
+CLEARED
+
+S11-F
 Status: IMPLEMENTED / GPT QA PENDING
-Implementation Record: docs/S11-F0-R1-PRODUCTION-REGISTRATION.md
-Note: S11-F entry block remains active/unresolved — this record does
-NOT close S11-F0/S11-F0-R1 and does NOT authorize S11-F. Only GPT may
-declare acceptance and clear the block.
+Implementation Record:
+docs/S11-F-END-TO-END-PRODUCT-QA.md
 ```
 
 S7 and S8 acceptance commit SHAs were confirmed directly from local Git
