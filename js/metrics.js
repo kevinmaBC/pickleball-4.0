@@ -16,7 +16,7 @@
   // 每项测试的“可由 S/P/F/I 直接算出的 ball-quality 主指标”键名（与 V2.3.1 test_definitions 对齐）
   var PRIMARY = {
     T01: 'serve_in_pct',
-    T02: 'return_quality_pct',
+    T02: 'return_in_pct', // canonical T02 key per data/test_definitions_v2_3_1.json (POST-S11-R3B-1 Fix A)
     T03: 'drive_ball_quality_pct',
     T04: 'drop_ball_quality_pct',
     T05: 'reset_ball_quality_pct',

@@ -15,7 +15,10 @@
 
   // 门槛指标键 → 我们已采集的测试（T01–T09）。不在表中的键=尚未采集（多属 T10 实战家族）
   var METRIC_TO_TEST = {
-    serve_in_pct: 'T01', return_quality_pct: 'T02', drive_ball_quality_pct: 'T03',
+    // return_in_pct = canonical T02 key (level 3.0 gate table + data/test_definitions_v2_3_1.json);
+    // return_quality_pct = legacy key still used by the 3.5/4.0 gate tables — both name the same
+    // T02 Return metric, so both must resolve (POST-S11-R3B-1 Fix A). Not a rename: additive only.
+    serve_in_pct: 'T01', return_in_pct: 'T02', return_quality_pct: 'T02', drive_ball_quality_pct: 'T03',
     drop_ball_quality_pct: 'T04', reset_ball_quality_pct: 'T05', dink_unattackable_pct: 'T06',
     volley_control_pct: 'T07', shot_selection_pct: 'T08', pressure_success_pct: 'T09'
   };
@@ -69,6 +72,11 @@
       if (!levelCfg) return { target: target, unsupported: true, rows: [] };
       var perTest = M.per_test || {};
       var match = M.match || null;
+      // Fix C: whether a not_captured gate key is genuinely T10-dependent is a data fact, not a
+      // hardcoded guess — level_gates_v2_3_1.json already declares this via levelCfg.source_tests
+      // (only present on the 4.5/5.0 provisional levels). Absent that declaration, "not_captured"
+      // means only "not yet mapped to a T01-T09 test" and must not claim to be "Pending T10".
+      var t10Pending = !!(levelCfg.source_tests && levelCfg.source_tests.indexOf('T10') !== -1);
       var rows = Object.keys(levelCfg.hard_gates).map(function (k) {
         var gate = levelCfg.hard_gates[k];
         // T10-lite：UE 每局从 match 块取（不再是"未采集"）
@@ -78,11 +86,14 @@
           var cur = (match && match.ue_per_game != null) ? match.ue_per_game : null;
           if (cur == null) { row.status = 'no_data'; return row; }
           row.current = cur; row.games = match.games;
+          row.n_valid = match.games; // Fix B: generic renderer reads n_valid, not games — avoids "Sample undefined/2"
           row.sample_ok = (minG == null) ? true : (match.games >= minG);
           row.status = statusMM(cur, thr, true);
           return row;
         }
-        return evalGate(k, gate, perTest);
+        var r = evalGate(k, gate, perTest);
+        if (r.status === 'not_captured') r.t10_pending = t10Pending;
+        return r;
       });
       // 实战验证：match_transfer_score 从 match 块取（简化验证分）
       if (levelCfg.match_validation && levelCfg.match_validation.required) {

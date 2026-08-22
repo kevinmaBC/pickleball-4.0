@@ -155,11 +155,14 @@
     PBPreview.forAssessment(aid).then(function (P) {
       if (P.unsupported) { h('<div class="a1-h"><button class="btn" data-act="open" data-id="'+aid+'" style="padding:4px 10px">'+(LANG==='en'?'‹ Back':'‹ 返回')+'</button></div><div class="a1-mut">'+(LANG==='en'?'No gate table yet for target level ':'目标等级 ')+esc(P.target)+(LANG==='en'?'.':' 暂无门槛表。')+'</div>'); return; }
       var STAT = LANG==='en'
-        ? { met:['Met ✓','var(--pass)'], borderline:['Borderline ~','var(--part)'], not_met:['Not Met ✗','var(--fail)'], no_data:['No Data','var(--muted)'], not_captured:['Not Captured · Pending T10','var(--muted)'] }
-        : { met:['达标 ✓','var(--pass)'], borderline:['边缘 ~','var(--part)'], not_met:['未达 ✗','var(--fail)'], no_data:['无数据','var(--muted)'], not_captured:['未采集·待T10','var(--muted)'] };
+        ? { met:['Met ✓','var(--pass)'], borderline:['Borderline ~','var(--part)'], not_met:['Not Met ✗','var(--fail)'], no_data:['No Data','var(--muted)'], not_captured:['Not Captured','var(--muted)'] }
+        : { met:['达标 ✓','var(--pass)'], borderline:['边缘 ~','var(--part)'], not_met:['未达 ✗','var(--fail)'], no_data:['无数据','var(--muted)'], not_captured:['未采集','var(--muted)'] };
       var rows = P.rows.map(function (x) {
         var s = STAT[x.status] || ['?','var(--muted)']; var op = x.direction==='max' ? '≤' : '≥'; var mid='';
-        if (x.status==='not_captured') mid='';
+        // Fix C: "Pending T10" is only accurate when the row is genuinely T10-dependent
+        // (PBPreview sets t10_pending from levelCfg.source_tests) — otherwise a neutral
+        // "Not Captured" avoids misattributing a T01-T09 gap (e.g. a key-mapping miss) to T10.
+        if (x.status==='not_captured') { s = [s[0] + (x.t10_pending ? (LANG==='en' ? ' · Pending T10' : '·待T10') : ''), s[1]]; mid=''; }
         else if (x.status==='no_data') mid='<span class="a1-mut">'+op+x.threshold+(LANG==='en'?' (not recorded)':'（未录）')+'</span>';
         else { var samp = x.min_required ? (' · '+(LANG==='en'?'Sample ':'样本 ')+x.n_valid+'/'+x.min_required+(x.sample_ok?'':(LANG==='en'?' ⚠ insufficient':' ⚠不足'))) : ''; mid='<b>'+x.current+'%</b> <span class="a1-mut">'+op+x.threshold+samp+'</span>'; }
         return '<div class="a1-row"><div style="flex:1 1 58%"><b>'+esc(x.key)+'</b><div class="a1-mut" style="padding:2px 0 0">'+mid+'</div></div><div style="color:'+s[1]+';font-weight:700;white-space:nowrap">'+s[0]+'</div></div>';
