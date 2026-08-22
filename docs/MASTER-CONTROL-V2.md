@@ -170,8 +170,18 @@ Full SHA: aa507fb87d7568d97f2221a3318897de2f33eb2d
 Acceptance Record: docs/S11-E-HISTORY-EXPLAINABILITY-RECOVERY.md
 
 S11-F0
-Status: BLOCKING REPAIR IN PROGRESS
-Finding: PRESCRIPTION_WORKFLOW_CYCLE_LINK_MISSING
+Status: BLOCKED — ROOT CAUSE REDEFINED
+Audit Commit: 263b946
+Primary Finding: MISSING_PRODUCTION_DECISION_REGISTRATION_ENTRY
+Secondary Finding: PRESCRIPTION_WORKFLOW_CYCLE_LINK_MISSING
+Audit Record: docs/S11-F0-PRESCRIPTION-LINEAGE-AUDIT.md
+
+S11-F0-R1
+Status: IMPLEMENTED / GPT QA PENDING
+Implementation Record: docs/S11-F0-R1-PRODUCTION-REGISTRATION.md
+Note: S11-F entry block remains active/unresolved — this record does
+NOT close S11-F0/S11-F0-R1 and does NOT authorize S11-F. Only GPT may
+declare acceptance and clear the block.
 ```
 
 S7 and S8 acceptance commit SHAs were confirmed directly from local Git

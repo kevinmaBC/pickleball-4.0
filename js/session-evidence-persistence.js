@@ -61,6 +61,10 @@
     if (typeof PBSessionEvidence === 'undefined') throw PersistenceError('DEP_MISSING', 'PBSessionEvidence not loaded');
     return PBSessionEvidence;
   }
+  function pwEngine() {
+    if (typeof PBPrescriptionWorkflow === 'undefined') throw PersistenceError('DEP_MISSING', 'PBPrescriptionWorkflow not loaded');
+    return PBPrescriptionWorkflow;
+  }
 
   var CONTRACT_VERSION = 'S10-D-R1-V1';
 
@@ -196,11 +200,147 @@
     });
   }
 
+  // ================================================================
+  // S11-F0-R1 — Decision Cycle Registration: the durable, idempotent
+  // bridge from an already-computed, transient S9 Recommendation +
+  // matching Prescription (recomputed fresh in memory on every Review
+  // page load — see js/review-ui.js's loadDashboardData) into a durable
+  // S10-A Development Cycle / S10-C Prescription Workflow pair. This is
+  // the production registration entry S11-F0's audit
+  // (docs/S11-F0-PRESCRIPTION-LINEAGE-AUDIT.md) found missing.
+  //
+  // No new business rule: every state transition is delegated verbatim
+  // to PBWorkflow.transition / PBPrescriptionWorkflow.createPrescriptionWorkflow,
+  // exactly as completeSessionDurable above delegates to
+  // PBWorkflow/PBSessionEvidence. The registration identity (cycle_id /
+  // workflow_id) is a deterministic composite key — the same convention
+  // this file already uses for evidence_id ('ev:' + session_id + ':' +
+  // kpi_profile_code above) — so a retried call for the same
+  // player/match/recommendation/prescription always resolves to the same
+  // durable records instead of duplicating them, and a partially-applied
+  // prior attempt resumes from wherever it left off (mirrors
+  // completeSessionDurable's own Case A/B/C resumability).
+  //
+  // Ends at cycle.state PRESCRIPTION_READY / workflow.state DRAFTED:
+  // START_TRAINING is never called here — that remains S11-C Guided
+  // Training's own separate, explicit, later action.
+  // ================================================================
+
+  function decisionCycleId(player_id, source_match_session_id, recommendation_id) {
+    return 'cyc:reg:' + player_id + ':' + source_match_session_id + ':' + recommendation_id;
+  }
+  function decisionWorkflowId(prescription_id) {
+    return 'pwf:reg:' + prescription_id;
+  }
+
+  function registerDecisionCycleDurable(opts) {
+    opts = opts || {};
+    var store = storeEngine();
+    var wf = wfEngine();
+
+    if (!opts.player_id) throw PersistenceError('INVALID_INPUT', 'player_id is required');
+    if (!opts.source_match_session_id) throw PersistenceError('INVALID_INPUT', 'source_match_session_id is required');
+    if (!isPlainObject(opts.recommendation) || opts.recommendation.recommendation_id == null) {
+      throw PersistenceError('INVALID_INPUT', 'recommendation.recommendation_id is required');
+    }
+    if (!isPlainObject(opts.prescription) || opts.prescription.prescription_id == null) {
+      throw PersistenceError('INVALID_INPUT', 'prescription.prescription_id is required');
+    }
+    if (opts.prescription.source_recommendation_id !== opts.recommendation.recommendation_id) {
+      throw PersistenceError('RECOMMENDATION_PRESCRIPTION_MISMATCH', 'prescription.source_recommendation_id does not match recommendation.recommendation_id');
+    }
+
+    var cycle_id = decisionCycleId(opts.player_id, opts.source_match_session_id, opts.recommendation.recommendation_id);
+    var workflow_id = decisionWorkflowId(opts.prescription.prescription_id);
+    var createdAnything = false;
+
+    return readStep(store.getDevelopmentCycle(cycle_id), 'getDevelopmentCycle').then(function (existingCycle) {
+      if (existingCycle) {
+        if (existingCycle.player_id !== opts.player_id || existingCycle.baseline_ref !== opts.source_match_session_id) {
+          throw PersistenceError('REGISTRATION_CONFLICT', 'existing development_cycle ' + cycle_id + ' does not match this registration\'s player/baseline');
+        }
+        return existingCycle;
+      }
+      createdAnything = true;
+      var created = wf.createDevelopmentCycle({ cycle_id: cycle_id, player_id: opts.player_id, baseline_ref: opts.source_match_session_id }).development_cycle;
+      return writeStep(store.putDevelopmentCycle(created), 'putDevelopmentCycle').then(function () { return created; });
+    }).then(function (cycle) {
+      // A cycle that has since accumulated newer evidence (e.g. via Guided Training's own
+      // completeSessionDurable against this same cycle_id) can never be legitimately prescribed
+      // from without first regenerating the recommendation — same STALE_RECOMMENDATION semantics
+      // js/workflow-integration-engine.js's own GENERATE_PRESCRIPTION check already enforces.
+      if (cycle.state === 'REASSESSMENT_READY') {
+        throw PersistenceError('STALE_RECOMMENDATION', 'development cycle ' + cycle_id + ' has newer evidence pending; regenerate the recommendation before registering this prescription');
+      }
+
+      var chain = Promise.resolve(cycle);
+
+      if (cycle.state === 'BASELINE_READY') {
+        chain = chain.then(function (c) {
+          createdAnything = true;
+          var next = wf.transition(c, 'ADD_EVIDENCE', { evidence_ref: opts.source_match_session_id });
+          return writeStep(store.putDevelopmentCycle(next), 'putDevelopmentCycle').then(function () { return next; });
+        });
+      }
+
+      chain = chain.then(function (c) {
+        if (c.state !== 'EVIDENCE_AVAILABLE') return c;
+        createdAnything = true;
+        // priority_ref stays null: this repo's S9 Recommendation has no separate, stably
+        // referenceable Priority object of its own (rank/priority_score/priority_tier are
+        // fields on the recommendation itself) — never fabricated here.
+        var next = wf.transition(c, 'GENERATE_RECOMMENDATION', {
+          recommendation_refs: [opts.recommendation.recommendation_id],
+          priority_ref: null
+        });
+        return writeStep(store.putDevelopmentCycle(next), 'putDevelopmentCycle').then(function () { return next; });
+      });
+
+      chain = chain.then(function (c) {
+        if (c.state !== 'RECOMMENDATION_READY') return c;
+        if (c.recommendation_refs.indexOf(opts.recommendation.recommendation_id) === -1) {
+          throw PersistenceError('REGISTRATION_CONFLICT', 'development cycle ' + cycle_id + ' is already registered against a different recommendation');
+        }
+        createdAnything = true;
+        var next = wf.transition(c, 'GENERATE_PRESCRIPTION', { prescription_refs: [opts.prescription.prescription_id] });
+        return writeStep(store.putDevelopmentCycle(next), 'putDevelopmentCycle').then(function () { return next; });
+      });
+
+      chain = chain.then(function (c) {
+        // Rule 5 (carried from S10-A): recommendation/prescription refs are never overwritten —
+        // a cycle already prescribed against a different prescription_id is a genuine conflict,
+        // not silently replaced.
+        if (c.prescription_refs.indexOf(opts.prescription.prescription_id) === -1) {
+          throw PersistenceError('REGISTRATION_CONFLICT', 'development cycle ' + cycle_id + ' is already registered against a different prescription');
+        }
+        return c;
+      });
+
+      return chain;
+    }).then(function (finalCycle) {
+      return readStep(store.getPrescriptionWorkflow(workflow_id), 'getPrescriptionWorkflow').then(function (existingWorkflow) {
+        if (existingWorkflow) {
+          return { development_cycle: finalCycle, prescription_workflow: existingWorkflow, was_existing: !createdAnything };
+        }
+        createdAnything = true;
+        var createdWf = pwEngine().createPrescriptionWorkflow({
+          workflow_id: workflow_id, player_id: opts.player_id, prescription: opts.prescription
+        }).prescription_workflow;
+        return writeStep(store.putPrescriptionWorkflow(createdWf), 'putPrescriptionWorkflow').then(function () {
+          return { development_cycle: finalCycle, prescription_workflow: createdWf, was_existing: false };
+        });
+      });
+    });
+  }
+
   return {
     CONTRACT_VERSION: CONTRACT_VERSION,
     ensureDevelopmentCycle: ensureDevelopmentCycle,
     persistPrescriptionWorkflow: persistPrescriptionWorkflow,
     reloadPrescriptionWorkflow: reloadPrescriptionWorkflow,
-    completeSessionDurable: completeSessionDurable
+    completeSessionDurable: completeSessionDurable,
+    decisionCycleId: decisionCycleId,
+    decisionWorkflowId: decisionWorkflowId,
+    registerDecisionCycleDurable: registerDecisionCycleDurable
   };
 });

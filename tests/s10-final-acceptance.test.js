@@ -448,15 +448,20 @@ function run() {
     // FA24 — no unauthorized next-stage work.
     // ================================================================
     .then(function () { return gate('FA24_NO_S11_WORK', function () {
-      // S11-A-R2/S11-B/S11-C/S11-D/S11-E/S11-F0: FA24 originally asserted "no S11-named file
-      // exists" — valid only at the S10-FINAL QA moment, before S11-A..F0 were GPT-authorized. It
-      // is now a strict allowlist instead: the specifically authorized S11-A + S11-B + S11-C +
-      // S11-D + S11-E + S11-F0 footprint passes, but any other S11-named file (a real S11-F
-      // implementation file, S11-FINAL, or an unexpected extra file from an already-accepted
-      // stage) still fails — the governance purpose ("no unauthorized next-stage work") is
-      // preserved, not removed. S11-F0 is a narrow, audit-only blocking-repair pass (see
-      // docs/S11-F0-PRESCRIPTION-LINEAGE-AUDIT.md) — only its own exact documentation filename is
-      // allowlisted here; S11-F itself remains explicitly unauthorized until GPT clears the block.
+      // S11-A-R2/S11-B/S11-C/S11-D/S11-E/S11-F0/S11-F0-R1: FA24 originally asserted "no S11-named
+      // file exists" — valid only at the S10-FINAL QA moment, before S11-A..F0-R1 were
+      // GPT-authorized. It is now a strict allowlist instead: the specifically authorized S11-A +
+      // S11-B + S11-C + S11-D + S11-E + S11-F0 + S11-F0-R1 footprint passes, but any other
+      // S11-named file (a real S11-F implementation file, S11-FINAL, or an unexpected extra file
+      // from an already-accepted stage) still fails — the governance purpose ("no unauthorized
+      // next-stage work") is preserved, not removed. S11-F0 was a narrow, audit-only
+      // blocking-repair pass (see docs/S11-F0-PRESCRIPTION-LINEAGE-AUDIT.md) that found no
+      // production registration caller existed; S11-F0-R1 (see
+      // docs/S11-F0-R1-PRODUCTION-REGISTRATION.md) builds exactly that one missing production
+      // registration entry point. Its own js/tests files (decision-cycle-registration-controller.js
+      // / .test.js) are not themselves S11-named and so are not matched by the /s11/i scan below,
+      // but are still listed here explicitly per the frozen S11-F0-R1 package. S11-F itself
+      // remains explicitly unauthorized until GPT clears the block — this repair does not clear it.
       var authorizedS11Files = [
         'product-journey-orchestrator.js',
         'product-journey-orchestrator.test.js',
@@ -481,7 +486,10 @@ function run() {
         'history-explainability-adapter.test.js',
         'history-explainability-ui.test.js',
         'S11-E-HISTORY-EXPLAINABILITY-RECOVERY.md',
-        'S11-F0-PRESCRIPTION-LINEAGE-AUDIT.md'
+        'S11-F0-PRESCRIPTION-LINEAGE-AUDIT.md',
+        'decision-cycle-registration-controller.js',
+        'decision-cycle-registration-controller.test.js',
+        'S11-F0-R1-PRODUCTION-REGISTRATION.md'
       ];
       var jsFiles = fs.readdirSync(path.join(ROOT, 'js'));
       var testFiles = fs.readdirSync(path.join(ROOT, 'tests'));

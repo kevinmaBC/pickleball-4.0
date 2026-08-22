@@ -62,7 +62,12 @@
     findingsLabel: { en: 'Findings', zh: '依据 Findings' },
     evidencePatternsLabel: { en: 'Evidence patterns', zh: '证据模式 Evidence patterns' },
     trainingDirectionLabel: { en: 'Training Direction', zh: '训练方向 Training Direction' },
-    noneLabel: { en: '(none)', zh: '（无）' }
+    noneLabel: { en: '(none)', zh: '（无）' },
+    useThisPlanBtn: { en: 'Use This Training Plan', zh: '使用此训练计划 Use This Training Plan' },
+    registrationPending: { en: 'Registering…', zh: '正在登记…' },
+    registrationSuccess: { en: 'Training plan registered. Development cycle ready — go to Guided Training to begin.', zh: '训练计划已登记，发展周期已就绪——请前往"引导训练"开始。' },
+    registrationAlready: { en: 'This training plan is already registered.', zh: '此训练计划此前已登记过。' },
+    registrationErrorPrefix: { en: 'Registration failed: ', zh: '登记失败：' }
   };
   function t(key) {
     var m = MESSAGES[key];
@@ -371,6 +376,21 @@
   var el = null;
   var SELECTED_PLAYER_ID = null;
 
+  // S11-F0-R1 IO-layer state — never read by the pure builders/renderers above (those only ever
+  // receive plain data as explicit arguments); these exist solely so the "Use This Training Plan"
+  // click handler can (a) find the exact in-memory recommendation+prescription pair the primary
+  // dashboard card is showing, without re-running S9, and (b) re-paint the already-loaded page
+  // with an updated registration status, without a redundant PBStore/S9 reload.
+  var LAST_MATCH_SESSION_ID = null;
+  var LAST_RAW_ITEMS = []; // [{recommendation, prescription, skill_gaps}] for SELECTED_PLAYER_ID's current dashboard
+  var LAST_HEADER_HTML = '';
+  var LAST_MODEL = null;
+  var REGISTRATION_VIEW_STATE = null;
+
+  function findRawItem(recommendation_id) {
+    return LAST_RAW_ITEMS.filter(function (it) { return it.recommendation && it.recommendation.recommendation_id === recommendation_id; })[0] || null;
+  }
+
   function domainCard(label, model) {
     return '<div class="rv-card"><div class="rv-mut" style="font-weight:700;color:var(--ink)">' + esc(label) + '</div>' +
       sparklineSVG(model.series, {}) +
@@ -470,7 +490,12 @@
   // ---- S10-B-R1: one dashboard_item -> one read-only recommendation card. Every value is read
   // straight off the PBDashboard-projected item; this function computes nothing (no rank, no
   // score, no tier, no mapping) — it only chooses HTML/copy for values already decided upstream.
-  function dashboardItemCard(item) {
+  // S11-F0-R1: isPrimaryEligible/registrationView are optional (default false/null) so every
+  // pre-existing call site/test that invokes dashboardItemCard(item) alone is unaffected — only
+  // renderSection7 ever passes them, and only for the single top-priority item that has both a
+  // resolved rank and an available prescription (the "primary Recommendation" the frozen package
+  // requires). registrationView, when given, is one of {phase:'idle'|'pending'|'success'|'already'|'error', code, cycle_id, workflow_id} — plain data, no DOM/PBStore read here, keeping this a pure function like the rest of this file's view builders.
+  function dashboardItemCard(item, isPrimaryEligible, registrationView) {
     var rankLabel = item.rank_status === 'RESOLVED' ? ('#' + item.rank) : t('rankUnresolved');
     var header = '<div class="rv-row" style="border:none"><b>' + esc(rankLabel) + '</b> ' + badgeHTML(item.priority_tier) + '</div>';
     var body =
@@ -503,15 +528,47 @@
     var workflowHTML = '<div class="rv-row" style="border:none"><span>' + (curLang() === 'en' ? 'Workflow' : '工作流状态') + '</span>' + badgeHTML(item.workflow_state) + '</div>';
     var reassessHTML = item.reassessment_pending ? '<div class="rv-banner" style="border-color:var(--part);background:#fff8e8">' + esc(t('reassessmentMsg')) + '</div>' : '';
 
+    // S11-F0-R1: the one legitimate production entry point for turning this already-computed,
+    // in-memory recommendation+prescription pair into a durable S10-A/S10-C registration. Only
+    // rendered for the single primary (rank #1, prescription available) item; never recomputes
+    // S9, never fabricates a rank/prescription that isn't already resolved upstream.
+    var registrationHTML = '';
+    if (isPrimaryEligible) {
+      var rv = registrationView || { phase: 'idle' };
+      var btnDisabled = rv.phase === 'pending' ? ' disabled' : '';
+      registrationHTML = '<div style="margin-top:8px">' +
+        '<button class="btn solid" data-act="register-decision-cycle" data-recid="' + esc(item.recommendation_id) + '"' + btnDisabled + '>' + esc(t('useThisPlanBtn')) + '</button>';
+      if (rv.phase === 'pending') {
+        registrationHTML += '<div class="rv-mut" style="margin-top:6px">' + esc(t('registrationPending')) + '</div>';
+      } else if (rv.phase === 'success') {
+        registrationHTML += '<div class="rv-banner" style="margin-top:6px">' + esc(t('registrationSuccess')) + '</div>';
+      } else if (rv.phase === 'already') {
+        registrationHTML += '<div class="rv-banner" style="margin-top:6px">' + esc(t('registrationAlready')) + '</div>';
+      } else if (rv.phase === 'error') {
+        registrationHTML += '<div class="rv-banner" style="margin-top:6px;border-color:var(--fail);background:#fdecec">' + esc(t('registrationErrorPrefix')) + esc(rv.code || 'UNKNOWN') + '</div>';
+      }
+      registrationHTML += '</div>';
+    }
+
     return '<div class="rv-card">' + header + body + traceHTML +
       '<div style="margin-top:6px;font-weight:700;color:var(--ink)">' + esc(t('trainingDirectionLabel')) + '</div>' + prescHTML +
-      workflowHTML + reassessHTML + '</div>';
+      workflowHTML + reassessHTML + registrationHTML + '</div>';
   }
 
+  // model.registrationView (optional; set by the DOM-mount layer only, never by
+  // buildReviewViewModel) — {recommendation_id, phase, code, cycle_id, workflow_id} describing the
+  // in-flight/most-recent registration click, or null/undefined outside of that. It is only ever
+  // matched against and displayed on the primary item; a stale entry for a since-changed primary
+  // recommendation_id (e.g. after switching players) is never shown.
   function renderSection7(model) {
     var d = model.dashboard || { items: [], item_count: 0 };
+    var rv = model.registrationView || null;
     var body = (d.items && d.items.length)
-      ? '<div class="rv-grid">' + d.items.map(dashboardItemCard).join('') + '</div>'
+      ? '<div class="rv-grid">' + d.items.map(function (item, idx) {
+          var isPrimaryEligible = idx === 0 && item.rank_status === 'RESOLVED' && item.prescription_status === 'AVAILABLE';
+          var itemRegistrationView = (isPrimaryEligible && rv && rv.recommendation_id === item.recommendation_id) ? rv : null;
+          return dashboardItemCard(item, isPrimaryEligible, itemRegistrationView);
+        }).join('') + '</div>'
       : '<div class="rv-mut">' + esc(t('noActiveRecommendation')) + '</div>';
     return '<div class="rv-section"><div class="rv-h">' + t('section7') + '</div>' + body + '</div>';
   }
@@ -551,9 +608,10 @@
   // without persistence), so `workflow` is left unset here; PBDashboard's own contract already
   // renders that honestly as workflow_state: 'UNRESOLVED' rather than inventing a storage layer.
   function loadDashboardData(player_id) {
-    if (!dashboardEnginesReady()) return Promise.resolve(null);
+    if (!dashboardEnginesReady()) { LAST_MATCH_SESSION_ID = null; LAST_RAW_ITEMS = []; return Promise.resolve(null); }
     return findLatestMatchSessionId(player_id).then(function (matchSessionId) {
-      if (!matchSessionId) return PBDashboard.projectDashboardList([]);
+      LAST_MATCH_SESSION_ID = matchSessionId;
+      if (!matchSessionId) { LAST_RAW_ITEMS = []; return PBDashboard.projectDashboardList([]); }
       return PBDiagnosis.diagnoseMatch(matchSessionId, player_id).then(function (diagnosisResult) {
         var recommendationResult = PBRecommendationPriority.prioritizeDiagnosis(diagnosisResult);
         var prescriptionResult = PBTrainingPrescription.prescribeRecommendations(recommendationResult);
@@ -561,11 +619,16 @@
           var prescription = prescriptionResult.prescriptions.filter(function (p) { return p.source_recommendation_id === r.recommendation_id; })[0] || null;
           return { recommendation: r, prescription: prescription, skill_gaps: diagnosisResult.skill_gaps };
         });
+        // S11-F0-R1: kept around (recommendation/prescription full objects, not just the S10-B
+        // projected summary) so the "Use This Training Plan" click can register the exact pair
+        // shown, without asking S9 to recompute anything at click time.
+        LAST_RAW_ITEMS = items;
         return PBDashboard.projectDashboardList(items);
       });
     }).catch(function () {
       // A dashboard-pipeline failure (e.g. an unreadable session) must never blank out the rest
       // of the Review page — degrade honestly to the same empty state PBDashboard itself defines.
+      LAST_RAW_ITEMS = [];
       return PBDashboard.projectDashboardList([]);
     });
   }
@@ -616,12 +679,16 @@
 
   function render() {
     if (!el) return;
+    REGISTRATION_VIEW_STATE = null; // a fresh full reload (player switch, initial mount) drops any stale click-status
+    LAST_MODEL = null;
     PBStore.listPlayers().then(function (players) {
       var header = renderPlayerPickerHTML(players);
+      LAST_HEADER_HTML = header;
       if (!players.length) { el.innerHTML = header; return; }
       if (!SELECTED_PLAYER_ID) { el.innerHTML = header + '<div class="rv-mut" style="margin-top:10px">' + esc(t('noPlayer')) + '</div>'; return; }
       el.innerHTML = header + '<div class="rv-mut" style="margin-top:10px">' + (LANG === 'en' ? 'Loading…' : '加载中…') + '</div>';
       loadReviewData(SELECTED_PLAYER_ID).then(function (model) {
+        LAST_MODEL = model;
         if (el) el.innerHTML = header + renderModelHTML(model);
       }).catch(function (e) {
         if (el) el.innerHTML = header + '<div class="rv-mut" style="color:var(--fail)">' + (LANG === 'en' ? 'Load failed: ' : '加载失败：') + esc(e.message) + '</div>';
@@ -629,10 +696,45 @@
     });
   }
 
+  // Repaints the already-loaded page from cached header/model + the current
+  // REGISTRATION_VIEW_STATE — no PBStore re-read, no S9 recompute — used after a registration
+  // click so the button's own status (pending/success/already/error) is reflected immediately.
+  function repaint() {
+    if (!el || !LAST_MODEL) return;
+    LAST_MODEL.registrationView = REGISTRATION_VIEW_STATE;
+    el.innerHTML = LAST_HEADER_HTML + renderModelHTML(LAST_MODEL);
+  }
+
+  function onRegisterDecisionCycleClick(recommendation_id) {
+    var item = findRawItem(recommendation_id);
+    if (!item || !item.prescription) return;
+    if (typeof PBDecisionCycleRegistration === 'undefined' || !LAST_MATCH_SESSION_ID || !SELECTED_PLAYER_ID) return;
+    REGISTRATION_VIEW_STATE = { recommendation_id: recommendation_id, phase: 'pending' };
+    repaint();
+    PBDecisionCycleRegistration.registerDecisionCycle({
+      player_id: SELECTED_PLAYER_ID,
+      source_match_session_id: LAST_MATCH_SESSION_ID,
+      recommendation: item.recommendation,
+      prescription: item.prescription
+    }).then(function (result) {
+      REGISTRATION_VIEW_STATE = {
+        recommendation_id: recommendation_id,
+        phase: result.was_existing ? 'already' : 'success',
+        cycle_id: result.development_cycle.cycle_id,
+        workflow_id: result.prescription_workflow.workflow_id
+      };
+      repaint();
+    }).catch(function (err) {
+      REGISTRATION_VIEW_STATE = { recommendation_id: recommendation_id, phase: 'error', code: (err && err.code) || 'UNKNOWN' };
+      repaint();
+    });
+  }
+
   function onClick(e) {
     var node = e.target.closest('[data-act]'); if (!node) return;
     var act = node.getAttribute('data-act');
-    if (act === 'pick-player') { SELECTED_PLAYER_ID = node.getAttribute('data-pid'); render(); }
+    if (act === 'pick-player') { SELECTED_PLAYER_ID = node.getAttribute('data-pid'); render(); return; }
+    if (act === 'register-decision-cycle') { onRegisterDecisionCycleClick(node.getAttribute('data-recid')); return; }
   }
 
   function mount() {

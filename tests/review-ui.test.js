@@ -366,4 +366,74 @@ function emptyTrendResult(fields) {
   });
 })();
 
+// ---- S11-F0-R1: "Use This Training Plan" registration button — pure rendering only ----
+
+function dashboardModel(items, registrationView) {
+  return { dashboard: { items: items, item_count: items.length }, registrationView: registrationView || null };
+}
+function dashboardItem(overrides) {
+  return Object.assign({
+    recommendation_id: 'rec_1', rank: 1, rank_status: 'RESOLVED', priority_tier: 'HIGH',
+    skill: 'third_shot_drop', context: 'match', recommendation_code: 'RC', status: 'ACTIVE',
+    traceability: { source_skill_gap_ids: [], evidence_pattern_ids: [] },
+    prescription_ref: 'rx_1', prescription_status: 'AVAILABLE',
+    prescription_summary: { training_objective_code: 'SHOT_EXECUTION', training_mode: 'TECHNICAL_REPETITION', drill_family_code: 'SHOT_EXECUTION', dosage_profile_code: 'PRIMARY_FOCUS', drill_resolution_status: 'RESOLVED', kpi_target_status: 'AT_TARGET' },
+    workflow_state: 'UNRESOLVED', reassessment_pending: false
+  }, overrides || {});
+}
+
+// 13. Button only appears on the primary (rank #1, prescription available) item.
+(function () {
+  var html = UI.renderSection7(dashboardModel([dashboardItem()]));
+  assert.ok(/data-act="register-decision-cycle"/.test(html), 'button rendered for eligible primary item');
+  assert.ok(/Use This Training Plan|使用此训练计划/.test(html));
+})();
+
+// 14. No button when the top item has no rank or no available prescription.
+(function () {
+  var htmlNoRank = UI.renderSection7(dashboardModel([dashboardItem({ rank_status: 'UNRESOLVED', rank: null })]));
+  assert.strictEqual(/data-act="register-decision-cycle"/.test(htmlNoRank), false, 'no button when rank unresolved');
+
+  var htmlNoRx = UI.renderSection7(dashboardModel([dashboardItem({ prescription_status: 'NOT_AVAILABLE', prescription_summary: null })]));
+  assert.strictEqual(/data-act="register-decision-cycle"/.test(htmlNoRx), false, 'no button when no prescription available');
+})();
+
+// 15. Only the top item gets the button, never a lower-ranked one, even if it also qualifies.
+(function () {
+  var html = UI.renderSection7(dashboardModel([
+    dashboardItem({ recommendation_id: 'rec_1', rank: 1 }),
+    dashboardItem({ recommendation_id: 'rec_2', rank: 2 })
+  ]));
+  var count = (html.match(/data-act="register-decision-cycle"/g) || []).length;
+  assert.strictEqual(count, 1, 'exactly one registration button, on the primary item only');
+  assert.ok(html.indexOf('data-recid="rec_1"') !== -1);
+})();
+
+// 16. registrationView phases render the correct bilingual status, keyed to the right recommendation_id.
+(function () {
+  var pending = UI.renderSection7(dashboardModel([dashboardItem()], { recommendation_id: 'rec_1', phase: 'pending' }));
+  assert.ok(/Registering|正在登记/.test(pending));
+  assert.ok(/disabled/.test(pending), 'button disabled while pending');
+
+  var success = UI.renderSection7(dashboardModel([dashboardItem()], { recommendation_id: 'rec_1', phase: 'success' }));
+  assert.ok(/registered|已登记/.test(success));
+
+  var already = UI.renderSection7(dashboardModel([dashboardItem()], { recommendation_id: 'rec_1', phase: 'already' }));
+  assert.ok(/already registered|已登记过/.test(already));
+
+  var error = UI.renderSection7(dashboardModel([dashboardItem()], { recommendation_id: 'rec_1', phase: 'error', code: 'REGISTRATION_CONFLICT' }));
+  assert.ok(/REGISTRATION_CONFLICT/.test(error), 'frozen error code surfaced verbatim, never re-worded');
+
+  // A registrationView for a *different* recommendation_id (e.g. stale from a prior primary item)
+  // must never bleed onto this one.
+  var stale = UI.renderSection7(dashboardModel([dashboardItem()], { recommendation_id: 'rec_other', phase: 'success' }));
+  assert.strictEqual(/registered|已登记/.test(stale.replace('Use This Training Plan', '').replace('使用此训练计划', '')), false, 'stale registrationView for a different recommendation_id is not shown');
+})();
+
+// 17. dashboardItemCard remains callable with just (item) — pre-existing call sites/tests unaffected.
+(function () {
+  var html = UI.dashboardItemCard(dashboardItem());
+  assert.strictEqual(/data-act="register-decision-cycle"/.test(html), false, 'no button when isPrimaryEligible is omitted (backward compatible default)');
+})();
+
 console.log('review-ui.test.js: all assertions passed');

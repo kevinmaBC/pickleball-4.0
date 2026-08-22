@@ -381,6 +381,139 @@ function run() {
     assert.ok(storageStripped.indexOf('deleteObjectStore') === -1, 'storage.js must never delete an object store');
     var upgradeBlock = storageStripped.match(/onupgradeneeded[\s\S]*?\n  \};/)[0];
     assert.ok(/if\s*\(!db\.objectStoreNames\.contains\(name\)\)/.test(upgradeBlock), 'the upgrade path only creates stores that are missing — additive only');
+  }).then(function () {
+
+    // ================================================================
+    // S11-F0-R1 — Decision Cycle Registration durability (R1-P01..R1-P06).
+    // Exercises registerDecisionCycleDurable directly at the persistence layer
+    // (js/decision-cycle-registration-controller.js's own test suite covers the
+    // thin controller wrapper end-to-end; these focus on the durability contract itself).
+    // ================================================================
+    function rec(overrides) {
+      return Object.assign({ recommendation_id: 'rec_r1_' + (rec._n = (rec._n || 0) + 1), rank: 1, priority_score: 70, priority_tier: 'HIGH', skill: 's', context: 'match', recommendation_code: 'RC', status: 'recommended' }, overrides || {});
+    }
+    function rx(r, overrides) {
+      return Object.assign({
+        prescription_id: 'rx_r1_' + (rx._n = (rx._n || 0) + 1), source_recommendation_id: r.recommendation_id, status: 'prescribed',
+        priority_rank: 1, priority_score: 70, priority_tier: 'HIGH', training_objective_code: 'SHOT_EXECUTION',
+        training_mode: 'TECHNICAL_REPETITION', kpi_profile_code: 'EXECUTION_SUCCESS_RATE', drill_family_code: 'SHOT_EXECUTION',
+        dosage_profile_code: 'PRIMARY_FOCUS', resolved_drill_ids: [], drill_resolution_status: 'RESOLVED',
+        kpi_target_value: 0.7, kpi_target_status: 'AT_TARGET', reassessment_profile_code: 'MATCH_RECHECK'
+      }, overrides || {});
+    }
+
+    // R1-P01: basic create -> PRESCRIPTION_READY / DRAFTED, both durable.
+    var r1 = rec(); var x1 = rx(r1);
+    return SEP.registerDecisionCycleDurable({ player_id: 'p_r1_1', source_match_session_id: 'm_r1_1', recommendation: r1, prescription: x1 }).then(function (out) {
+      assert.strictEqual(out.development_cycle.state, 'PRESCRIPTION_READY', 'R1-P01 cycle reaches PRESCRIPTION_READY');
+      assert.strictEqual(out.prescription_workflow.state, 'DRAFTED', 'R1-P01 workflow stays DRAFTED');
+      assert.strictEqual(out.was_existing, false, 'R1-P01 freshly created');
+      return PBStore.getDevelopmentCycle(out.development_cycle.cycle_id);
+    }).then(function (persisted) {
+      assert.ok(persisted, 'R1-P01 cycle durably persisted');
+    });
+  }).then(function () {
+
+    // R1-P02: identical replay is idempotent, was_existing:true, single durable record.
+    function rec2() { return { recommendation_id: 'rec_r1_p02', rank: 1, priority_score: 70, priority_tier: 'HIGH', skill: 's', context: 'match', recommendation_code: 'RC', status: 'recommended' }; }
+    function rx2(r) {
+      return {
+        prescription_id: 'rx_r1_p02', source_recommendation_id: r.recommendation_id, status: 'prescribed',
+        priority_rank: 1, priority_score: 70, priority_tier: 'HIGH', training_objective_code: 'SHOT_EXECUTION',
+        training_mode: 'TECHNICAL_REPETITION', kpi_profile_code: 'EXECUTION_SUCCESS_RATE', drill_family_code: 'SHOT_EXECUTION',
+        dosage_profile_code: 'PRIMARY_FOCUS', resolved_drill_ids: [], drill_resolution_status: 'RESOLVED',
+        kpi_target_value: 0.7, kpi_target_status: 'AT_TARGET', reassessment_profile_code: 'MATCH_RECHECK'
+      };
+    }
+    var opts = { player_id: 'p_r1_2', source_match_session_id: 'm_r1_2', recommendation: rec2(), prescription: rx2(rec2()) };
+    return SEP.registerDecisionCycleDurable(opts).then(function (first) {
+      return SEP.registerDecisionCycleDurable(opts).then(function (second) {
+        assert.strictEqual(second.development_cycle.cycle_id, first.development_cycle.cycle_id, 'R1-P02 stable cycle_id on replay');
+        assert.strictEqual(second.was_existing, true, 'R1-P02 replay reports was_existing');
+        return PBStore.listDevelopmentCyclesByPlayer('p_r1_2');
+      }).then(function (cycles) {
+        assert.strictEqual(cycles.length, 1, 'R1-P02 no duplicate cycle from replay');
+      });
+    });
+  }).then(function () {
+
+    // R1-P03: an existing durable record at the deterministic cycle_id but with a mismatched
+    // player_id/baseline_ref (data-integrity guard, not a realistic collision) -> REGISTRATION_CONFLICT.
+    var r3 = { recommendation_id: 'rec_r1_p03', rank: 1, priority_score: 70, priority_tier: 'HIGH', skill: 's', context: 'match', recommendation_code: 'RC', status: 'recommended' };
+    var x3 = {
+      prescription_id: 'rx_r1_p03', source_recommendation_id: r3.recommendation_id, status: 'prescribed',
+      priority_rank: 1, priority_score: 70, priority_tier: 'HIGH', training_objective_code: 'SHOT_EXECUTION',
+      training_mode: 'TECHNICAL_REPETITION', kpi_profile_code: 'EXECUTION_SUCCESS_RATE', drill_family_code: 'SHOT_EXECUTION',
+      dosage_profile_code: 'PRIMARY_FOCUS', resolved_drill_ids: [], drill_resolution_status: 'RESOLVED',
+      kpi_target_value: 0.7, kpi_target_status: 'AT_TARGET', reassessment_profile_code: 'MATCH_RECHECK'
+    };
+    var cycle_id3 = SEP.decisionCycleId('p_r1_3', 'm_r1_3', r3.recommendation_id);
+    var wrongBaselineCycle = Object.assign(
+      PBWorkflow.createDevelopmentCycle({ cycle_id: cycle_id3, player_id: 'p_r1_3', baseline_ref: 'm_DIFFERENT' }).development_cycle,
+      {}
+    );
+    return PBStore.putDevelopmentCycle(wrongBaselineCycle).then(function () {
+      return assertThrows(
+        SEP.registerDecisionCycleDurable({ player_id: 'p_r1_3', source_match_session_id: 'm_r1_3', recommendation: r3, prescription: x3 }),
+        'R1-P03 mismatched baseline_ref', 'REGISTRATION_CONFLICT'
+      );
+    });
+  }).then(function () {
+
+    // R1-P04: cycle already REASSESSMENT_READY (newer evidence arrived) -> STALE_RECOMMENDATION,
+    // never silently prescribed from.
+    var r4 = { recommendation_id: 'rec_r1_p04', rank: 1, priority_score: 70, priority_tier: 'HIGH', skill: 's', context: 'match', recommendation_code: 'RC', status: 'recommended' };
+    var x4 = {
+      prescription_id: 'rx_r1_p04', source_recommendation_id: r4.recommendation_id, status: 'prescribed',
+      priority_rank: 1, priority_score: 70, priority_tier: 'HIGH', training_objective_code: 'SHOT_EXECUTION',
+      training_mode: 'TECHNICAL_REPETITION', kpi_profile_code: 'EXECUTION_SUCCESS_RATE', drill_family_code: 'SHOT_EXECUTION',
+      dosage_profile_code: 'PRIMARY_FOCUS', resolved_drill_ids: [], drill_resolution_status: 'RESOLVED',
+      kpi_target_value: 0.7, kpi_target_status: 'AT_TARGET', reassessment_profile_code: 'MATCH_RECHECK'
+    };
+    var cycle_id4 = SEP.decisionCycleId('p_r1_4', 'm_r1_4', r4.recommendation_id);
+    var reassessCycle = Object.assign(
+      PBWorkflow.createDevelopmentCycle({ cycle_id: cycle_id4, player_id: 'p_r1_4', baseline_ref: 'm_r1_4' }).development_cycle,
+      { state: 'REASSESSMENT_READY', evidence_refs: ['m_r1_4', 'ev_extra'], recommendation_refs: [r4.recommendation_id] }
+    );
+    return PBStore.putDevelopmentCycle(reassessCycle).then(function () {
+      return assertThrows(
+        SEP.registerDecisionCycleDurable({ player_id: 'p_r1_4', source_match_session_id: 'm_r1_4', recommendation: r4, prescription: x4 }),
+        'R1-P04 REASSESSMENT_READY blocks registration', 'STALE_RECOMMENDATION'
+      );
+    });
+  }).then(function () {
+
+    // R1-P05: resuming from RECOMMENDATION_READY (recommendation already generated, prescription
+    // not yet) completes only the remaining GENERATE_PRESCRIPTION step.
+    var r5 = { recommendation_id: 'rec_r1_p05', rank: 1, priority_score: 70, priority_tier: 'HIGH', skill: 's', context: 'match', recommendation_code: 'RC', status: 'recommended' };
+    var x5 = {
+      prescription_id: 'rx_r1_p05', source_recommendation_id: r5.recommendation_id, status: 'prescribed',
+      priority_rank: 1, priority_score: 70, priority_tier: 'HIGH', training_objective_code: 'SHOT_EXECUTION',
+      training_mode: 'TECHNICAL_REPETITION', kpi_profile_code: 'EXECUTION_SUCCESS_RATE', drill_family_code: 'SHOT_EXECUTION',
+      dosage_profile_code: 'PRIMARY_FOCUS', resolved_drill_ids: [], drill_resolution_status: 'RESOLVED',
+      kpi_target_value: 0.7, kpi_target_status: 'AT_TARGET', reassessment_profile_code: 'MATCH_RECHECK'
+    };
+    var cycle_id5 = SEP.decisionCycleId('p_r1_5', 'm_r1_5', r5.recommendation_id);
+    var recReadyCycle = Object.assign(
+      PBWorkflow.createDevelopmentCycle({ cycle_id: cycle_id5, player_id: 'p_r1_5', baseline_ref: 'm_r1_5' }).development_cycle,
+      { state: 'RECOMMENDATION_READY', evidence_refs: ['m_r1_5'], recommendation_refs: [r5.recommendation_id], evidence_ref_count_at_last_recommendation: 1 }
+    );
+    return PBStore.putDevelopmentCycle(recReadyCycle).then(function () {
+      return SEP.registerDecisionCycleDurable({ player_id: 'p_r1_5', source_match_session_id: 'm_r1_5', recommendation: r5, prescription: x5 }).then(function (out) {
+        assert.strictEqual(out.development_cycle.state, 'PRESCRIPTION_READY', 'R1-P05 resumed from RECOMMENDATION_READY to completion');
+        assert.deepStrictEqual(out.development_cycle.prescription_refs, [x5.prescription_id]);
+      });
+    });
+  }).then(function () {
+
+    // R1-P06: structural — the new registration API delegates verbatim, no new business rule
+    // vocabulary duplicated from PBWorkflow/PBPrescriptionWorkflow's own frozen decisions.
+    var src = fs.readFileSync(path.join(__dirname, '../js/session-evidence-persistence.js'), 'utf8');
+    var stripped = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    ['registerDecisionCycleDurable', 'decisionCycleId', 'decisionWorkflowId'].forEach(function (name) {
+      assert.ok(stripped.indexOf('function ' + name) !== -1, 'R1-P06: ' + name + ' is defined');
+    });
+    assert.strictEqual(/START_TRAINING|ACTIVATE/.test(stripped.split('registerDecisionCycleDurable')[1] || ''), false, 'R1-P06: registration never calls START_TRAINING/ACTIVATE');
   });
 }
 
