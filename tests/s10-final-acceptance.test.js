@@ -448,23 +448,26 @@ function run() {
     // FA24 — no unauthorized next-stage work.
     // ================================================================
     .then(function () { return gate('FA24_NO_S11_WORK', function () {
-      // S11-A-R2/S11-B/S11-C/S11-D/S11-E/S11-F0/S11-F0-R1/S11-F: FA24 originally asserted "no
-      // S11-named file exists" — valid only at the S10-FINAL QA moment, before S11-A..F were
-      // GPT-authorized. It is now a strict allowlist instead: the specifically authorized S11-A +
-      // S11-B + S11-C + S11-D + S11-E + S11-F0 + S11-F0-R1 + S11-F footprint passes, but any
-      // other S11-named file (an S11-FINAL production artifact, or an unexpected extra file from
-      // an already-accepted stage) still fails — the governance purpose ("no unauthorized
-      // next-stage work") is preserved, not removed. S11-F0 was a narrow, audit-only
-      // blocking-repair pass (see docs/S11-F0-PRESCRIPTION-LINEAGE-AUDIT.md) that found no
-      // production registration caller existed; S11-F0-R1 (see
-      // docs/S11-F0-R1-PRODUCTION-REGISTRATION.md) built exactly that one missing production
-      // registration entry point, and its acceptance cleared the S11-F entry block. S11-F itself
-      // (see docs/S11-F-END-TO-END-PRODUCT-QA.md) is a QA-only stage — its two test files and one
-      // doc are the only new files it is authorized to add; it modifies no production code. Its
-      // own js/tests files from the S11-F0-R1 round
-      // (decision-cycle-registration-controller.js / .test.js) are not themselves S11-named and so
-      // are not matched by the /s11/i scan below, but are still listed here explicitly per that
-      // frozen package. S11-FINAL remains explicitly unauthorized until GPT accepts this stage.
+      // S11-A-R2/S11-B/S11-C/S11-D/S11-E/S11-F0/S11-F0-R1/S11-F/S11-FINAL: FA24 originally
+      // asserted "no S11-named file exists" — valid only at the S10-FINAL QA moment, before
+      // S11-A..FINAL were GPT-authorized. It is now a strict allowlist instead: the specifically
+      // authorized S11-A + S11-B + S11-C + S11-D + S11-E + S11-F0 + S11-F0-R1 + S11-F +
+      // S11-FINAL footprint passes, but any other S11-named file (an unexpected extra file from
+      // an already-accepted stage, or a genuine S12 artifact) still fails — the governance
+      // purpose ("no unauthorized next-stage work") is preserved, not removed. S11-F0 was a
+      // narrow, audit-only blocking-repair pass (see
+      // docs/S11-F0-PRESCRIPTION-LINEAGE-AUDIT.md) that found no production registration caller
+      // existed; S11-F0-R1 (see docs/S11-F0-R1-PRODUCTION-REGISTRATION.md) built exactly that one
+      // missing production registration entry point, and its acceptance cleared the S11-F entry
+      // block. S11-F/S11-F-R1 (see docs/S11-F-END-TO-END-PRODUCT-QA.md) was a QA-only stage —
+      // its test files, one CSS fix, and one doc are its only authorized additions/changes; no
+      // engine/DB logic. S11-FINAL (see docs/S11-FINAL-ACCEPTANCE.md) is a governance/
+      // final-acceptance-preparation stage only — its one doc and one governance test are the
+      // only new files it is authorized to add, and it modifies no production code; it does not
+      // and cannot self-declare S11 CLOSED/ACCEPTED (only GPT may). Its own js/tests files from
+      // the S11-F0-R1 round (decision-cycle-registration-controller.js / .test.js) are not
+      // themselves S11-named and so are not matched by the /s11/i scan below, but are still listed
+      // here explicitly per that frozen package. S12 remains explicitly unauthorized.
       var authorizedS11Files = [
         'product-journey-orchestrator.js',
         'product-journey-orchestrator.test.js',
@@ -495,7 +498,9 @@ function run() {
         'S11-F0-R1-PRODUCTION-REGISTRATION.md',
         's11-full-product-journey.test.js',
         's11-reload-recovery.test.js',
-        'S11-F-END-TO-END-PRODUCT-QA.md'
+        'S11-F-END-TO-END-PRODUCT-QA.md',
+        'S11-FINAL-ACCEPTANCE.md',
+        's11-final-acceptance.test.js'
       ];
       var jsFiles = fs.readdirSync(path.join(ROOT, 'js'));
       var testFiles = fs.readdirSync(path.join(ROOT, 'tests'));

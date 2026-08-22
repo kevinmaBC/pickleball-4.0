@@ -187,10 +187,29 @@ docs/S11-F0-R1-PRODUCTION-REGISTRATION.md
 S11-F ENTRY BLOCK:
 CLEARED
 
-S11-F
-Status: IMPLEMENTED / GPT RE-QA PENDING
-Implementation Record:
+S11-F-R1
+Status: CLOSED / ACCEPTED
+Acceptance Commit: c757d8f
+Full SHA:
+c757d8f5381ac0236d0a25752fe9f9cc34d8f9dd
+Acceptance Record:
 docs/S11-F-END-TO-END-PRODUCT-QA.md
+
+S11-F
+Status: CLOSED / ACCEPTED
+Final Acceptance Commit: c757d8f
+Full SHA:
+c757d8f5381ac0236d0a25752fe9f9cc34d8f9dd
+Acceptance Record:
+docs/S11-F-END-TO-END-PRODUCT-QA.md
+
+S11-FINAL
+Status: IMPLEMENTED / GPT FINAL ACCEPTANCE PENDING
+Implementation Record:
+docs/S11-FINAL-ACCEPTANCE.md
+
+S11
+Status: FINAL ACCEPTANCE PENDING
 ```
 
 S7 and S8 acceptance commit SHAs were confirmed directly from local Git
