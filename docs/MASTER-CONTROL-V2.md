@@ -253,8 +253,9 @@ GPT Independent QA: PASS
 POST-S11-R4-C
 Name:
 Assessment -> Action Handoff UX
-Status:
-IMPLEMENTATION IN PROGRESS
+Status: CLOSED / ACCEPTED
+Acceptance Commit:
+70435196e6a06ee006374de4fb19d7b721a03813
 Baseline:
 97d0cb12bcec7573c3f03e3de4c3a2b05a76f12b
 AI Resource Control:
@@ -271,6 +272,32 @@ Cycle, validated level, or Match Transfer computation. No S9/
 S10 engine changes, no Journey/HOME domain logic changes, no
 DB schema changes. DB_VERSION unchanged (5), stores unchanged
 (18/18).
+
+POST-S11-R4-D
+Name:
+Release Candidate Full-System UAT / Final Product Readiness
+Status:
+IMPLEMENTATION COMPLETE / GPT QA PENDING
+Baseline:
+70435196e6a06ee006374de4fb19d7b721a03813
+AI Resource Control:
+MEASURED
+Scope:
+Final release-acceptance gate only: added
+tests/r4d-final-release-acceptance.test.js (FRG-01..FRG-08
+governance/regression gate, no new product logic) and this
+docs/R4-D-FINAL-RELEASE-ACCEPTANCE.md record. Manual UAT at
+desktop and 375px surfaced one P1 mobile-overflow defect
+(bottom nav last tab clipped off-screen at 375px, caused by
+the R4-A/B-added #k-score-disclaimer text lacking min-width:0
+as a flex child of .composite .lvl); fixed minimally with a
+single min-width:0 CSS declaration in css/app.css, verified to
+eliminate the overflow at 375px and 1280px with no other visual
+change. No S9/S10 engine changes, no Journey/HOME domain logic
+changes, no recommendation/priority/prescription logic changes,
+no DB schema changes. DB_VERSION unchanged (5), stores unchanged
+(18/18). See docs/R4-D-FINAL-RELEASE-ACCEPTANCE.md for the full
+record.
 ```
 
 S7 and S8 acceptance commit SHAs were confirmed directly from local Git

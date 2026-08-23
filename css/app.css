@@ -174,7 +174,7 @@
   .composite .big{font-family:var(--mono);font-size:44px;font-weight:700;color:var(--lime);
     line-height:.9;font-variant-numeric:tabular-nums}
   .composite .big small{font-size:16px;color:#8fb0a5}
-  .composite .lvl{font-size:13px;color:#cfe0d9}
+  .composite .lvl{font-size:13px;color:#cfe0d9;min-width:0}
   .composite .lvl b{display:block;font-size:19px;color:#fff;font-weight:800;margin-top:2px}
 
   footer.foot{text-align:center;color:var(--muted);font-size:11.5px;padding:24px 16px 8px;line-height:1.7}
