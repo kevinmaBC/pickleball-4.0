@@ -38,6 +38,51 @@
     };
     return M[k] || k;
   }
+  // POST-S11-R4-A: player-facing test names. Internal T01-T10 IDs are never renamed anywhere in
+  // the data model — this is a presentation-only label, always shown alongside (never replacing)
+  // the raw tid so diagnostics stay traceable.
+  function TEST_LABEL(tid) {
+    var M = {
+      T01: LANG === 'en' ? 'Serve' : '发球 Serve',
+      T02: LANG === 'en' ? 'Return' : '接发 Return',
+      T03: LANG === 'en' ? 'Drive' : '平抽 Drive',
+      T04: LANG === 'en' ? 'Third-Shot Drop' : '三档小球 Third-Shot Drop',
+      T05: LANG === 'en' ? 'Transition Reset' : '过渡缓冲 Transition Reset',
+      T06: LANG === 'en' ? 'Dink' : '搓球 Dink',
+      T07: LANG === 'en' ? 'Volley & Counter' : '截击与反击 Volley & Counter',
+      T08: LANG === 'en' ? 'Shot Decision' : '击球决策 Shot Decision',
+      T09: LANG === 'en' ? 'Pressure & Transition' : '抗压与过渡 Pressure & Transition',
+      T10: LANG === 'en' ? 'Match Transfer' : '实战转化 Match Transfer'
+    };
+    return M[tid] || tid;
+  }
+  // POST-S11-R4-A: short player-facing explanation of each feed mode (§8). Feed modes themselves
+  // are unchanged (machine/calibrated_human/partner/live_match).
+  function FEED_DESC(k) {
+    var M = {
+      machine: LANG === 'en' ? 'Ball machine feed.' : '发球机喂球。',
+      calibrated_human: LANG === 'en' ? 'Repeatable protocol-based feed by a person.' : '按标定协议由人工喂球，可重复。',
+      partner: LANG === 'en' ? 'Normal partner-fed test.' : '搭档正常喂球测试。',
+      live_match: LANG === 'en' ? 'Evidence observed during live play.' : '在实战中观察记录的证据。'
+    };
+    return M[k] || '';
+  }
+  // POST-S11-R4-A (§5): per-test progress bucket, derived only from already-computed fields
+  // (PBMetrics' m.n_total / m.sample_complete) — no new completion logic, never fabricated.
+  function TEST_PROGRESS(session, m) {
+    if (!session) return 'not_started';
+    if (m && m.sample_complete === true) return 'complete';
+    return 'in_progress';
+  }
+  function PROGRESS_LABEL(status) {
+    var M = LANG === 'en'
+      ? { not_started: 'Not Started', in_progress: 'In Progress', complete: 'Complete · Evidence Ready' }
+      : { not_started: '未开始', in_progress: '进行中', complete: '完成 · 证据充分' };
+    return M[status];
+  }
+  function PROGRESS_COLOR(status) {
+    return status === 'complete' ? 'var(--pass)' : (status === 'in_progress' ? 'var(--part)' : 'var(--muted)');
+  }
 
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function h(html){ el.innerHTML = html; }
@@ -64,16 +109,27 @@
       var list=r[0], players=r[1];
       var pmap={}; players.forEach(function(p){pmap[p.player_id]=p.display_name;});
       list.sort(function(a,b){return (b.created_at||'').localeCompare(a.created_at||'');});
-      var rows = list.length ? list.map(function (a) {
-        return '<div class="a1-row"><div><b>'+esc(pmap[a.player_id]||'—')+'</b> '+
-          '<span class="a1-mut">· '+esc(a.assessment_tier)+' · '+(LANG==='en'?'Target ':'目标 ')+a.target_training_level.toFixed(1)+' · '+esc(a.assessment_date)+'</span></div>'+
-          '<div><button class="btn" data-act="open" data-id="'+a.assessment_id+'">'+(LANG==='en'?'Open':'打开')+'</button> '+
-          '<button class="btn solid" data-act="export" data-id="'+a.assessment_id+'">'+(LANG==='en'?'Export':'导出')+'</button> '+
-          '<button class="btn" data-act="del-asm" data-id="'+a.assessment_id+'" style="color:var(--fail)">'+(LANG==='en'?'Delete':'删')+'</button></div></div>';
-      }).join('') : '<div class="a1-mut">'+(LANG==='en'?'No assessments yet. Tap the button above to create one.':'还没有评估记录。点上方按钮新建。')+'</div>';
-      h('<div class="a1-h">'+(LANG==='en'?'Assessment Data Core':'评估数据核心 <span class="en">Assessment Data Core</span>')+'</div>'+
-        '<div class="a1-sub">V2.3.1 · schema '+PBConfig.versions.schema_version+' / benchmark '+PBConfig.versions.benchmark_version+' / protocol '+PBConfig.versions.protocol_version+'</div>'+
-        '<button class="btn solid" data-act="new" style="margin-bottom:12px">'+(LANG==='en'?'＋ New Assessment':'＋ 新建评估 New Assessment')+'</button>'+ rows);
+      // POST-S11-R4-A (§12): assessment list prioritizes Player/Type/Target/Date/state over the
+      // opaque assessment_id (which stays out of the primary label entirely — same as before).
+      // The per-row state chip reuses PBMetrics' own already-computed per_test fields; no new
+      // completion logic.
+      return Promise.all(list.map(function (a) { return PBMetrics.computeAssessment(a.assessment_id); })).then(function (metricsList) {
+        var rows = list.length ? list.map(function (a, i) {
+          var per = metricsList[i].per_test || {};
+          var startedN = PBConfig.testIds.filter(function (tid) { return per[tid] && per[tid].n_total > 0; }).length;
+          var completeN = PBConfig.testIds.filter(function (tid) { return per[tid] && per[tid].sample_complete === true; }).length;
+          var stateLabel = completeN === PBConfig.testIds.length ? (LANG==='en'?'Evidence Ready':'证据充分')
+            : (startedN > 0 ? (LANG==='en'?'In Progress':'进行中') : (LANG==='en'?'Not Started':'未开始'));
+          return '<div class="a1-row"><div><b>'+esc(pmap[a.player_id]||'—')+'</b> '+
+            '<span class="a1-mut">· '+esc(TIER_LABEL(a.assessment_tier))+' · '+(LANG==='en'?'Target ':'目标 ')+a.target_training_level.toFixed(1)+' · '+esc(a.assessment_date)+' · '+stateLabel+'</span></div>'+
+            '<div><button class="btn" data-act="open" data-id="'+a.assessment_id+'">'+(LANG==='en'?'Open':'打开')+'</button> '+
+            '<button class="btn solid" data-act="export" data-id="'+a.assessment_id+'">'+(LANG==='en'?'Export':'导出')+'</button> '+
+            '<button class="btn" data-act="del-asm" data-id="'+a.assessment_id+'" style="color:var(--fail)">'+(LANG==='en'?'Delete':'删')+'</button></div></div>';
+        }).join('') : '<div class="a1-mut">'+(LANG==='en'?'No assessments yet. Tap the button above to create one.':'还没有评估记录。点上方按钮新建。')+'</div>';
+        h('<div class="a1-h">'+(LANG==='en'?'Assessment Data Core':'评估数据核心 <span class="en">Assessment Data Core</span>')+'</div>'+
+          '<div class="a1-sub">V2.3.1 · schema '+PBConfig.versions.schema_version+' / benchmark '+PBConfig.versions.benchmark_version+' / protocol '+PBConfig.versions.protocol_version+'</div>'+
+          '<button class="btn solid" data-act="new" style="margin-bottom:12px">'+(LANG==='en'?'＋ New Assessment':'＋ 新建评估 New Assessment')+'</button>'+ rows);
+      });
     });
   }
 
@@ -106,28 +162,43 @@
       .then(function (r) {
         var a=r[0], sessions=r[1]||[], metrics=r[2].per_test||{}, match=r[2].match||null;
         var byTest={}; sessions.forEach(function(s){ if(!byTest[s.test_id]) byTest[s.test_id]=s; });
+        var startedCount = 0;
         var rows = PBConfig.testIds.map(function (tid) {
           var t=PBConfig.tests[tid]||{name:tid}; var s=byTest[tid]; var m=metrics[tid];
+          var status = TEST_PROGRESS(s, m);
+          if (status !== 'not_started') startedCount++;
           var pflag=PBConfig.partialAllowed(tid)?'':(LANG==='en'?' <span class="a1-mut">(no P)</span>':' <span class="a1-mut">(无 P)</span>');
           var right, second='';
           if(s){
             right='<button class="btn solid" data-act="record" data-sid="'+s.test_session_id+'">'+(LANG==='en'?'Record':'记录')+'</button> '+
                   '<button class="btn" data-act="del-session" data-sid="'+s.test_session_id+'" style="color:var(--fail)">'+(LANG==='en'?'Delete':'删')+'</button>';
+            // POST-S11-R4-A (§6): player-facing "X of Y observations recorded" wording — the
+            // technical "Sampling n/target" phrasing stays available in Readiness Preview
+            // (js/preview.js), unchanged, for diagnostic use.
             var comp='';
-            if(m && m.sample_target){ comp=' · '+(LANG==='en'?'Sampling ':'抽样 ')+m.n_valid+'/'+m.sample_target+(m.sample_complete?' ✓':''); }
-            second='<div class="a1-mut" style="padding:2px 0 0">'+FEED_LABEL(s.feed_mode)+' · '+metricLine(m)+comp+'</div>';
+            if(m && m.sample_target){ comp=' · '+(LANG==='en' ? (m.n_valid+' of '+m.sample_target+' observations recorded') : (m.n_valid+' / '+m.sample_target+' 次观测已记录'))+(m.sample_complete?' ✓':''); }
+            second='<div class="a1-mut" style="padding:2px 0 0">'+FEED_LABEL(s.feed_mode)+comp+'</div>'+
+                   '<div class="a1-mut" style="padding:2px 0 0">'+metricLine(m)+'</div>';
           } else {
-            right='<button class="btn" data-act="new-session" data-tid="'+tid+'">'+(LANG==='en'?'Create Session':'创建 Session')+'</button>';
+            right='<button class="btn" data-act="new-session" data-tid="'+tid+'">'+(LANG==='en'?'Start Test':'开始测试')+'</button>';
           }
-          return '<div class="a1-row" style="flex-wrap:wrap"><div style="flex:1 1 55%"><b>'+tid+'</b> '+esc(t.name)+pflag+second+'</div><div>'+right+'</div></div>';
+          var statusBadge = '<span style="color:'+PROGRESS_COLOR(status)+';font-weight:700;font-size:12px;white-space:nowrap">'+PROGRESS_LABEL(status)+'</span>';
+          // Internal tid stays visible (small, secondary) — never removed, never the primary label.
+          return '<div class="a1-row" style="flex-wrap:wrap"><div style="flex:1 1 55%"><b>'+esc(TEST_LABEL(tid))+'</b> <span class="a1-mut" style="font-size:11px">'+tid+'</span>'+pflag+second+'</div><div style="text-align:right">'+statusBadge+'<div style="margin-top:6px">'+right+'</div></div></div>';
         }).join('');
-        h('<div class="a1-h"><button class="btn" data-act="home" style="padding:4px 10px">'+(LANG==='en'?'‹ Back':'‹ 返回')+'</button> &nbsp; '+esc(a?a.assessment_tier:'')+' · '+(LANG==='en'?'Target ':'目标 ')+(a?a.target_training_level.toFixed(1):'')+'</div>'+
-          '<div class="a1-sub">'+aid+'</div>'+ rows +
+        var progressSummary = '<div style="font-weight:700;margin:2px 0 10px">'+
+          (LANG==='en' ? (startedCount+' of '+PBConfig.testIds.length+' skill tests started') : (startedCount+' / '+PBConfig.testIds.length+' 项技术测试已开始'))+'</div>';
+        var matchStatus = (match && match.match_transfer_score!=null)
+          ? ((LANG==='en'?'Transfer score ':'转化分 ')+match.match_transfer_score)
+          : (LANG==='en'?'Not Yet Validated':'尚未验证');
+        h('<div class="a1-h"><button class="btn" data-act="home" style="padding:4px 10px">'+(LANG==='en'?'‹ Back':'‹ 返回')+'</button> &nbsp; '+esc(a?TIER_LABEL(a.assessment_tier):'')+' · '+(LANG==='en'?'Target ':'目标 ')+(a?a.target_training_level.toFixed(1):'')+'</div>'+
+          '<div class="a1-sub">'+aid+'</div>'+
+          progressSummary + rows +
           '<div class="a1-mut" style="margin-top:10px">'+(LANG==='en'
             ? 'Each row shows the raw primary metric % (weighted success/valid trials) + sampling completeness (recorded/target). Includes T08 Decision / T09 Pressure. Still no level rating, no composite score, no gate thresholds.'
             : '各项显示"原始主指标%（加权成功/有效试验）+ 抽样完整度（已录/目标）"。含 T08 决策 / T09 抗压；仍不判级、不算综合分、不设门槛。')+'</div>'+
-          '<div class="a1-row" style="border:none;margin-top:8px"><div class="a1-mut">'+(LANG==='en'?'Match T10-lite: ':'实战 T10-lite：')+(match&&match.ue_per_game!=null?((LANG==='en'?'UE/game ':'每局UE ')+match.ue_per_game):(LANG==='en'?'UE not recorded':'UE 未录'))+' · '+(match&&match.match_transfer_score!=null?((LANG==='en'?'Transfer score ':'转化分 ')+match.match_transfer_score):(LANG==='en'?'Transfer score not recorded':'转化分 未录'))+'</div>'+
-            '<button class="btn" data-act="match" data-id="'+aid+'">'+(LANG==='en'?'Match Entry':'实战录入')+'</button></div>'+
+          '<div class="a1-row" style="border:none;margin-top:8px"><div class="a1-mut"><b>'+esc(TEST_LABEL('T10'))+'</b> · '+(match&&match.ue_per_game!=null?((LANG==='en'?'UE/game ':'每局UE ')+match.ue_per_game):(LANG==='en'?'UE not recorded':'UE 未录'))+' · '+matchStatus+'</div>'+
+            '<button class="btn" data-act="match" data-id="'+aid+'">'+(LANG==='en'?'Record Match Evidence':'记录实战证据')+'</button></div>'+
           '<div class="a1-row" style="border:none;margin-top:12px">'+
             '<button class="btn" data-act="preview" data-id="'+aid+'">'+(LANG==='en'?'Readiness Preview':'就绪度预览')+'</button>'+
             '<button class="btn solid" data-act="export" data-id="'+aid+'">'+(LANG==='en'?'Export JSON':'导出 JSON')+'</button></div>');
@@ -139,12 +210,20 @@
     var modeChips = PBConfig.feedModes.map(function(m){ return chip(FEED_LABEL(m),'pick-feed','feed',m,d.feed_mode===m); }).join('');
     var showFeeder = d.feed_mode && d.feed_mode!=='machine';
     var showCal = d.feed_mode==='calibrated_human';
-    h('<div class="a1-h"><button class="btn" data-act="open" data-id="'+ui.assessment_id+'" style="padding:4px 10px">'+(LANG==='en'?'‹ Back':'‹ 返回')+'</button> &nbsp; '+(LANG==='en'?'New Session · ':'新建 Session · ')+tid+' '+esc(t.name)+'</div>'+
-      '<label class="a1-mut">'+(LANG==='en'?'Feed Mode':'喂球方式 Feed Mode')+'</label><div>'+modeChips+'</div>'+
+    // POST-S11-R4-A (§8): short player-facing explanation of the selected feed mode. Live Match
+    // is explicitly called out as skill-test evidence only — never Match Transfer validation.
+    var feedNote = d.feed_mode ? ('<div class="a1-mut" style="margin:2px 0 8px">'+esc(FEED_DESC(d.feed_mode))+
+      (d.feed_mode==='live_match' ? (' '+(LANG==='en'
+        ? 'This records evidence for this skill test only — it is not the same as Match Transfer validation.'
+        : '此项仅为该技能测试的证据，不等同于"实战转化 Match Transfer"验证。')) : '')+'</div>') : '';
+    h('<div class="a1-h"><button class="btn" data-act="open" data-id="'+ui.assessment_id+'" style="padding:4px 10px">'+(LANG==='en'?'‹ Back':'‹ 返回')+'</button> &nbsp; '+(LANG==='en'?'New Session · ':'新建 Session · ')+esc(TEST_LABEL(tid))+' <span class="a1-mut" style="font-size:11px">'+tid+'</span></div>'+
+      '<label class="a1-mut">'+(LANG==='en'?'Feed Mode':'喂球方式 Feed Mode')+'</label>'+
+      '<div class="a1-mut" style="margin:2px 0 6px">'+(LANG==='en'?'How is the ball being supplied for this test?':'这项测试的来球方式是？')+'</div>'+
+      '<div>'+modeChips+'</div>'+ feedNote +
       (showFeeder?'<input class="fld" id="a1-feeder" placeholder="'+(LANG==='en'?'feeder_id — feeder identifier (optional)':'feeder_id 喂球者标识（可留空）')+'" style="margin:8px 0" value="'+esc(d.feeder_id||'')+'">':'')+
       (showCal?'<input class="fld" id="a1-cal" placeholder="'+(LANG==='en'?'feeder_calibration_id — calibration ID (optional)':'feeder_calibration_id 标定编号（可留空）')+'" style="margin:0 0 8px" value="'+esc(d.cal||'')+'">':'')+
       '<div class="a1-row" style="border:none;margin-top:12px"><button class="btn" data-act="open" data-id="'+ui.assessment_id+'">'+(LANG==='en'?'Cancel':'取消')+'</button>'+
-        '<button class="btn solid" data-act="create-session"'+(d.feed_mode?'':' disabled style="opacity:.5"')+'>'+(LANG==='en'?'Create Session':'创建 Session')+'</button></div>');
+        '<button class="btn solid" data-act="create-session"'+(d.feed_mode?'':' disabled style="opacity:.5"')+'>'+(LANG==='en'?'Start Test':'开始测试')+'</button></div>');
     var fi=document.getElementById('a1-feeder'); if(fi) fi.oninput=function(){ui.sessDraft.feeder_id=this.value;};
     var ci=document.getElementById('a1-cal'); if(ci) ci.oninput=function(){ui.sessDraft.cal=this.value;};
   }
@@ -206,7 +285,7 @@
       var dimInputs = dims.map(function (t) {
         return '<div class="a1-row"><div>'+t[1]+'</div><input class="fld" style="width:84px" type="number" min="0" max="100" data-mt="'+t[0]+'" value="'+(d[t[0]]||0)+'"></div>';
       }).join('');
-      h('<div class="a1-h"><button class="btn" data-act="open" data-id="'+aid+'" style="padding:4px 10px">'+(LANG==='en'?'‹ Back':'‹ 返回')+'</button> &nbsp; '+(LANG==='en'?'Match Entry (T10-lite)':'实战录入 Match (T10-lite)')+'</div>'+
+      h('<div class="a1-h"><button class="btn" data-act="open" data-id="'+aid+'" style="padding:4px 10px">'+(LANG==='en'?'‹ Back':'‹ 返回')+'</button> &nbsp; '+esc(TEST_LABEL('T10'))+' <span class="a1-mut" style="font-size:11px">T10-lite</span></div>'+
         '<div class="a1-sub">'+(LANG==='en'
           ? 'Simplified version: only captures UE and a transfer verification score, to complete the readiness preview — not rally-by-rally coding, not an official rating.'
           : '简化版：只采 UE 与转化验证分，用于补全就绪度预览；非逐拍编码，非官方评级。')+'</div>'+
@@ -257,9 +336,15 @@
       var log=trials.map(function(tr){return tr.trial_no+':'+tr.outcome;}).join('  ')||(LANG==='en'?'(none yet)':'（暂无）');
       var btns=outs.map(function(o){var wt=PBConfig.scoreWeight(tid,o);
         return '<button class="btn" data-act="trial" data-o="'+o+'" style="margin:4px 6px 4px 0">'+OUT_LABEL(o)+(wt==null?'':' ·'+wt)+'</button>';}).join('');
-      h('<div class="a1-h"><button class="btn" data-act="open" data-id="'+s.assessment_id+'" style="padding:4px 10px">'+(LANG==='en'?'‹ Back':'‹ 返回')+'</button> &nbsp; '+tid+' '+esc(t.name)+'</div>'+
+      // POST-S11-R4-A (§7): concise player guidance for Success/Fail/Invalid, wording only —
+      // the underlying S/P/F/I data semantics and scoring are unchanged.
+      var sfiGuide = LANG==='en'
+        ? 'Success: valid attempt meeting the criterion · Fail: valid attempt not meeting it · Invalid: excluded from the count.'
+        : '成功：有效尝试且达标 · 失败：有效尝试未达标 · 无效：不计入统计。';
+      h('<div class="a1-h"><button class="btn" data-act="open" data-id="'+s.assessment_id+'" style="padding:4px 10px">'+(LANG==='en'?'‹ Back':'‹ 返回')+'</button> &nbsp; '+esc(TEST_LABEL(tid))+' <span class="a1-mut" style="font-size:11px">'+tid+'</span></div>'+
         '<div class="a1-sub">'+FEED_LABEL(s.feed_mode)+(s.feeder_id?(' · feeder '+esc(s.feeder_id)):'')+' · Tier '+esc(s.assessment_tier)+(target?(' · '+(LANG==='en'?'target ':'参考目标 ')+target+' trials'):'')+'</div>'+
-        '<div>'+(LANG==='en'?'Record trial (raw data):':'逐 Trial 记录（原始数据）：')+'</div><div style="margin-top:8px">'+btns+'</div>'+
+        '<div>'+(LANG==='en'?'Record this attempt:':'记录本次尝试：')+'</div><div style="margin-top:8px">'+btns+'</div>'+
+        '<div class="a1-mut" style="margin-top:6px">'+esc(sfiGuide)+'</div>'+
         '<div style="margin-top:6px">'+(LANG==='en'?'Recorded ':'已记录 ')+'<b>'+trials.length+'</b> · '+(LANG==='en'?'Current ':'当前 ')+metricLine(m)+'</div><div class="a1-list">'+esc(log)+'</div>'+
         '<div class="a1-row" style="border:none;margin-top:12px"><span></span><button class="btn solid" data-act="open" data-id="'+s.assessment_id+'">'+(LANG==='en'?'Done':'完成 Done')+'</button></div>');
     });
@@ -345,5 +430,13 @@
       .catch(function(err){el.innerHTML='<div class="a1-mut">'+(LANG==='en'?'Config load failed: ':'配置加载失败：')+esc(err.message)+'</div>';});
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
-  window.PBAssessment = { refresh: function(){ if(el) render(); } };
+  window.PBAssessment = {
+    refresh: function(){ if(el) render(); },
+    // POST-S11-R4-A: pure label/progress helpers + a minimal screen-navigation hook, exposed for
+    // Node testability (tests/r4a-assessment-ux.test.js) — no new player-visible behavior, no
+    // change to onClick/data-act routing, no domain logic.
+    TEST_LABEL: TEST_LABEL, FEED_DESC: FEED_DESC, TEST_PROGRESS: TEST_PROGRESS,
+    PROGRESS_LABEL: PROGRESS_LABEL, PROGRESS_COLOR: PROGRESS_COLOR,
+    _goto: function (screen, assessment_id) { ui.screen = screen; if (assessment_id != null) ui.assessment_id = assessment_id; render(); }
+  };
 })();

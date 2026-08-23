@@ -222,19 +222,38 @@ Acceptance Commit:
 85f1c1e803ab7658214c1002d86c4eb2a30af6f8
 
 POST-S11-R3B-3
+Status: CLOSED / ACCEPTED
+Acceptance Commit:
+c523a23346204309f594926aadee607bb2306809
+GPT Independent QA: PASS
+RC-UAT: PASS
+Full Regression: 50/50 PASS
+
+POST-S11-R3B
+Status: CLOSED / ACCEPTED
+
+POST-S11-R4
+Status:
+ARCHITECTURE + DESIGN FROZEN
+
+POST-S11-R4-A
 Status:
 IMPLEMENTATION IN PROGRESS
 Baseline:
-85f1c1e803ab7658214c1002d86c4eb2a30af6f8
+c523a23346204309f594926aadee607bb2306809
 Scope:
-HOME user-facing integration of the accepted Assessment
-Journey Bridge -> Product Journey Orchestrator -> HOME
-Dashboard Adapter -> HOME Priority Dashboard UI pipeline.
-State integration + CTA correctness (J0-J4) + regression QA
-only. No new decision engines, no Development Cycle
-auto-creation, no S9 rerun, no official rating / validated
-level side effects. DB_VERSION unchanged (5), stores
-unchanged (18/18).
+Assessment UX productization — presentation/UX only.
+Translates engineering-oriented Assessment UI (T01-T10
+internal IDs, raw sampling counters, assessment_id/tier
+labels, provisional composite score) into player-oriented
+language and progress semantics, while preserving all
+existing raw evidence data, internal IDs, identity
+(player_id), persistence, Readiness logic, and fail-safe
+rules (partial evidence != official rating / validated
+level / recommendation / prescription / Development Cycle).
+No S9/S10 engine changes, no Journey/HOME domain logic
+changes, no DB schema changes. DB_VERSION unchanged (5),
+stores unchanged (18/18).
 ```
 
 S7 and S8 acceptance commit SHAs were confirmed directly from local Git
