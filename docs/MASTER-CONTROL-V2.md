@@ -277,7 +277,9 @@ POST-S11-R4-D
 Name:
 Release Candidate Full-System UAT / Final Product Readiness
 Status:
-IMPLEMENTATION COMPLETE / GPT QA PENDING
+CLOSED / ACCEPTED
+Acceptance Commit:
+4676e256f534dcef68ac6f0db52eb40ba578fbfd
 Baseline:
 70435196e6a06ee006374de4fb19d7b721a03813
 AI Resource Control:
@@ -298,6 +300,94 @@ changes, no recommendation/priority/prescription logic changes,
 no DB schema changes. DB_VERSION unchanged (5), stores unchanged
 (18/18). See docs/R4-D-FINAL-RELEASE-ACCEPTANCE.md for the full
 record.
+Final Regression:
+54 / 54 PASS
+0 failures
+Release Blocking Defects:
+NONE OPEN
+GPT Independent Final Acceptance:
+PASS
+
+POST-S11-R4 FINAL
+Name:
+Productization / Release Readiness Final Closure
+Status:
+CLOSED / ACCEPTED
+Product Release Candidate:
+PB-APP-RC1
+Product Code Baseline:
+4676e256f534dcef68ac6f0db52eb40ba578fbfd
+Product Release Baseline:
+FROZEN
+Database:
+DB_VERSION = 5
+Stores = 18 / 18
+Validated Levels:
+3.0 / 3.5 / 4.0 / 4.5 / 5.0
+Release Blocking Defects:
+NONE OPEN
+Final Regression:
+54 / 54 PASS
+0 failures
+```
+
+## Product Release Baseline
+
+```
+Product:
+Drills Path from 3.0 to 5.0
+
+Release Candidate:
+PB-APP-RC1
+
+Product Code Baseline:
+4676e256f534dcef68ac6f0db52eb40ba578fbfd
+
+Branch:
+app-v2-alpha
+
+R4:
+CLOSED / ACCEPTED
+
+Product Release Baseline:
+FROZEN
+
+Governance invariants:
+- TRAINING Evidence != MATCH Evidence
+- Progress != Validated Level
+- Provisional Assessment Score != Validated Level
+- Validated Levels remain: 3.0 / 3.5 / 4.0 / 4.5 / 5.0
+- DB_VERSION remains 5
+- Stores remain 18 / 18
+
+Future changes are subject to Product Release Change Control.
+
+The Product Code Baseline must NOT be redefined by later
+governance/documentation commits.
+```
+
+## AI Resource Control V1
+
+```
+AI RESOURCE CONTROL V1
+Status:
+ACTIVE
+
+For future controlled implementation stages, the Resource Ledger
+should record where applicable:
+- stage
+- baseline SHA
+- start timestamp
+- end timestamp
+- elapsed minutes
+- commands run
+- files added
+- files modified
+- test suites
+- tests passed
+- tests failed
+- rework rounds
+- commit SHA
 ```
 
 S7 and S8 acceptance commit SHAs were confirmed directly from local Git
