@@ -245,23 +245,32 @@ Manual UAT: PASS
 Full Regression: 51/51 PASS
 
 POST-S11-R4-B
+Status: CLOSED / ACCEPTED
+Acceptance Commit:
+97d0cb12bcec7573c3f03e3de4c3a2b05a76f12b
+GPT Independent QA: PASS
+
+POST-S11-R4-C
+Name:
+Assessment -> Action Handoff UX
 Status:
 IMPLEMENTATION IN PROGRESS
 Baseline:
-91178606c6cad4f33361b622f6226180fb1cf780
+97d0cb12bcec7573c3f03e3de4c3a2b05a76f12b
+AI Resource Control:
+MEASURED
 Scope:
-Assessment completion / result presentation — presentation/
-interpretation only. Player-facing completion states (Not
-Started / In Progress / Complete / Result Ready), a Result
-Summary (completion, provisional score, skill results, Six
-Hard Gates, Match Transfer, next action), FOUNDATION relabeled
-as Assessment Stage (not Level), legacy "Measure · 4.0 KPI"
-title replaced. All derived from existing accepted sources
-only (PBMetrics/PBPreview/computeKPI/Journey next_action) —
-no new rating, recommendation, prescription, journey, or
-match-transfer logic. No S9/S10 engine changes, no Journey/
-HOME domain logic changes, no DB schema changes. DB_VERSION
-unchanged (5), stores unchanged (18/18).
+Presentation + routing only, added to the R4-B Assessment
+Result Summary as a new "Your Next Step" panel (Current
+Priority / Why This Matters / Next Action / one primary CTA).
+Every field is read verbatim from existing accepted sources
+(PBHomeDashboardAdapter.loadHomeDashboard -> journey/focus/
+next_action, PBHomeDashboardUI label/route helpers) — no new
+diagnosis, recommendation, priority, prescription, Development
+Cycle, validated level, or Match Transfer computation. No S9/
+S10 engine changes, no Journey/HOME domain logic changes, no
+DB schema changes. DB_VERSION unchanged (5), stores unchanged
+(18/18).
 ```
 
 S7 and S8 acceptance commit SHAs were confirmed directly from local Git

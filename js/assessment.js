@@ -271,6 +271,67 @@
   }
 
   // ============================================================
+  // POST-S11-R4-C — "Your Next Step" panel (Current Priority / Why This
+  // Matters / Next Action / ONE primary CTA). PRESENTATION + ROUTING ONLY.
+  // Every field is read verbatim from the existing accepted Home View
+  // Model (PBHomeDashboardAdapter.loadHomeDashboard's focus/why/
+  // next_action) and the existing accepted label/route helpers
+  // (PBHomeDashboardUI.nextActionLabel/routeForNextAction) — never
+  // recalculated, never synthesized. Pure function (explicit `en`, no
+  // DOM/PBStore) so it is directly Node-testable, same split convention
+  // js/home-priority-dashboard-ui.js already uses for renderHomePanelHTML.
+  // ============================================================
+  function renderNextStepHTML(homeDashboard, en) {
+    var focus = homeDashboard && homeDashboard.focus;
+    var why = homeDashboard && homeDashboard.why;
+    var na = homeDashboard && homeDashboard.next_action;
+
+    // Current Priority — §14: only ever the existing accepted focus; never computed here.
+    var priorityHTML = focus
+      ? ('<b>'+esc(focus.priority_tier != null ? focus.priority_tier : (focus.rank != null ? ('#'+focus.rank) : (en?'Available':'可用')))+'</b>'+
+         (focus.skill ? (' · '+esc(focus.skill)+(focus.context ? (' · '+esc(focus.context)) : '')) : ''))
+      : (en ? 'Not available yet' : '暂无可用数据');
+
+    // Why This Matters — §15: only the existing accepted traceability; never a synthesized diagnosis.
+    var hasWhy = why && ((why.source_skill_gap_ids && why.source_skill_gap_ids.length) || (why.evidence_pattern_ids && why.evidence_pattern_ids.length) || (why.evidence_refs && why.evidence_refs.length));
+    var whyHTML;
+    if (hasWhy) {
+      var parts = [];
+      if (why.source_skill_gap_ids.length) parts.push((en?'Skill gaps: ':'技术缺口：')+esc(why.source_skill_gap_ids.join(', ')));
+      if (why.evidence_pattern_ids.length) parts.push((en?'Evidence patterns: ':'证据模式：')+esc(why.evidence_pattern_ids.join(', ')));
+      if (why.evidence_refs.length) parts.push((en?'Evidence: ':'证据：')+esc(why.evidence_refs.join(', ')));
+      whyHTML = parts.join('<br>');
+    } else {
+      whyHTML = en ? 'More evidence or recommendation detail is required.' : '尚需更多证据或训练建议详情。';
+    }
+
+    // Next Action / ONE primary CTA — §13: only the existing accepted Journey next_action vocabulary
+    // (js/product-journey-orchestrator.js NEXT_ACTIONS, labeled/routed by the existing
+    // js/home-priority-dashboard-ui.js helpers). An unrecognized/absent code is never guessed —
+    // it falls back to the one universally safe route: Home.
+    var known = na && na.code && na.code !== 'NONE' && typeof PBHomeDashboardUI !== 'undefined' && PBHomeDashboardUI.routeForNextAction(na.code) != null;
+    var ctaLabel, route, enabled, actionNoteHTML;
+    if (known) {
+      ctaLabel = PBHomeDashboardUI.nextActionLabel(na.code, en);
+      route = PBHomeDashboardUI.routeForNextAction(na.code);
+      enabled = na.enabled === true;
+      actionNoteHTML = '';
+    } else {
+      ctaLabel = en ? 'Return Home' : '返回首页';
+      route = 'home';
+      enabled = true;
+      actionNoteHTML = '<div class="a1-mut" style="margin-bottom:6px">'+(en?'Your next action is not available yet.':'暂无可用的下一步操作。')+'</div>';
+    }
+
+    function label(text) { return '<div class="a1-mut" style="font-size:11px;text-transform:uppercase;letter-spacing:.03em;margin-top:8px">'+text+'</div>'; }
+
+    return label(en?'Current Priority':'当前优先级') + '<div>'+priorityHTML+'</div>' +
+      label(en?'Why This Matters':'为什么重要') + '<div>'+whyHTML+'</div>' +
+      label(en?'Next Action':'下一步') + actionNoteHTML +
+      '<button class="btn solid" data-act="result-cta" data-route="'+esc(route)+'"'+(enabled?'':' disabled style="opacity:.5"')+'>'+esc(ctaLabel)+'</button>';
+  }
+
+  // ============================================================
   // POST-S11-R4-B — Assessment Result Summary. PRESENTATION / INTERPRETATION ONLY.
   // Every field here is read from already-computed, already-accepted sources
   // (PBMetrics.computeAssessment / PBPreview.forAssessment / PBHomeDashboardAdapter
@@ -366,29 +427,18 @@
         '<div class="a1-mut" style="margin-top:2px">'+(LANG==='en'?'Training performance alone does not validate match transfer.':'仅训练表现不能验证实战转化。')+'</div>'+
         '<button class="btn" data-act="match" data-id="'+aid+'" style="margin-top:6px">'+(LANG==='en'?'Record Match Evidence':'记录实战证据')+'</button>';
 
-      // ---- F. Recommended Next Action — read-only from the existing Journey projection.
-      // Never computed locally; §16 fail-safe: unavailable Journey data -> neutral state, never a
-      // guessed CTA. ----
+      // ---- F. YOUR NEXT STEP — read-only from the existing Journey/HOME projection (§16). ----
       var homeDashboard = homeResult && homeResult.home_dashboard;
-      var na = homeDashboard && homeDashboard.next_action;
-      var focus = homeDashboard && homeDashboard.focus;
-      var recommendationLine = focus
-        ? ((LANG==='en'?'Recommendation: ':'训练建议：')+esc(focus.recommendation_code || focus.skill || (LANG==='en'?'available':'可用')))
-        : (LANG==='en'?'Recommendation not available yet.':'暂无可用的训练建议。');
-      var sectionF;
-      if (na && typeof PBHomeDashboardUI !== 'undefined') {
-        var ctaLabel = PBHomeDashboardUI.nextActionLabel(na.code, LANG==='en');
-        var route = PBHomeDashboardUI.routeForNextAction(na.code);
-        sectionF = '<div class="a1-mut" style="margin-bottom:6px">'+recommendationLine+'</div>'+
-          '<button class="btn solid" data-act="result-cta" data-route="'+esc(route||'')+'"'+(na.enabled?'':' disabled style="opacity:.5"')+'>'+esc(ctaLabel)+'</button>';
-      } else {
-        sectionF = '<div class="a1-mut" style="margin-bottom:6px">'+recommendationLine+'</div>'+
-          '<div class="a1-mut">'+(LANG==='en'?'Next action not available yet.':'暂无可用的下一步操作。')+'</div>';
-      }
+      var sectionF = renderNextStepHTML(homeDashboard, LANG==='en');
 
       function section(label, body) {
         return '<div class="a1-row" style="border:none;flex-direction:column;align-items:flex-start;padding:10px 0"><div class="a1-h" style="font-size:13px;margin-bottom:4px">'+label+'</div>'+body+'</div>';
       }
+
+      // Secondary links (§12/§16) — never a second primary CTA, just plain nav buttons.
+      var secondaryLinks = '<div class="a1-row" style="border:none;margin-top:10px">'+
+        '<button class="btn" data-act="open" data-id="'+aid+'">'+(LANG==='en'?'View Assessment Details':'查看评估详情')+'</button>'+
+        '<button class="btn" data-act="export" data-id="'+aid+'">'+(LANG==='en'?'Export':'导出')+'</button></div>';
 
       h('<div class="a1-h"><button class="btn" data-act="open" data-id="'+aid+'" style="padding:4px 10px">'+(LANG==='en'?'‹ Back':'‹ 返回')+'</button> &nbsp; '+(LANG==='en'?'Assessment Result':'评估结果')+'</div>'+
         sectionA +
@@ -396,7 +446,8 @@
         section(LANG==='en'?'Skill Results':'技能结果', sectionC) +
         section(LANG==='en'?'Six Hard Gates':'六道硬门槛', sectionD) +
         section(LANG==='en'?'Match Transfer':'实战转化', sectionE) +
-        section(LANG==='en'?'Recommended Next Action':'建议下一步', sectionF));
+        section(LANG==='en'?'Your Next Step':'你的下一步', sectionF) +
+        secondaryLinks);
     }).catch(function (e) { el.innerHTML = '<div class="a1-mut">'+(LANG==='en'?'Result failed: ':'结果加载失败：')+esc(e.message)+'</div>'; });
   }
 
@@ -577,6 +628,9 @@
     // change to onClick/data-act routing, no domain logic.
     TEST_LABEL: TEST_LABEL, FEED_DESC: FEED_DESC, TEST_PROGRESS: TEST_PROGRESS,
     PROGRESS_LABEL: PROGRESS_LABEL, PROGRESS_COLOR: PROGRESS_COLOR,
+    // POST-S11-R4-C: pure "Your Next Step" renderer, exposed for Node testability
+    // (tests/r4c-assessment-action-handoff.test.js) — same reasoning as the R4-A exports above.
+    renderNextStepHTML: renderNextStepHTML,
     _goto: function (screen, assessment_id) { ui.screen = screen; if (assessment_id != null) ui.assessment_id = assessment_id; render(); }
   };
 })();

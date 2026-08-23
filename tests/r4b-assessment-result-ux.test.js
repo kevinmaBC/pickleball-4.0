@@ -270,7 +270,12 @@ test('R4B-13 end-to-end: fresh assessment (no evidence) -> Not Started, no fabri
     assert.strictEqual(html.indexOf('Provisional Assessment Score'), -1, 'no score fabricated when no comparable evidence has been recorded');
     assert.strictEqual(html.indexOf('validated_training_level'), -1, 'no validated_training_level ever surfaced');
     assert.ok(html.indexOf('Not Yet Validated') !== -1, 'Match Transfer honestly shows Not Yet Validated (R4B-09)');
-    assert.ok(html.indexOf('Recommendation not available yet') !== -1, 'no fabricated recommendation for a brand-new player (R4B-10)');
+    // POST-S11-R4-C superseded Section F's original ad-hoc "Recommendation not available yet."
+    // text with the richer, frozen "Your Next Step" panel (Current Priority / Why This Matters /
+    // Next Action) — this is that package's own authorized, in-scope redesign, not a weakening of
+    // this check. The equivalent honest-fallback assertion now lives in
+    // tests/r4c-assessment-action-handoff.test.js (R4C-06/R4C-08).
+    assert.ok(html.indexOf('Not available yet') !== -1, 'no fabricated Current Priority for a brand-new player (R4B-10, superseded by R4-C\'s Your Next Step panel)');
   });
 });
 
