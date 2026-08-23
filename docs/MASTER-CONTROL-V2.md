@@ -217,19 +217,24 @@ Acceptance Commit:
 201dfde1810426b0e68a105f05477aab4da95882
 
 POST-S11-R3B-2
+Status: CLOSED / ACCEPTED
+Acceptance Commit:
+85f1c1e803ab7658214c1002d86c4eb2a30af6f8
+
+POST-S11-R3B-3
 Status:
-IMPLEMENTED / GPT QA PENDING
+IMPLEMENTATION IN PROGRESS
 Baseline:
-201dfde1810426b0e68a105f05477aab4da95882
+85f1c1e803ab7658214c1002d86c4eb2a30af6f8
 Scope:
-Read-side Assessment -> Journey Integration Bridge
-(js/assessment-journey-bridge.js), wired additively through
-js/product-journey-orchestrator.js (assessment_context
-passthrough, never influencing stage/next_action derivation)
-into js/home-dashboard-adapter.js / js/home-priority-
-dashboard-ui.js. No Development Cycle auto-created, no
-official rating, no validated_training_level written, no S9
-rerun. DB_VERSION unchanged (5), stores unchanged (18/18).
+HOME user-facing integration of the accepted Assessment
+Journey Bridge -> Product Journey Orchestrator -> HOME
+Dashboard Adapter -> HOME Priority Dashboard UI pipeline.
+State integration + CTA correctness (J0-J4) + regression QA
+only. No new decision engines, no Development Cycle
+auto-creation, no S9 rerun, no official rating / validated
+level side effects. DB_VERSION unchanged (5), stores
+unchanged (18/18).
 ```
 
 S7 and S8 acceptance commit SHAs were confirmed directly from local Git

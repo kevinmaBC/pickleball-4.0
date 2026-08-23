@@ -72,8 +72,13 @@
 
   // Frozen §7 Product Journey Stages — presentation/product stages, never written back onto
   // development_cycle.state or prescription_workflow.state.
+  // POST-S11-R3B-3: ASSESSMENT_IN_PROGRESS/ASSESSMENT_READY are additive — they only ever occur
+  // in the !cycle branch of deriveStage (below), resolving the no-development_cycle case at finer
+  // granularity via assessment_context (J1/J2). They never appear once a development_cycle exists;
+  // the existing cycle.state switch (J3/J4 and beyond) is completely untouched.
   var JOURNEY_STAGES = [
-    'NEEDS_ASSESSMENT', 'REVIEW_RECOMMENDATION', 'READY_TO_TRAIN', 'TRAINING_IN_PROGRESS',
+    'NEEDS_ASSESSMENT', 'ASSESSMENT_IN_PROGRESS', 'ASSESSMENT_READY',
+    'REVIEW_RECOMMENDATION', 'READY_TO_TRAIN', 'TRAINING_IN_PROGRESS',
     'REVIEW_PROGRESS', 'READY_TO_REASSESS', 'CYCLE_COMPLETE'
   ];
 
@@ -81,8 +86,11 @@
   var JOURNEY_STATUSES = ['READY', 'PARTIAL', 'UNRESOLVED', 'BLOCKED'];
 
   // Frozen §11 Next Action vocabulary — navigation/UX intent only, never domain execution.
+  // POST-S11-R3B-3: CONTINUE_ASSESSMENT/REVIEW_ASSESSMENT are additive, paired one-to-one with
+  // ASSESSMENT_IN_PROGRESS/ASSESSMENT_READY above.
   var NEXT_ACTIONS = [
-    'START_ASSESSMENT', 'REVIEW_RECOMMENDATION', 'ACTIVATE_PRESCRIPTION', 'START_TRAINING',
+    'START_ASSESSMENT', 'CONTINUE_ASSESSMENT', 'REVIEW_ASSESSMENT',
+    'REVIEW_RECOMMENDATION', 'ACTIVATE_PRESCRIPTION', 'START_TRAINING',
     'CONTINUE_TRAINING', 'RESUME_SESSION', 'REVIEW_PROGRESS', 'RECORD_REAL_MATCH',
     'REVIEW_REASSESSMENT', 'START_NEXT_CYCLE', 'NONE'
   ];
@@ -168,6 +176,29 @@
 
   function deriveStage(cycle, ctx) {
     if (!cycle) {
+      // POST-S11-R3B-3 (J0/J1/J2): no development_cycle exists yet — this is the ONLY branch
+      // assessment_context is ever consulted from. It never runs once a real cycle exists (the
+      // switch below is completely unchanged), so it can never second-guess cycle.state.
+      var asmt = ctx.assessmentContext;
+      if (isPlainObject(asmt) && asmt.assessment_exists === true) {
+        if (asmt.recommendation_eligible === true) {
+          // J2: evidence sufficient / recommendation-eligible, but no accepted Recommendation
+          // exists yet (that only ever arrives via a real development_cycle — see §7 boundary:
+          // this file never creates one). Distinct from J3 (REVIEW_RECOMMENDATION, cycle-driven).
+          return {
+            stage: 'ASSESSMENT_READY', status: 'READY', headline_code: asmt.assessment_status || 'ASSESSMENT_EVIDENCE_READY',
+            next_action: nextAction('REVIEW_ASSESSMENT', true, asmt.assessment_id != null ? asmt.assessment_id : null),
+            presentation_flags: []
+          };
+        }
+        // J1: assessment exists, evidence partial/incomplete — never collapsed into NEEDS_ASSESSMENT.
+        return {
+          stage: 'ASSESSMENT_IN_PROGRESS', status: 'PARTIAL', headline_code: asmt.assessment_status || 'ASSESSMENT_IN_PROGRESS',
+          next_action: nextAction('CONTINUE_ASSESSMENT', true, asmt.assessment_id != null ? asmt.assessment_id : null),
+          presentation_flags: []
+        };
+      }
+      // J0: no assessment_context, or assessment_context says NO_ASSESSMENT.
       return {
         stage: 'NEEDS_ASSESSMENT', status: 'READY', headline_code: 'NO_ACTIVE_CYCLE',
         next_action: nextAction('START_ASSESSMENT', true, null), presentation_flags: []
@@ -271,10 +302,11 @@
       : (cycle && cycle.player_id != null ? cycle.player_id : null);
     if (playerId == null) throw JourneyError('MISSING_PLAYER_ID', 'a player_id is required (via input.player.player_id or development_cycle.player_id)');
 
-    // POST-S11-R3B-2: assessment_context (from js/assessment-journey-bridge.js) is passed through
-    // verbatim, additive-only — it is never consulted by deriveStage/CYCLE_STATES and never
-    // influences stage/next_action/current_focus/workflow_context. It exists solely so a
-    // consumer (e.g. HOME) can know assessment/evidence facts even while cycle is null.
+    // POST-S11-R3B-2/R3B-3: assessment_context (from js/assessment-journey-bridge.js) is read by
+    // deriveStage ONLY inside its !cycle branch (J0/J1/J2 resolution — see there for the exact
+    // rule) and is additionally passed through verbatim into journey.assessment_context below.
+    // Once a real development_cycle exists, it plays no role at all — cycle.state remains the
+    // sole primary signal for stage, exactly as frozen.
     var assessmentContext = isPlainObject(input.assessment_context) ? input.assessment_context : null;
 
     var recommendations = Array.isArray(input.recommendations) ? input.recommendations : [];
@@ -283,7 +315,7 @@
     var sessionResults = Array.isArray(input.session_results) ? input.session_results : [];
     var progress = Array.isArray(input.progress) ? input.progress : [];
 
-    var ctx = { prescriptions: prescriptions, prescriptionWorkflows: prescriptionWorkflows, sessionResults: sessionResults, progress: progress };
+    var ctx = { prescriptions: prescriptions, prescriptionWorkflows: prescriptionWorkflows, sessionResults: sessionResults, progress: progress, assessmentContext: assessmentContext };
     var derived = deriveStage(cycle, ctx);
 
     var recRef = cycle ? findLast(cycle.recommendation_refs) : null;

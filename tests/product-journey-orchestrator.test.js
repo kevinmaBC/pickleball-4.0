@@ -473,6 +473,38 @@ function checkDbVersionAndStores() {
 })();
 
 // ================================================================
+// POST-S11-R3B-3 (J0/J1/J2): the !cycle branch resolves finer-grained stages from
+// assessment_context — additive vocabulary, never touching the cycle.state switch.
+// ================================================================
+(function () {
+  var noCtx = PJ.projectJourney({ player: player() });
+  assert.strictEqual(noCtx.journey.stage, 'NEEDS_ASSESSMENT', 'J0: no assessment_context at all');
+  assert.strictEqual(noCtx.journey.next_action.code, 'START_ASSESSMENT');
+
+  var noAsm = PJ.projectJourney({ player: player(), assessment_context: { assessment_exists: false, assessment_status: 'NO_ASSESSMENT' } });
+  assert.strictEqual(noAsm.journey.stage, 'NEEDS_ASSESSMENT', 'J0: assessment_context explicitly says no assessment');
+
+  var partial = PJ.projectJourney({ player: player(), assessment_context: { assessment_exists: true, assessment_status: 'ASSESSMENT_IN_PROGRESS', recommendation_eligible: false, assessment_id: 'asm_1' } });
+  assert.strictEqual(partial.journey.stage, 'ASSESSMENT_IN_PROGRESS', 'J1: partial evidence');
+  assert.strictEqual(partial.journey.next_action.code, 'CONTINUE_ASSESSMENT');
+  assert.strictEqual(partial.journey.next_action.target_ref, 'asm_1');
+  assert.notStrictEqual(partial.journey.stage, 'NEEDS_ASSESSMENT', 'J1 never collapses to NEEDS_ASSESSMENT');
+
+  var ready = PJ.projectJourney({ player: player(), assessment_context: { assessment_exists: true, assessment_status: 'ASSESSMENT_EVIDENCE_READY', recommendation_eligible: true, assessment_id: 'asm_1' } });
+  assert.strictEqual(ready.journey.stage, 'ASSESSMENT_READY', 'J2: sufficient evidence, recommendation eligible, no cycle yet');
+  assert.strictEqual(ready.journey.next_action.code, 'REVIEW_ASSESSMENT');
+  assert.notStrictEqual(ready.journey.stage, 'REVIEW_RECOMMENDATION', 'J2 is distinct from J3 (no accepted Recommendation exists without a real cycle)');
+
+  // A real development_cycle always wins — assessment_context is never consulted once cycle exists.
+  var cyc = { cycle_id: 'cyc_1', player_id: 'p1', state: 'TRAINING_ACTIVE' };
+  var withBoth = PJ.projectJourney({ player: player(), development_cycle: cyc, assessment_context: { assessment_exists: true, assessment_status: 'ASSESSMENT_EVIDENCE_READY', recommendation_eligible: true } });
+  assert.strictEqual(withBoth.journey.stage, 'TRAINING_IN_PROGRESS', 'cycle.state still the sole primary signal once a cycle exists');
+
+  ['ASSESSMENT_IN_PROGRESS', 'ASSESSMENT_READY'].forEach(function (s) { assert.ok(PJ.JOURNEY_STAGES.indexOf(s) !== -1, s + ' registered in JOURNEY_STAGES'); });
+  ['CONTINUE_ASSESSMENT', 'REVIEW_ASSESSMENT'].forEach(function (a) { assert.ok(PJ.NEXT_ACTIONS.indexOf(a) !== -1, a + ' registered in NEXT_ACTIONS'); });
+})();
+
+// ================================================================
 // Structurally invalid input -> explicit deterministic error, never a guess
 // ================================================================
 (function () {

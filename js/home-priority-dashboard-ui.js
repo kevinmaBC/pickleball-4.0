@@ -38,6 +38,10 @@
   // ================================================================
   var STAGE_LABELS = {
     NEEDS_ASSESSMENT: { zh: '需要评估', en: 'Assessment Needed' },
+    // POST-S11-R3B-3 (J1/J2): additive — only ever emitted by PBProductJourney's !cycle branch
+    // when assessment_context says an assessment exists (see js/product-journey-orchestrator.js).
+    ASSESSMENT_IN_PROGRESS: { zh: '评估进行中', en: 'Assessment In Progress' },
+    ASSESSMENT_READY: { zh: '评估已就绪', en: 'Assessment Ready' },
     REVIEW_RECOMMENDATION: { zh: '查看训练重点', en: 'Review Focus' },
     READY_TO_TRAIN: { zh: '可以开始训练', en: 'Ready to Train' },
     TRAINING_IN_PROGRESS: { zh: '训练进行中', en: 'Training in Progress' },
@@ -71,6 +75,9 @@
   // ================================================================
   var NEXT_ACTION_LABELS = {
     START_ASSESSMENT: { zh: '开始评估', en: 'Start Assessment' },
+    // POST-S11-R3B-3 (J1/J2): additive, paired with ASSESSMENT_IN_PROGRESS/ASSESSMENT_READY above.
+    CONTINUE_ASSESSMENT: { zh: '继续评估', en: 'Continue Assessment' },
+    REVIEW_ASSESSMENT: { zh: '查看评估', en: 'Review Assessment' },
     REVIEW_RECOMMENDATION: { zh: '查看训练重点', en: 'Review Recommendation' },
     ACTIVATE_PRESCRIPTION: { zh: '查看处方详情', en: 'View Prescription' },
     START_TRAINING: { zh: '开始训练', en: 'Start Training' },
@@ -97,6 +104,11 @@
   // does not own Match Observation.
   var NEXT_ACTION_ROUTES = {
     START_ASSESSMENT: 'measure',
+    // POST-S11-R3B-3 (J1/J2): same existing `measure` route as START_ASSESSMENT — the Assessment
+    // Data Core widget (js/assessment.js) and its Readiness Preview both already live there; no
+    // new route/tab is introduced.
+    CONTINUE_ASSESSMENT: 'measure',
+    REVIEW_ASSESSMENT: 'measure',
     REVIEW_RECOMMENDATION: 'review',
     ACTIVATE_PRESCRIPTION: 'guided',
     START_TRAINING: 'guided',

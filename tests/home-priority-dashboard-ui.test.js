@@ -49,10 +49,25 @@ function run() {
   })();
 
   // ==================================================================
+  // POST-S11-R3B-3: J1/J2 bilingual stage labels — additive, paired with the new
+  // ASSESSMENT_IN_PROGRESS/ASSESSMENT_READY journey stages.
+  // ==================================================================
+  (function () {
+    var expected = {
+      ASSESSMENT_IN_PROGRESS: ['评估进行中', 'Assessment In Progress'],
+      ASSESSMENT_READY: ['评估已就绪', 'Assessment Ready']
+    };
+    Object.keys(expected).forEach(function (stage) {
+      assert.strictEqual(UI.stageLabel(stage, false), expected[stage][0], stage + ' zh label');
+      assert.strictEqual(UI.stageLabel(stage, true), expected[stage][1], stage + ' en label');
+    });
+  })();
+
+  // ==================================================================
   // CTA route table — every real next_action routes to an existing view; NONE routes nowhere
   // ==================================================================
   (function () {
-    var known = ['START_ASSESSMENT', 'REVIEW_RECOMMENDATION', 'ACTIVATE_PRESCRIPTION', 'START_TRAINING', 'CONTINUE_TRAINING', 'RESUME_SESSION', 'REVIEW_PROGRESS', 'RECORD_REAL_MATCH', 'REVIEW_REASSESSMENT', 'START_NEXT_CYCLE'];
+    var known = ['START_ASSESSMENT', 'CONTINUE_ASSESSMENT', 'REVIEW_ASSESSMENT', 'REVIEW_RECOMMENDATION', 'ACTIVATE_PRESCRIPTION', 'START_TRAINING', 'CONTINUE_TRAINING', 'RESUME_SESSION', 'REVIEW_PROGRESS', 'RECORD_REAL_MATCH', 'REVIEW_REASSESSMENT', 'START_NEXT_CYCLE'];
     // 'guided' (S11-C) / 'progress' (S11-D) added alongside the pre-existing bottom-nav-tab views.
     var existingViews = ['home', 'learn', 'drill', 'measure', 'review', 'compete', 'team', 'guided', 'progress'];
     known.forEach(function (code) {
@@ -69,6 +84,10 @@ function run() {
     assert.strictEqual(UI.routeForNextAction('REVIEW_PROGRESS'), 'progress');
     assert.strictEqual(UI.routeForNextAction('REVIEW_REASSESSMENT'), 'progress');
     assert.strictEqual(UI.routeForNextAction('RECORD_REAL_MATCH'), 'measure');
+    // POST-S11-R3B-3: CONTINUE_ASSESSMENT/REVIEW_ASSESSMENT reuse the existing `measure` route
+    // (Assessment Data Core + Readiness Preview) — no new route/tab introduced.
+    assert.strictEqual(UI.routeForNextAction('CONTINUE_ASSESSMENT'), 'measure');
+    assert.strictEqual(UI.routeForNextAction('REVIEW_ASSESSMENT'), 'measure');
   })();
 
   // ==================================================================

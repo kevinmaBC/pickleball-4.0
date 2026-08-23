@@ -211,19 +211,27 @@ test('B2-10: bridge never creates a Development Cycle', function () {
 
 // ================================================================
 // B2-11 — Journey distinguishes "no assessment" from "assessment in
-// progress" via assessment_context, even though (per the frozen S11-A
-// cycle.state contract) journey.stage itself correctly stays
-// NEEDS_ASSESSMENT in both cases absent a development_cycle.
+// progress" via assessment_context.
+//
+// POST-S11-R3B-3 superseded this test's original expectation: under R3B-2,
+// assessment_context was purely inert passthrough, so journey.stage itself
+// stayed NEEDS_ASSESSMENT in both cases. R3B-3's own acceptance gates
+// (package §15 G2/G3: "assessment exists -> never shown as no assessment",
+// "partial evidence -> Assessment In Progress") require journey.stage
+// itself to distinguish J0 from J1 — see the !cycle branch of deriveStage
+// in js/product-journey-orchestrator.js. This is the intentional, in-scope
+// behavior change that package authorized, not a weakening of this test.
 // ================================================================
-test('B2-11: journey.assessment_context distinguishes NO_ASSESSMENT from ASSESSMENT_IN_PROGRESS', function () {
+test('B2-11: journey.assessment_context (and, since R3B-3, journey.stage) distinguishes NO_ASSESSMENT from ASSESSMENT_IN_PROGRESS', function () {
   delete require.cache[require.resolve('../js/product-journey-orchestrator.js')];
   var PJ = require('../js/product-journey-orchestrator.js');
 
   var noAsm = PJ.projectJourney({ player: { player_id: 'p1' }, assessment_context: { assessment_status: 'NO_ASSESSMENT', assessment_exists: false } });
-  var partial = PJ.projectJourney({ player: { player_id: 'p1' }, assessment_context: { assessment_status: 'ASSESSMENT_IN_PROGRESS', assessment_exists: true, traceability_available: true } });
+  var partial = PJ.projectJourney({ player: { player_id: 'p1' }, assessment_context: { assessment_status: 'ASSESSMENT_IN_PROGRESS', assessment_exists: true, recommendation_eligible: false, traceability_available: true } });
 
   assert.strictEqual(noAsm.journey.stage, 'NEEDS_ASSESSMENT');
-  assert.strictEqual(partial.journey.stage, 'NEEDS_ASSESSMENT'); // correct: no development_cycle exists either way
+  assert.strictEqual(partial.journey.stage, 'ASSESSMENT_IN_PROGRESS'); // POST-S11-R3B-3: no longer collapsed into NEEDS_ASSESSMENT
+  assert.notStrictEqual(partial.journey.stage, noAsm.journey.stage, 'stage itself now distinguishes J0 from J1');
   assert.strictEqual(noAsm.journey.assessment_context.assessment_status, 'NO_ASSESSMENT');
   assert.strictEqual(partial.journey.assessment_context.assessment_status, 'ASSESSMENT_IN_PROGRESS');
   assert.notStrictEqual(noAsm.journey.assessment_context.assessment_exists, partial.journey.assessment_context.assessment_exists);
