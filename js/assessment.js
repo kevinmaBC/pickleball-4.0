@@ -102,6 +102,7 @@
     if (ui.screen === 'preview')     return renderPreview();
     if (ui.screen === 'match')       return renderMatch();
     if (ui.screen === 'record')      return renderRecord();
+    if (ui.screen === 'result')      return renderResult();
   }
 
   function renderHome() {
@@ -120,9 +121,15 @@
           var completeN = PBConfig.testIds.filter(function (tid) { return per[tid] && per[tid].sample_complete === true; }).length;
           var stateLabel = completeN === PBConfig.testIds.length ? (LANG==='en'?'Evidence Ready':'证据充分')
             : (startedN > 0 ? (LANG==='en'?'In Progress':'进行中') : (LANG==='en'?'Not Started':'未开始'));
+          // POST-S11-R4-B (§15): History/result access — the Assessment Data Core's own list is
+          // the accepted "history" surface for assessments (there is no separate assessment
+          // history architecture; extending the S9/S10 History/Explainability feature, S11-E,
+          // would cross into an unrelated subsystem — see the R4-B report for why that was not
+          // done). "View Result" appears once evidence exists; presentation only, no recompute.
+          var resultBtn = startedN > 0 ? ('<button class="btn" data-act="result" data-id="'+a.assessment_id+'">'+(LANG==='en'?'View Result':'查看结果')+'</button> ') : '';
           return '<div class="a1-row"><div><b>'+esc(pmap[a.player_id]||'—')+'</b> '+
             '<span class="a1-mut">· '+esc(TIER_LABEL(a.assessment_tier))+' · '+(LANG==='en'?'Target ':'目标 ')+a.target_training_level.toFixed(1)+' · '+esc(a.assessment_date)+' · '+stateLabel+'</span></div>'+
-            '<div><button class="btn" data-act="open" data-id="'+a.assessment_id+'">'+(LANG==='en'?'Open':'打开')+'</button> '+
+            '<div>'+resultBtn+'<button class="btn" data-act="open" data-id="'+a.assessment_id+'">'+(LANG==='en'?'Open':'打开')+'</button> '+
             '<button class="btn solid" data-act="export" data-id="'+a.assessment_id+'">'+(LANG==='en'?'Export':'导出')+'</button> '+
             '<button class="btn" data-act="del-asm" data-id="'+a.assessment_id+'" style="color:var(--fail)">'+(LANG==='en'?'Delete':'删')+'</button></div></div>';
         }).join('') : '<div class="a1-mut">'+(LANG==='en'?'No assessments yet. Tap the button above to create one.':'还没有评估记录。点上方按钮新建。')+'</div>';
@@ -200,8 +207,9 @@
           '<div class="a1-row" style="border:none;margin-top:8px"><div class="a1-mut"><b>'+esc(TEST_LABEL('T10'))+'</b> · '+(match&&match.ue_per_game!=null?((LANG==='en'?'UE/game ':'每局UE ')+match.ue_per_game):(LANG==='en'?'UE not recorded':'UE 未录'))+' · '+matchStatus+'</div>'+
             '<button class="btn" data-act="match" data-id="'+aid+'">'+(LANG==='en'?'Record Match Evidence':'记录实战证据')+'</button></div>'+
           '<div class="a1-row" style="border:none;margin-top:12px">'+
+            '<button class="btn solid" data-act="result" data-id="'+aid+'">'+(LANG==='en'?'View Result':'查看结果')+'</button>'+
             '<button class="btn" data-act="preview" data-id="'+aid+'">'+(LANG==='en'?'Readiness Preview':'就绪度预览')+'</button>'+
-            '<button class="btn solid" data-act="export" data-id="'+aid+'">'+(LANG==='en'?'Export JSON':'导出 JSON')+'</button></div>');
+            '<button class="btn" data-act="export" data-id="'+aid+'">'+(LANG==='en'?'Export JSON':'导出 JSON')+'</button></div>');
       });
   }
 
@@ -260,6 +268,136 @@
           ? 'Item-by-item comparison only — no composite score, no official level. Capability composite and UE / match_transfer are pending (T10). Percentages are indicative only when sample size is short.'
           : '仅逐项比对，不综合、不判官方等级；capability 综合分与 UE / match_transfer 均待后续（T10）。样本不足时百分比仅供参考。')+'</div>');
     }).catch(function (e) { el.innerHTML='<div class="a1-mut">'+(LANG==='en'?'Preview failed: ':'预览失败：')+esc(e.message)+'</div>'; });
+  }
+
+  // ============================================================
+  // POST-S11-R4-B — Assessment Result Summary. PRESENTATION / INTERPRETATION ONLY.
+  // Every field here is read from already-computed, already-accepted sources
+  // (PBMetrics.computeAssessment / PBPreview.forAssessment / PBHomeDashboardAdapter
+  // .loadHomeDashboard) — never recalculated, never a new rating/recommendation/
+  // prescription/journey/match-transfer computation. Section order: A Completion,
+  // B Overall Result (provisional), C Skill Results, D Six Hard Gates (cross-
+  // reference only — see below), E Match Transfer, F Next Action (read-only).
+  // ============================================================
+  function renderResult() {
+    var aid = ui.assessment_id;
+    el.innerHTML = '<div class="a1-mut">'+(LANG==='en'?'Loading result…':'加载结果…')+'</div>';
+    PBStore.get('assessments', aid).then(function (a) {
+      // §14: next_action must come from the existing Journey projection, read-only. A soft
+      // dependency (PBHomeDashboardAdapter loads after assessment.js in index.html's script
+      // chain, so it is always present in the browser; the guard is defensive only) — its
+      // absence/failure must degrade to an honest "not available yet", never a guessed CTA.
+      var homeDashboardPromise = (typeof PBHomeDashboardAdapter !== 'undefined')
+        ? PBHomeDashboardAdapter.loadHomeDashboard(a.player_id).catch(function () { return null; })
+        : Promise.resolve(null);
+      return Promise.all([
+        Promise.resolve(a),
+        PBMetrics.computeAssessment(aid),
+        PBPreview.forAssessment(aid).catch(function () { return { unsupported: true }; }),
+        homeDashboardPromise
+      ]);
+    }).then(function (r) {
+      var a = r[0], M = r[1], P = r[2], homeResult = r[3];
+      var metrics = M.per_test || {}, match = M.match || null;
+      var totalTests = PBConfig.testIds.length;
+      var completeN = PBConfig.testIds.filter(function (tid) { return metrics[tid] && metrics[tid].sample_complete === true; }).length;
+      var startedN = PBConfig.testIds.filter(function (tid) { return metrics[tid] && metrics[tid].n_total > 0; }).length;
+      var assessmentComplete = completeN === totalTests;
+      var previewOk = P && !P.unsupported;
+      // §4: RESULT_READY != VALIDATED_LEVEL — this only signals "enough evidence exists to show a
+      // meaningful comparison against Target Level", reusing PBPreview's own tally verbatim.
+      var resultReady = assessmentComplete && previewOk && P.tally.no_data === 0 && P.tally.sample_short === 0;
+
+      // ---- A. Completion ----
+      var completionLabel = assessmentComplete ? (LANG==='en'?'Assessment Complete':'评估已完成')
+        : (startedN > 0 ? (LANG==='en'?'Assessment In Progress':'评估进行中') : (LANG==='en'?'Not Started':'未开始'));
+      var sectionA = '<div style="font-weight:800;font-size:16px">'+completionLabel+'</div>'+
+        '<div class="a1-mut" style="margin:2px 0 8px">'+esc(TIER_LABEL(a.assessment_tier))+' · '+(LANG==='en'?'Target ':'目标 ')+a.target_training_level.toFixed(1)+'</div>'+
+        '<div style="margin-bottom:4px">'+(LANG==='en' ? (completeN+' of '+totalTests+' skill tests complete') : (completeN+' / '+totalTests+' 项技术测试完成'))+'</div>';
+
+      // ---- B. Overall Assessment Result (Provisional Assessment Score) ----
+      var sectionB;
+      if (!previewOk) {
+        sectionB = '<div class="a1-mut">'+(LANG==='en'?'No gate table yet for target level ':'目标等级 ')+esc(a.target_training_level.toFixed(1))+(LANG==='en'?'.':' 暂无门槛表。')+'</div>';
+      } else if (!resultReady) {
+        // §16 fail-safe: incomplete/insufficient evidence -> honest "not ready", never a fabricated result.
+        sectionB = '<div class="a1-mut">'+(LANG==='en'
+          ? ('Result not ready yet — complete all '+totalTests+' skill tests with sufficient evidence for Target '+P.target+' to see the overall result.')
+          : ('结果尚未就绪——需完成全部 '+totalTests+' 项技术测试且证据充分（针对目标 '+P.target+'）才能查看总体结果。'))+'</div>';
+      } else {
+        var t = P.tally;
+        sectionB = '<div style="font-weight:700">'+(LANG==='en'?'Provisional Assessment Score':'评估参考分')+'</div>'+
+          '<div style="margin:4px 0">'+(LANG==='en'
+            ? ('Met '+t.met+' · Borderline '+t.borderline+' · Not Met '+t.not_met+' (of '+t.total+' comparable)')
+            : ('达标 '+t.met+' · 边缘 '+t.borderline+' · 未达 '+t.not_met+'（共 '+t.total+' 项可比）'))+'</div>'+
+          '<div class="a1-mut">'+(LANG==='en'?'Reference only — not an official or validated player rating.':'仅供参考——非官方或已验证的球员评级。')+'</div>';
+      }
+
+      // ---- C. Skill Results (relabels PBPreview's own rows; §10 — "Near Target" reuses the
+      // existing accepted borderline band, never a new threshold rule) ----
+      var sectionC = '<div class="a1-mut">'+(LANG==='en'?'Not available yet.':'暂不可用。')+'</div>';
+      if (previewOk) {
+        var SKILL_STATUS = LANG==='en'
+          ? { met:['Meets Target','var(--pass)'], borderline:['Near Target','var(--part)'], not_met:['Below Target','var(--fail)'], no_data:['Insufficient Evidence','var(--muted)'] }
+          : { met:['达到目标','var(--pass)'], borderline:['接近目标','var(--part)'], not_met:['未达目标','var(--fail)'], no_data:['证据不足','var(--muted)'] };
+        var skillRows = P.rows.filter(function (x) { return x.test_id && PBConfig.testIds.indexOf(x.test_id) !== -1; }).map(function (x) {
+          var s = SKILL_STATUS[x.status]; if (!s) return '';
+          var curTxt = x.current != null ? (x.current+'%') : '—';
+          return '<div class="a1-row"><div><b>'+esc(TEST_LABEL(x.test_id))+'</b> <span class="a1-mut" style="font-size:11px">'+x.test_id+'</span></div>'+
+            '<div style="text-align:right"><span class="a1-mut">'+curTxt+' / '+(x.direction==='max'?'≤':'≥')+x.threshold+'</span><br>'+
+            '<span style="color:'+s[1]+';font-weight:700;font-size:12px">'+s[0]+'</span></div></div>';
+        }).join('');
+        if (skillRows) sectionC = skillRows;
+      }
+
+      // ---- D. Six Hard Gates — an honest cross-reference, not a fabricated per-assessment
+      // computation: the existing Six Hard Gates tracker (js/app.js, this Measure tab) is a
+      // separate self-rated slider system, never derived from this assessment's own trial
+      // evidence. Unifying the two would be a domain-architecture change, out of R4-B's scope.
+      var sectionD = '<div class="a1-mut">'+(LANG==='en'
+        ? 'Stable 4.0 Readiness is tracked separately below on this page (Six Hard Gates), from self-rated module sliders — not derived from this assessment’s own trial evidence.'
+        : '稳定 4.0 就绪度在本页下方"六道硬门槛"单独跟踪（基于自评滑块），并非由本次评估的原始试验证据推算。')+'</div>';
+
+      // ---- E. Match Transfer (T10 stays architecturally distinct — unchanged from renderDetail) ----
+      var matchStatus = (match && match.match_transfer_score!=null)
+        ? ((LANG==='en'?'Transfer score ':'转化分 ')+match.match_transfer_score)
+        : (LANG==='en'?'Not Yet Validated':'尚未验证');
+      var sectionE = '<div><b>'+esc(TEST_LABEL('T10'))+'</b> · '+(match&&match.ue_per_game!=null?((LANG==='en'?'UE/game ':'每局UE ')+match.ue_per_game):(LANG==='en'?'UE not recorded':'UE 未录'))+' · '+matchStatus+'</div>'+
+        '<div class="a1-mut" style="margin-top:2px">'+(LANG==='en'?'Training performance alone does not validate match transfer.':'仅训练表现不能验证实战转化。')+'</div>'+
+        '<button class="btn" data-act="match" data-id="'+aid+'" style="margin-top:6px">'+(LANG==='en'?'Record Match Evidence':'记录实战证据')+'</button>';
+
+      // ---- F. Recommended Next Action — read-only from the existing Journey projection.
+      // Never computed locally; §16 fail-safe: unavailable Journey data -> neutral state, never a
+      // guessed CTA. ----
+      var homeDashboard = homeResult && homeResult.home_dashboard;
+      var na = homeDashboard && homeDashboard.next_action;
+      var focus = homeDashboard && homeDashboard.focus;
+      var recommendationLine = focus
+        ? ((LANG==='en'?'Recommendation: ':'训练建议：')+esc(focus.recommendation_code || focus.skill || (LANG==='en'?'available':'可用')))
+        : (LANG==='en'?'Recommendation not available yet.':'暂无可用的训练建议。');
+      var sectionF;
+      if (na && typeof PBHomeDashboardUI !== 'undefined') {
+        var ctaLabel = PBHomeDashboardUI.nextActionLabel(na.code, LANG==='en');
+        var route = PBHomeDashboardUI.routeForNextAction(na.code);
+        sectionF = '<div class="a1-mut" style="margin-bottom:6px">'+recommendationLine+'</div>'+
+          '<button class="btn solid" data-act="result-cta" data-route="'+esc(route||'')+'"'+(na.enabled?'':' disabled style="opacity:.5"')+'>'+esc(ctaLabel)+'</button>';
+      } else {
+        sectionF = '<div class="a1-mut" style="margin-bottom:6px">'+recommendationLine+'</div>'+
+          '<div class="a1-mut">'+(LANG==='en'?'Next action not available yet.':'暂无可用的下一步操作。')+'</div>';
+      }
+
+      function section(label, body) {
+        return '<div class="a1-row" style="border:none;flex-direction:column;align-items:flex-start;padding:10px 0"><div class="a1-h" style="font-size:13px;margin-bottom:4px">'+label+'</div>'+body+'</div>';
+      }
+
+      h('<div class="a1-h"><button class="btn" data-act="open" data-id="'+aid+'" style="padding:4px 10px">'+(LANG==='en'?'‹ Back':'‹ 返回')+'</button> &nbsp; '+(LANG==='en'?'Assessment Result':'评估结果')+'</div>'+
+        sectionA +
+        section(LANG==='en'?'Overall Assessment Result':'总体评估结果', sectionB) +
+        section(LANG==='en'?'Skill Results':'技能结果', sectionC) +
+        section(LANG==='en'?'Six Hard Gates':'六道硬门槛', sectionD) +
+        section(LANG==='en'?'Match Transfer':'实战转化', sectionE) +
+        section(LANG==='en'?'Recommended Next Action':'建议下一步', sectionF));
+    }).catch(function (e) { el.innerHTML = '<div class="a1-mut">'+(LANG==='en'?'Result failed: ':'结果加载失败：')+esc(e.message)+'</div>'; });
   }
 
   function renderMatch() {
@@ -362,6 +500,8 @@
     if(act==='open'){ui.assessment_id=node.getAttribute('data-id');ui.screen='detail';return render();}
     if(act==='export')return exportJSON(node.getAttribute('data-id'));
     if(act==='preview'){ui.assessment_id=node.getAttribute('data-id');ui.screen='preview';return render();}
+    if(act==='result'){ui.assessment_id=node.getAttribute('data-id');ui.screen='result';return render();}
+    if(act==='result-cta'){var route=node.getAttribute('data-route'); if(route && typeof go==='function') go(route); return;}
     if(act==='match'){ui.assessment_id=node.getAttribute('data-id');ui.screen='match';return render();}
     if(act==='save-match')return saveMatch(node.getAttribute('data-id'));
     if(act==='del-asm')return delAssessment(node.getAttribute('data-id'));

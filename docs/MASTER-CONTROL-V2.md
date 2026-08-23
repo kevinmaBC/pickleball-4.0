@@ -237,23 +237,31 @@ Status:
 ARCHITECTURE + DESIGN FROZEN
 
 POST-S11-R4-A
+Status: CLOSED / ACCEPTED
+Acceptance Commit:
+91178606c6cad4f33361b622f6226180fb1cf780
+GPT Independent QA: PASS
+Manual UAT: PASS
+Full Regression: 51/51 PASS
+
+POST-S11-R4-B
 Status:
 IMPLEMENTATION IN PROGRESS
 Baseline:
-c523a23346204309f594926aadee607bb2306809
+91178606c6cad4f33361b622f6226180fb1cf780
 Scope:
-Assessment UX productization — presentation/UX only.
-Translates engineering-oriented Assessment UI (T01-T10
-internal IDs, raw sampling counters, assessment_id/tier
-labels, provisional composite score) into player-oriented
-language and progress semantics, while preserving all
-existing raw evidence data, internal IDs, identity
-(player_id), persistence, Readiness logic, and fail-safe
-rules (partial evidence != official rating / validated
-level / recommendation / prescription / Development Cycle).
-No S9/S10 engine changes, no Journey/HOME domain logic
-changes, no DB schema changes. DB_VERSION unchanged (5),
-stores unchanged (18/18).
+Assessment completion / result presentation — presentation/
+interpretation only. Player-facing completion states (Not
+Started / In Progress / Complete / Result Ready), a Result
+Summary (completion, provisional score, skill results, Six
+Hard Gates, Match Transfer, next action), FOUNDATION relabeled
+as Assessment Stage (not Level), legacy "Measure · 4.0 KPI"
+title replaced. All derived from existing accepted sources
+only (PBMetrics/PBPreview/computeKPI/Journey next_action) —
+no new rating, recommendation, prescription, journey, or
+match-transfer logic. No S9/S10 engine changes, no Journey/
+HOME domain logic changes, no DB schema changes. DB_VERSION
+unchanged (5), stores unchanged (18/18).
 ```
 
 S7 and S8 acceptance commit SHAs were confirmed directly from local Git

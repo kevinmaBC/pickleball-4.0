@@ -202,7 +202,9 @@ test('R4A-T08: Live Match feed-mode note explicitly distinguishes it from Match 
 test('R4A-T09: the composite/provisional score display carries a non-official disclaimer', function () {
   var compositeBlock = /<div class="composite">[\s\S]*?<\/div>\s*<\/div>/.exec(HTML);
   assert.ok(compositeBlock, 'the .composite score block must still exist in index.html');
-  assert.ok(/Provisional — not a validated level/.test(compositeBlock[0]), 'the composite score block must carry a "Provisional — not a validated level" disclaimer');
+  // POST-S11-R4-B (§7) refined this disclaimer's exact wording to explicitly say "Provisional
+  // Assessment Score" — a superseding, in-scope wording change, not a weakening of this check.
+  assert.ok(/Provisional Assessment Score — not a validated level/.test(compositeBlock[0]), 'the composite score block must carry a "Provisional Assessment Score — not a validated level" disclaimer');
   // Regression: the underlying computeKPI() formula/DOM write is untouched (same literal value
   // tests/pre-s7-ui-regression.test.js already locks in for a clean STATE).
   assert.ok(fs.readFileSync(path.join(ROOT, 'js', 'app.js'), 'utf8').indexOf("document.getElementById('k-score').innerHTML=score+'<small>/100</small>'") !== -1, 'computeKPI() DOM write is unchanged');

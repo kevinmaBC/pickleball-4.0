@@ -657,8 +657,8 @@
   <!-- ========== 测 MEASURE ========== -->
   <section class="view" id="v-measure">
     <div class="eyebrow">03 · Measure</div>
-    <h2 class="sec" data-i18n="measure.h2">测 · 4.0 KPI</h2>
-    <p class="sec-sub" data-i18n-html="measure.sub">10 模块加权综合分（满分 100）+ 水平判定 + 六道硬门槛。拖动滑块填入每场录像统计的当前%。<span class="en">Composite KPI Dashboard</span></p>
+    <h2 class="sec" data-i18n="measure.h2">测 · 球员评估</h2>
+    <p class="sec-sub" data-i18n-html="measure.sub">技能评估、KPI 追踪与稳定 4.0 就绪度。<span class="en">Skill assessment, KPI tracking, and Stable 4.0 readiness.</span></p>
     <!-- ===== S1 · V2.3.1 Assessment Data Core ===== -->
     <div class="card" id="a1-root" style="margin:14px 0 18px">
       <div class="eyebrow" style="margin-bottom:8px">S1 · Assessment Data Core</div>
@@ -667,9 +667,9 @@
 
     <div class="composite">
       <div class="big" id="k-score">0<small>/100</small></div>
-      <div class="lvl"><span data-i18n-html="measure.levelLabel">当前水平 <span class="en">Level</span></span><b id="k-level">基础需加强</b></div>
-      <!-- POST-S11-R4-A (§10): static disclaimer only — computeKPI()/levelOf() math untouched. -->
-      <div style="font-size:12px;color:var(--muted);margin-top:6px">仅供参考 · 非官方评级 <span class="en">Provisional — not a validated level</span></div>
+      <div class="lvl"><span data-i18n-html="measure.levelLabel">评估阶段 <span class="en">Assessment Stage</span></span><b id="k-level">基础需加强</b></div>
+      <!-- POST-S11-R4-A/R4-B: static disclaimer only — computeKPI()/levelOf() math untouched. -->
+      <div style="font-size:12px;color:var(--muted);margin-top:6px" id="k-score-disclaimer">仅供参考 · 非官方评级 <span class="en">Provisional Assessment Score — not a validated level</span></div>
     </div>
 
     <div class="card" id="modules"></div>

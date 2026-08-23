@@ -219,12 +219,12 @@ function renderGates(){
   const curLabel = LANG==='en' ? 'current' : '当前';
   ['kpi-gates','home-gates'].forEach(gid=>{
     const box=document.getElementById(gid);box.innerHTML='';
-    let allOk=true;
+    let allOk=true, okCount=0;
     GATES.forEach(g=>{
       let ok,cur,thr,curTxt;
       if(g.ue){cur=UE_PER;ok=UE_PER<=5;thr=LANG==='en'?(g.thrEn||g.thr):g.thr;curTxt=LANG==='en'?String(UE_PER):(UE_PER+' 次');}
       else{cur=MODULES[g.mod].cur;ok=cur>=g.min;thr=g.thr;curTxt=cur+'%';}
-      if(!ok)allOk=false;
+      if(ok)okCount++; else allOk=false;
       const el=document.createElement('div');
       el.className='gate '+(ok?'ok':(cur>0||g.ue?'no':''));
       const lab=LANG==='en'?g.en:g.lab;
@@ -232,9 +232,13 @@ function renderGates(){
       box.appendChild(el);
     });
     const vid=gid==='kpi-gates'?'kpi-verdict':'home-verdict';
-    document.getElementById(vid).innerHTML= allOk
+    // POST-S11-R4-B (§11): "X of 6 gates currently meet the benchmark" count — presentation only,
+    // added to the existing verdict. Gate thresholds/math/allOk logic are unchanged.
+    const countLine = '<div style="font-size:12px;font-weight:400;margin-top:4px">'+
+      (LANG==='en' ? (okCount+' of '+GATES.length+' gates currently meet the benchmark') : (okCount+' / '+GATES.length+' 项门槛目前达标'))+'</div>';
+    document.getElementById(vid).innerHTML= (allOk
       ? (LANG==='en' ? '✅ All 6 gates green · Certified Stable 4.0' : '✅ 六门槛全绿 · 已达稳定 4.0<span class="en">CERTIFIED STABLE 4.0</span>')
-      : (LANG==='en' ? '⛔ Not all green yet · Clear the red items for Stable 4.0' : '⛔ 尚未全绿 · 补齐红色项才算稳定 4.0<span class="en">GATES NOT ALL GREEN</span>');
+      : (LANG==='en' ? '⛔ Not all green yet · Clear the red items for Stable 4.0' : '⛔ 尚未全绿 · 补齐红色项才算稳定 4.0<span class="en">GATES NOT ALL GREEN</span>')) + countLine;
     document.getElementById(vid).style.color=allOk?'var(--pass)':'var(--fail)';
   });
 }
