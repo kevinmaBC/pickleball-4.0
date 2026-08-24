@@ -334,3 +334,20 @@
 #history-explainability-app .he-event:first-child{border-top:none}
 #history-explainability-app .he-event-row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 #history-explainability-app .he-detail{font-family:var(--mono);font-size:10.5px;margin-top:3px;word-break:break-all}
+
+/* ===== PB-APP-RC1.1 · Version / Update / Install / E-Book access (av-) ===== */
+#about-version-root .av-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px;flex-wrap:wrap}
+#about-version-root .av-row:last-of-type{border-bottom:none}
+#about-version-root .av-row b{font-family:var(--mono);font-size:12.5px;color:var(--ink);text-align:right}
+#about-version-root .av-status{font-size:13px;font-weight:700;margin:10px 0;padding:8px 10px;border-radius:8px;background:#eef2ee;color:var(--ink)}
+#about-version-root .av-status:empty{display:none}
+#about-version-root .av-status-latest{background:#f1fbf5;color:var(--pass)}
+#about-version-root .av-status-update-available{background:#fff8e8;color:#7a5c00}
+#about-version-root .av-status-offline,#about-version-root .av-status-check-failed{background:#fdecec;color:var(--fail)}
+#about-version-root .av-status-unsupported{background:#eef2ee;color:var(--muted)}
+#about-version-root .av-install-block{margin-bottom:12px;font-size:12.5px;line-height:1.6}
+#about-version-root .av-install-block b{display:block;font-size:13px;margin-bottom:3px}
+#about-version-root .av-install-block .en{display:block;color:var(--muted)}
+#about-version-root .av-url{font-family:var(--mono);font-size:11px;color:var(--muted);word-break:break-all;margin:8px 0}
+#about-version-root .av-qr{width:140px;height:140px;display:block;margin:6px 0;border:1px solid var(--line);border-radius:10px;padding:8px;background:#fff}
+#about-version-root button[disabled]{opacity:.5;cursor:not-allowed}

@@ -51,21 +51,32 @@
  *       引擎 (js/preview.js) 并投影为 assessment_context；不建 Development
  *       Cycle，不写 validated_training_level，不重跑 S9 决策引擎。无新增
  *       store，DB_VERSION 保持不变，纯粹是脚本加载清单的增量新增）。
+ *   -> pb40-v30（PB-APP-RC1.1：新增 js/version-update.js（只读的 Version &
+ *       Update Check —— RUNNING_RELEASE/compareReleases/checkForUpdate 纯
+ *       函数 + 一次性、防循环的 update-and-restart 流程）与
+ *       data/app-release.json（发布元数据，供检查更新按钮以
+ *       cache:"no-store" 拉取）。新增 message 监听器仅用于转发页面发来的
+ *       SKIP_WAITING，激活等待中的 Service Worker；不改变既有 fetch 缓存
+ *       策略。无判定/评分/处方/训练/比赛/进度/复测/Journey 逻辑改动，无新增
+ *       /删除/重命名 store，DB_VERSION 保持不变）。
  * 策略（见 docs/SW-CACHE-POLICY.md 完整说明）：
  *   - 导航(HTML) 与 代码/数据资源(js/css/json)：network-first
  *     （在线时始终取最新；离线才回退缓存 —— 陈旧内容不会被静默长期提供）。
  *   - 其它静态资源（图标等，内容极少变化）：stale-while-revalidate。
  *   - activate 阶段清除所有非当前 CACHE 版本（陈旧缓存自动移除）。 */
-const CACHE='pb40-v29';
+const CACHE='pb40-v30';
 const CORE=[
   './','./index.html','./manifest.json',
   './css/app.css',
-  './js/i18n.js','./js/namespace.js','./js/config-loader.js','./js/storage.js','./js/metrics.js','./js/review-engine.js','./js/trend-engine.js','./js/retest-engine.js','./js/match-observation-engine.js','./js/performance-analysis-engine.js','./js/diagnosis-engine.js','./js/recommendation-priority-engine.js','./js/training-prescription-engine.js','./js/dashboard-integration-engine.js','./js/workflow-integration-engine.js','./js/prescription-workflow-engine.js','./js/session-evidence-engine.js','./js/session-evidence-persistence.js','./js/cycle-baseline-engine.js','./js/progress-tracking-engine.js','./js/reassessment-engine.js','./js/progress-reassessment-persistence.js','./js/assessment-journey-bridge.js','./js/product-journey-orchestrator.js','./js/home-dashboard-adapter.js','./js/home-priority-dashboard-ui.js','./js/guided-training-action-controller.js','./js/guided-training-ui.js','./js/progress-reassessment-adapter.js','./js/progress-reassessment-ui.js','./js/history-explainability-adapter.js','./js/history-explainability-ui.js','./js/decision-cycle-registration-controller.js','./js/review-ui.js','./js/session-execution-engine.js','./js/training-readiness-engine.js','./js/training-ui.js','./js/preview.js','./js/app.js','./js/assessment.js',
-  './data/versions.json','./data/test_definitions_v2_3_1.json','./data/assessment_tiers_v2_3_1.json','./data/level_gates_v2_3_1.json','./data/evidence_confidence_v2_3_1.json',
+  './js/i18n.js','./js/namespace.js','./js/config-loader.js','./js/version-update.js','./js/storage.js','./js/metrics.js','./js/review-engine.js','./js/trend-engine.js','./js/retest-engine.js','./js/match-observation-engine.js','./js/performance-analysis-engine.js','./js/diagnosis-engine.js','./js/recommendation-priority-engine.js','./js/training-prescription-engine.js','./js/dashboard-integration-engine.js','./js/workflow-integration-engine.js','./js/prescription-workflow-engine.js','./js/session-evidence-engine.js','./js/session-evidence-persistence.js','./js/cycle-baseline-engine.js','./js/progress-tracking-engine.js','./js/reassessment-engine.js','./js/progress-reassessment-persistence.js','./js/assessment-journey-bridge.js','./js/product-journey-orchestrator.js','./js/home-dashboard-adapter.js','./js/home-priority-dashboard-ui.js','./js/guided-training-action-controller.js','./js/guided-training-ui.js','./js/progress-reassessment-adapter.js','./js/progress-reassessment-ui.js','./js/history-explainability-adapter.js','./js/history-explainability-ui.js','./js/decision-cycle-registration-controller.js','./js/review-ui.js','./js/session-execution-engine.js','./js/training-readiness-engine.js','./js/training-ui.js','./js/preview.js','./js/app.js','./js/assessment.js',
+  './data/versions.json','./data/test_definitions_v2_3_1.json','./data/assessment_tiers_v2_3_1.json','./data/level_gates_v2_3_1.json','./data/evidence_confidence_v2_3_1.json','./data/app-release.json',
   './icon-192.png','./icon-512.png','./icon-maskable-512.png','./apple-touch-icon.png'
 ];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).catch(()=>{}));});
 self.addEventListener('activate',e=>{e.waitUntil((async()=>{const ks=await caches.keys();await Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)));await self.clients.claim();})());});
+// PB-APP-RC1.1：页面在“更新并重新启动”流程中请求跳过等待，激活新 Service Worker；
+// 不清除任何 Cache Storage / IndexedDB / localStorage，只做单次 skipWaiting。
+self.addEventListener('message',e=>{if(e.data&&e.data.type==='SKIP_WAITING')self.skipWaiting();});
 self.addEventListener('fetch',e=>{const req=e.request;if(req.method!=='GET')return;
   const url=new URL(req.url);
   const isNav = req.mode==='navigate' || (req.headers.get('accept')||'').includes('text/html');

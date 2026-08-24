@@ -815,6 +815,62 @@
     </div>
   </section>
 
+  <!-- ===== PB-APP-RC1.1 · Version / Update / Install / E-Book access ===== -->
+  <div id="about-version-root">
+    <details class="acc" id="about-version-acc">
+      <summary><span>关于 / About &amp; Version</span><span class="chev">▸</span></summary>
+      <div class="body">
+
+        <div class="card" style="margin-top:10px">
+          <div style="font-weight:700;margin-bottom:8px">APP版本 / App Version</div>
+          <div class="av-row"><span>APP版本 / App Version</span><b>PB-APP-RC1.1</b></div>
+          <div class="av-row"><span>数据与规则版本 / Rules &amp; Data Versions</span><b>Schema 2.3.1 · Benchmark 2.1.1 · Protocol 2.2.1</b></div>
+          <div class="av-row"><span>Cache / 缓存标识</span><b id="av-cache">pb40-v30</b></div>
+          <div class="av-row"><span>最近检查时间 / Last Checked</span><b id="av-last-checked">—</b></div>
+          <div id="av-status" class="av-status"></div>
+          <button class="btn solid" id="av-check-btn" onclick="PBVersionUpdateUI.check()">检查更新 / Check for Updates</button>
+          <div id="av-update-actions" style="display:none;margin-top:8px">
+            <button class="btn solid" id="av-update-btn" onclick="PBVersionUpdateUI.applyUpdate()">更新并重新启动 / Update and Restart</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="font-weight:700;margin-bottom:10px">安装到设备 / Install App</div>
+          <div class="av-install-block">
+            <b>iPhone / iPad</b>
+            使用Safari打开官方网站 → 分享 → 添加到主屏幕 → 开启"作为网页App打开" → 添加
+            <span class="en">Open the official website in Safari → Share → Add to Home Screen → enable "Open as Web App" → Add</span>
+          </div>
+          <div class="av-install-block">
+            <b>Android</b>
+            使用Chrome打开官方网站 → 右上角菜单 → 安装应用或添加到主屏幕
+            <span class="en">Open the official website in Chrome → menu → Install app or Add to Home screen</span>
+          </div>
+          <div class="av-install-block">
+            <b>Windows / Mac · Chrome or Edge</b>
+            点击地址栏安装图标，或从浏览器菜单选择安装应用
+            <span class="en">Select the install icon in the address bar, or install the app from the browser menu</span>
+          </div>
+          <div class="av-install-block" style="margin-bottom:0">
+            <b>Mac Safari</b>
+            文件 → 添加到程序坞
+            <span class="en">File → Add to Dock</span>
+          </div>
+          <div class="av-url" style="margin-top:10px">Official APP URL: https://kevinmabc.github.io/pickleball-4.0/</div>
+        </div>
+
+        <div class="card" style="margin-bottom:0">
+          <div style="font-weight:700;margin-bottom:8px">正式电子书 / Official E-Book</div>
+          <p style="font-size:12.5px;color:var(--muted);margin-bottom:8px">扫码或点击打开《Pickleball 3.0–5.0 Training System》电子书主页。<span class="en">Scan or tap to open the Pickleball 3.0–5.0 Training System e-book landing page.</span></p>
+          <img class="av-qr" src="./assets/qr/qr-ebook.svg" alt="QR code linking to the permanent Pickleball 3.0-5.0 E-Book landing page at https://kevinmabc.github.io/pickleball-4.0/ebook/" width="140" height="140">
+          <div class="av-url">https://kevinmabc.github.io/pickleball-4.0/ebook/</div>
+          <a class="btn" href="./ebook/" target="_blank" rel="noopener" style="display:inline-block;margin-top:6px">打开电子书 / Open E-Book</a>
+        </div>
+
+      </div>
+    </details>
+  </div>
+
   <footer class="foot">
     Drills Path from 3.0 to 5.0<br>
     <span data-i18n-html="shell.footer">整理 by Kevin Ma　|　所有记录仅保存在本设备浏览器 · 请定期"导出备份"<br>规则依据 The Dink MiLP 官方手册 2025-10-21</span>
@@ -853,6 +909,7 @@
 
 <script src="./js/i18n.js"></script>
 <script src="./js/namespace.js"></script>
+<script src="./js/version-update.js"></script>
 <script src="./js/config-loader.js"></script>
 <script src="./js/storage.js"></script>
 <script src="./js/metrics.js"></script>
@@ -895,6 +952,83 @@
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 }
+</script>
+<script>
+/* PB-APP-RC1.1 · About/Version panel wiring — DOM + Service Worker glue only;
+ * all comparison/state logic lives in js/version-update.js (PBVersionUpdate). */
+(function(){
+  function $(id){ return document.getElementById(id); }
+  var STATUS_TEXT = {
+    LATEST: '当前已是最新版 / You’re using the latest version',
+    UPDATE_AVAILABLE: '发现新版本 / A new version is available',
+    OFFLINE: '离线，暂时无法检查更新 / Offline — unable to check for updates',
+    CHECK_FAILED: '检查失败，请稍后重试 / Check failed — please try again',
+    UNSUPPORTED: '当前浏览器不支持自动检查更新 / Update check isn’t supported in this browser'
+  };
+  var LAST_KEY = 'pb40_last_checked';
+
+  function fmtTime(ts){
+    if(!ts) return '—';
+    try{ return new Date(ts).toLocaleString(); }catch(e){ return '—'; }
+  }
+  function paintStatus(state){
+    var el=$('av-status'); if(!el) return;
+    el.textContent = STATUS_TEXT[state] || '';
+    el.className = 'av-status' + (state ? ' av-status-' + state.toLowerCase().replace(/_/g,'-') : '');
+    var actions = $('av-update-actions');
+    if(actions) actions.style.display = (state === 'UPDATE_AVAILABLE') ? 'block' : 'none';
+  }
+  function paintLastChecked(ts){
+    var el = $('av-last-checked');
+    if(el) el.textContent = fmtTime(ts);
+  }
+  function getRegistration(){
+    return ('serviceWorker' in navigator) ? navigator.serviceWorker.getRegistration() : Promise.resolve(undefined);
+  }
+
+  function check(){
+    var btn = $('av-check-btn');
+    if(btn) btn.disabled = true;
+    getRegistration().then(function(reg){
+      return window.PBVersionUpdate.checkForUpdate({ swRegistration: reg });
+    }).then(function(result){
+      var ts = result.checkedAt || Date.now();
+      try{ localStorage.setItem(LAST_KEY, String(ts)); }catch(e){}
+      paintLastChecked(ts);
+      paintStatus(result.state);
+    }).catch(function(){
+      paintStatus('CHECK_FAILED');
+    }).then(function(){
+      if(btn) btn.disabled = false;
+    });
+  }
+
+  function applyUpdate(){
+    var btn = $('av-update-btn');
+    if(btn) btn.disabled = true;
+    getRegistration().then(function(reg){
+      if(!reg || !reg.waiting){
+        alert('请手动关闭并重新打开 APP 以完成更新。\nPlease close and reopen the app to finish updating.');
+        if(btn) btn.disabled = false;
+        return;
+      }
+      return window.PBVersionUpdate.applyUpdateAndRestart({ swRegistration: reg, win: window });
+    }).catch(function(){
+      if(btn) btn.disabled = false;
+    });
+  }
+
+  function initDisplay(){
+    if(window.PBVersionUpdate) window.PBVersionUpdate.clearReloadGuard(window);
+    var last = null;
+    try{ last = Number(localStorage.getItem(LAST_KEY)) || null; }catch(e){}
+    paintLastChecked(last);
+  }
+
+  window.PBVersionUpdateUI = { check: check, applyUpdate: applyUpdate };
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initDisplay);
+  else initDisplay();
+})();
 </script>
 </body>
 </html>

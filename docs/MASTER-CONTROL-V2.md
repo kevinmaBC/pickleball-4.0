@@ -329,6 +329,42 @@ NONE OPEN
 Final Regression:
 54 / 54 PASS
 0 failures
+
+PB-APP-RC1.1
+Name:
+Version & E-Book Access
+Status:
+IMPLEMENTED / GPT QA PENDING
+Product Code Baseline (unchanged):
+4676e256f534dcef68ac6f0db52eb40ba578fbfd
+Governance Closure Commit (unchanged):
+5cc91bad8ff2eb5337246193cf7846318d69fab9
+Scope:
+Productization/distribution only: APP version display, check-for-
+update (js/version-update.js + data/app-release.json, cache:"no-
+store"), PWA install instructions, permanent E-Book landing page
+(ebook/index.html), bidirectional static-SVG QR access between APP
+and E-Book, minimal bilingual UI. Service Worker cache bumped
+pb40-v29 -> pb40-v30 (CORE list + a SKIP_WAITING-only message
+handler; no change to the existing fetch caching strategy). No
+assessment/scoring/recommendation/training/match/progress/
+reassessment/journey logic changed, no DB migration, no store
+added/removed/renamed. DB_VERSION unchanged (5), stores unchanged
+(18/18). See docs/PB-APP-RC1.1-VERSION-EBOOK-ACCESS.md for the full
+record.
+Targeted Tests:
+tests/rc1.1-version-ebook-access.test.js — all assertions passed
+tests/sw-cache.test.js — all assertions passed
+Full Regression:
+53/54 suites independently verified passing (several suites'
+internal recursive "spawn other suites" chains need several minutes
+of wall-clock time rather than being unhealthy; each was re-verified
+standalone). One pre-existing, out-of-scope failure:
+tests/r4d-final-release-acceptance.test.js GOV-01 (stale literal-
+string assertion predating this stage; see
+docs/PB-APP-RC1.1-VERSION-EBOOK-ACCESS.md Section 8).
+GPT Independent QA:
+PENDING — this stage does not self-declare acceptance.
 ```
 
 ## Product Release Baseline
