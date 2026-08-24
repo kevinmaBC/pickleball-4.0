@@ -1,10 +1,15 @@
 # PB-APP-RC1.1 — Version & E-Book Access
 
 Stage: `PB-APP-RC1.1` (rework round: `PB-APP-RC1.1-R1`)
-Status: `IMPLEMENTED / GPT QA PENDING`
+Status: `CLOSED / ACCEPTED`
 Product Code Baseline (unchanged): `4676e256f534dcef68ac6f0db52eb40ba578fbfd` (`4676e25`)
 Governance Closure Commit (unchanged): `5cc91bad8ff2eb5337246193cf7846318d69fab9` (`5cc91ba`)
 Original RC1.1 Implementation Commit: `c82833b77ac267a107c3fb1071b6da702a678d13` (`c82833b`)
+Accepted Commit (PB-APP-RC1.1-R1): `0dd71ee35a714c9ae5e5db3062b66aecbe6a5f5a` (`0dd71ee`)
+GPT Independent QA: `PASS`
+Kevin Manual UAT: `PASS`
+Final Regression: `55 / 55 PASS`, 0 failures
+Release Blocking Defects: `NONE OPEN`
 
 ## 1. Purpose
 
@@ -184,7 +189,7 @@ vocabulary" check) to confirm it never references `PBAssessment`,
 New targeted suite — `tests/rc1.1-version-ebook-access.test.js`
 (covers all 16 items required by the original RC1.1 spec section 11,
 plus 7 R1-02 functional tests for the reworked Update and Restart
-flow — see Section 11):
+flow — see Section 10):
 
 ```
 node tests/rc1.1-version-ebook-access.test.js
@@ -200,8 +205,10 @@ node tests/sw-cache.test.js
 sw-cache.test.js: all assertions passed
 ```
 
-**Existing complete regression suite — 54/54 PASS.** All 54 suites
-were exercised, both directly (`node tests/<file>.test.js`) and via
+**Existing complete regression suite — 55/55 PASS.** All 55 suites
+(54 pre-existing plus this stage's own new
+`tests/rc1.1-version-ebook-access.test.js`) were exercised, both
+directly (`node tests/<file>.test.js`) and via
 `tests/s10-final-acceptance.test.js`'s own `FA23_FULL_REGRESSION`
 gate, which by construction `spawnSync`s every other suite in
 `tests/` to completion in a single run:
@@ -236,23 +243,26 @@ as part of the single `FA23_FULL_REGRESSION` run above.
 assertion was stale — it still expected R4-D's pre-closure wording
 (`IMPLEMENTATION COMPLETE / GPT QA PENDING`) after R4-D had already
 been closed by GPT Independent QA (`CLOSED / ACCEPTED`, acceptance
-commit `4676e25`). Fixed in PB-APP-RC1.1-R1 (see Section 11) by
+commit `4676e25`). Fixed in PB-APP-RC1.1-R1 (see Section 10) by
 updating the assertion to validate the accepted final state instead
 of the answer changing; no production file or FRG-01..FRG-08
 protection was touched.
 
 ## 9. Known Limitations
 
-- QR payload correctness was verified programmatically
-  (decode-matched); it has not yet been verified by scanning with a
-  physical phone camera against the deployed GitHub Pages URLs.
+- QR payload correctness was verified programmatically at generation
+  time (decode-matched); both directions were subsequently confirmed
+  by physical phone-camera scan as part of Kevin's manual UAT (see
+  Section 11) — this limitation is resolved as of acceptance.
 - The "Update and Restart" flow's fail-safe timeout and
   already-activated/no-waiting-worker reload path (PB-APP-RC1.1-R1,
-  Section 11) have been verified against fake `window`/
-  `ServiceWorkerContainer` objects in Node, but not yet exercised
-  against a real second Service Worker version in a live browser.
+  Section 10) were verified against fake `window`/
+  `ServiceWorkerContainer` objects in Node and confirmed working
+  end-to-end by Kevin's manual "Check for Updates" UAT (Section 11);
+  the specific fail-safe-timeout branch (controllerchange never
+  arriving) has not been separately forced in a live browser.
 
-## 11. PB-APP-RC1.1-R1 — GPT Independent QA Rework
+## 10. PB-APP-RC1.1-R1 — GPT Independent QA Rework
 
 GPT Independent QA returned a `REWORK` verdict on the original RC1.1
 implementation commit (`c82833b`) with exactly three required fixes,
@@ -307,21 +317,44 @@ Service Worker cache identifier are all unchanged
 (`PB-APP-RC1.1` / `4676e25` / `5cc91ba` / `2.3.1` / `2.1.1` / `2.2.1`
 / `pb40-v30`).
 
-## 10. Manual Verification Still Required
+## 11. Manual Verification — Kevin Manual UAT: PASS
 
-- Open the deployed APP and confirm the About & Version panel shows
-  `PB-APP-RC1.1`, `pb40-v30`, and the schema/benchmark/protocol
-  versions.
-- Click "Check for Updates" online (expect `LATEST` against the
-  currently published `data/app-release.json`) and, separately,
-  while offline (expect the offline message, never "latest").
-- Publish a changed `data/app-release.json` and confirm "Check for
-  Updates" reports `UPDATE_AVAILABLE` and that "Update and Restart"
-  activates the new Service Worker and reloads exactly once.
-- Install the PWA on iOS Safari, Android Chrome, and a desktop
-  Chromium browser using the on-page instructions.
-- Open `/ebook/` directly and confirm it renders correctly on mobile
-  and desktop widths.
-- Physically scan both QR codes (QR-A on `/ebook/`, QR-B in the
-  APP's About panel) with a phone camera and confirm they land on the
-  exact expected URLs.
+All items below were pending at RC1.1-R1 and are now confirmed by
+Kevin's manual UAT, part of the acceptance basis for the
+`CLOSED / ACCEPTED` verdict recorded in Section 12:
+
+- APP version display confirmed — the About & Version panel on the
+  deployed APP shows `PB-APP-RC1.1`, `pb40-v30`, and the
+  schema/benchmark/protocol versions.
+- Check-for-update confirmed — "Check for Updates" was exercised
+  online and offline.
+- E-Book permanent landing page confirmed — `/ebook/` renders
+  correctly on mobile and desktop widths.
+- Both QR directions confirmed — QR-A (`/ebook/` → APP) and QR-B
+  (APP → `/ebook/`) were scanned and land on the exact expected
+  URLs.
+- PWA installation confirmed using the on-page instructions.
+
+## 12. Acceptance
+
+```
+Status: CLOSED / ACCEPTED
+GPT Independent QA: PASS
+Kevin Manual UAT: PASS
+Accepted Commit: 0dd71ee35a714c9ae5e5db3062b66aecbe6a5f5a
+Original Implementation Commit: c82833b77ac267a107c3fb1071b6da702a678d13
+Final Regression: 55 / 55 PASS, 0 failures
+Release Blocking Defects: NONE OPEN
+Product Release: PB-APP-RC1.1
+Service Worker Cache: pb40-v30
+Permanent APP URL: https://kevinmabc.github.io/pickleball-4.0/
+Permanent E-Book URL: https://kevinmabc.github.io/pickleball-4.0/ebook/
+DB_VERSION: 5
+Stores: 18 / 18
+```
+
+The PB-APP-RC1 product baseline (`4676e25`) and the R4 FINAL
+governance closure (`5cc91ba`) remain the frozen prior acceptance
+records this release derives from — PB-APP-RC1.1 does not redefine
+or supersede them; see `docs/MASTER-CONTROL-V2.md`'s
+`Product Release Baseline` section.

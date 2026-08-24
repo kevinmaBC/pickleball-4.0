@@ -334,11 +334,15 @@ PB-APP-RC1.1
 Name:
 Version & E-Book Access
 Status:
-IMPLEMENTED / GPT QA PENDING
+CLOSED / ACCEPTED
 Product Code Baseline (unchanged):
 4676e256f534dcef68ac6f0db52eb40ba578fbfd
 Governance Closure Commit (unchanged):
 5cc91bad8ff2eb5337246193cf7846318d69fab9
+Original Implementation Commit:
+c82833b77ac267a107c3fb1071b6da702a678d13
+Accepted Commit (PB-APP-RC1.1-R1):
+0dd71ee35a714c9ae5e5db3062b66aecbe6a5f5a
 Scope:
 Productization/distribution only: APP version display, check-for-
 update (js/version-update.js + data/app-release.json, cache:"no-
@@ -350,21 +354,37 @@ handler; no change to the existing fetch caching strategy). No
 assessment/scoring/recommendation/training/match/progress/
 reassessment/journey logic changed, no DB migration, no store
 added/removed/renamed. DB_VERSION unchanged (5), stores unchanged
-(18/18). See docs/PB-APP-RC1.1-VERSION-EBOOK-ACCESS.md for the full
+(18/18). R1 rework closed the three GPT-identified QA gaps: repaired
+the stale R4-D governance test assertion, made Update and Restart
+reliable when the Service Worker activates a new version without
+ever leaving registration.waiting populated, and replaced the
+release_commit placeholder with the original implementation commit
+c82833b. See docs/PB-APP-RC1.1-VERSION-EBOOK-ACCESS.md for the full
 record.
 Targeted Tests:
 tests/rc1.1-version-ebook-access.test.js — all assertions passed
+tests/r4d-final-release-acceptance.test.js — all assertions passed
 tests/sw-cache.test.js — all assertions passed
-Full Regression:
-53/54 suites independently verified passing (several suites'
-internal recursive "spawn other suites" chains need several minutes
-of wall-clock time rather than being unhealthy; each was re-verified
-standalone). One pre-existing, out-of-scope failure:
-tests/r4d-final-release-acceptance.test.js GOV-01 (stale literal-
-string assertion predating this stage; see
-docs/PB-APP-RC1.1-VERSION-EBOOK-ACCESS.md Section 8).
+Final Regression:
+55 / 55 PASS
+0 failures
+Release Blocking Defects:
+NONE OPEN
+Product Release:
+PB-APP-RC1.1
+Service Worker Cache:
+pb40-v30
+Permanent APP URL:
+https://kevinmabc.github.io/pickleball-4.0/
+Permanent E-Book URL:
+https://kevinmabc.github.io/pickleball-4.0/ebook/
+Database:
+DB_VERSION = 5
+Stores = 18 / 18
 GPT Independent QA:
-PENDING — this stage does not self-declare acceptance.
+PASS
+Kevin Manual UAT:
+PASS
 ```
 
 ## Product Release Baseline
