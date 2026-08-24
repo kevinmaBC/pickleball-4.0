@@ -966,6 +966,7 @@ if('serviceWorker' in navigator){
     UNSUPPORTED: '当前浏览器不支持自动检查更新 / Update check isn’t supported in this browser'
   };
   var LAST_KEY = 'pb40_last_checked';
+  var lastCheckState = null; // last PBVersionUpdate.checkForUpdate() state, for applyUpdate()'s fallback path
 
   function fmtTime(ts){
     if(!ts) return '—';
@@ -995,8 +996,10 @@ if('serviceWorker' in navigator){
       var ts = result.checkedAt || Date.now();
       try{ localStorage.setItem(LAST_KEY, String(ts)); }catch(e){}
       paintLastChecked(ts);
+      lastCheckState = result.state;
       paintStatus(result.state);
     }).catch(function(){
+      lastCheckState = 'CHECK_FAILED';
       paintStatus('CHECK_FAILED');
     }).then(function(){
       if(btn) btn.disabled = false;
@@ -1007,12 +1010,13 @@ if('serviceWorker' in navigator){
     var btn = $('av-update-btn');
     if(btn) btn.disabled = true;
     getRegistration().then(function(reg){
-      if(!reg || !reg.waiting){
+      var updateAvailable = (lastCheckState === 'UPDATE_AVAILABLE');
+      if((!reg || !reg.waiting) && !updateAvailable){
         alert('请手动关闭并重新打开 APP 以完成更新。\nPlease close and reopen the app to finish updating.');
         if(btn) btn.disabled = false;
         return;
       }
-      return window.PBVersionUpdate.applyUpdateAndRestart({ swRegistration: reg, win: window });
+      return window.PBVersionUpdate.applyUpdateAndRestart({ swRegistration: reg, win: window, updateAvailable: updateAvailable });
     }).catch(function(){
       if(btn) btn.disabled = false;
     });

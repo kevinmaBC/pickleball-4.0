@@ -1,9 +1,10 @@
 # PB-APP-RC1.1 — Version & E-Book Access
 
-Stage: `PB-APP-RC1.1`
+Stage: `PB-APP-RC1.1` (rework round: `PB-APP-RC1.1-R1`)
 Status: `IMPLEMENTED / GPT QA PENDING`
 Product Code Baseline (unchanged): `4676e256f534dcef68ac6f0db52eb40ba578fbfd` (`4676e25`)
 Governance Closure Commit (unchanged): `5cc91bad8ff2eb5337246193cf7846318d69fab9` (`5cc91ba`)
+Original RC1.1 Implementation Commit: `c82833b77ac267a107c3fb1071b6da702a678d13` (`c82833b`)
 
 ## 1. Purpose
 
@@ -77,7 +78,7 @@ timestamp query param by the check-for-update flow):
   "product_release": "PB-APP-RC1.1",
   "product_baseline": "4676e25",
   "governance_baseline": "5cc91ba",
-  "release_commit": "PENDING_AT_RELEASE_COMMIT",
+  "release_commit": "c82833b77ac267a107c3fb1071b6da702a678d13",
   "sw_cache": "pb40-v30",
   "schema_version": "2.3.1",
   "benchmark_version": "2.1.1",
@@ -86,16 +87,19 @@ timestamp query param by the check-for-update flow):
 }
 ```
 
-`release_commit` is intentionally a documented placeholder rather
-than a fabricated self-referential SHA: the file that names the
-commit cannot know its own future commit hash before that commit is
-made. It should be updated to the real implementation commit SHA in
-a follow-up documentation-only edit once this stage's commit is
-known, or left as `PENDING_AT_RELEASE_COMMIT` until then — either
-way it is never treated as authoritative identity by the update
-check, which compares `product_release` / `sw_cache` /
-`schema_version` / `benchmark_version` / `protocol_version` only
-(see `js/version-update.js`'s `IDENTITY_FIELDS`).
+`release_commit` is `c82833b77ac267a107c3fb1071b6da702a678d13` — the
+original PB-APP-RC1.1 implementation commit (the one this document
+first shipped against), not this R1 QA-repair commit. It was left as
+a documented placeholder (`PENDING_AT_RELEASE_COMMIT`) at first
+because that commit could not know its own future SHA before it
+existed; it has now been filled in as a follow-up documentation
+edit (PB-APP-RC1.1-R1) once that commit was known. It is never
+treated as authoritative identity by the update check, which
+compares `product_release` / `sw_cache` / `schema_version` /
+`benchmark_version` / `protocol_version` only (see
+`js/version-update.js`'s `IDENTITY_FIELDS`) — so this field can be
+filled in without affecting `LATEST` / `UPDATE_AVAILABLE` comparison
+results.
 
 `js/version-update.js` bakes in the matching `RUNNING_RELEASE`
 constant for the code actually shipped, so a freshly deployed app
@@ -178,7 +182,9 @@ vocabulary" check) to confirm it never references `PBAssessment`,
 ## 8. Test Results
 
 New targeted suite — `tests/rc1.1-version-ebook-access.test.js`
-(covers all 16 items required by the RC1.1 spec section 11):
+(covers all 16 items required by the original RC1.1 spec section 11,
+plus 7 R1-02 functional tests for the reworked Update and Restart
+flow — see Section 11):
 
 ```
 node tests/rc1.1-version-ebook-access.test.js
@@ -194,64 +200,112 @@ node tests/sw-cache.test.js
 sw-cache.test.js: all assertions passed
 ```
 
-**Existing complete regression suite**: all 54 pre-existing suites
-were exercised directly (`node tests/<file>.test.js`). Several of
-this repository's suites recursively `spawnSync` other suites as part
-of their own "relevant accepted suites still pass unmodified" checks
-(a pattern that predates this stage — `tests/s10-final-acceptance.test.js`
-is the extreme case: its own `FA23_FULL_REGRESSION` gate spawns
-*every other* suite in `tests/`); at sufficient depth those chains
-take several minutes per root file purely from cumulative Node
-process-startup overhead (e.g. `r3b3-home-integration.test.js` alone
-took ~9m44s to complete on its own, unmodified). Every suite that was
-given enough wall-clock time completed with **all assertions
-passing**, including the deepest chains — `product-journey-
+**Existing complete regression suite — 54/54 PASS.** All 54 suites
+were exercised, both directly (`node tests/<file>.test.js`) and via
+`tests/s10-final-acceptance.test.js`'s own `FA23_FULL_REGRESSION`
+gate, which by construction `spawnSync`s every other suite in
+`tests/` to completion in a single run:
+
+```
+node tests/s10-final-acceptance.test.js
+s10-final-acceptance.test.js: all gates passed — ... FA23_FULL_REGRESSION
+```
+
+Several suites in this repository recursively `spawnSync` other
+suites as part of their own "relevant accepted suites still pass
+unmodified" checks (a pattern that predates this stage); at
+sufficient depth those chains take several minutes per root file
+purely from cumulative Node process-startup overhead (e.g.
+`r3b3-home-integration.test.js` alone takes ~9m44s standalone, and
+the full `FA23_FULL_REGRESSION` run — which serially exercises every
+one of those chains once each — takes on the order of tens of
+minutes). This is unmodified, pre-existing test architecture; no
+RC1.1/R1 change touched any file any of these suites inspects. Every
+suite, including the deepest chains (`product-journey-
 orchestrator.test.js`, `r3b3-home-integration.test.js`,
 `prescription-workflow-engine.test.js`, `workflow-integration-
 engine.test.js`, `match-observation-engine.test.js`, `dashboard-
 integration-engine.test.js`, `s9-full-system-qa.test.js`,
 `assessment-journey-bridge.test.js`, `home-dashboard-adapter.test.js`,
 `progress-reassessment-persistence.test.js`, `session-evidence-
-engine.test.js`, and `s10-f-cross-workflow-qa.test.js` — each
-independently re-verified standalone with no external timeout. No
-RC1.1 change touched any file referenced by these suites.
-`tests/s10-final-acceptance.test.js` was not separately re-run to
-completion standalone (its FA23 gate is, by construction, equivalent
-to re-running the entire suite named above plus the one known
-pre-existing failure below, and would take on the order of an hour);
-its own non-regression assertions were unaffected by this stage since
-no file it inspects was modified.
+engine.test.js`, `s10-f-cross-workflow-qa.test.js`, and the repaired
+`r4d-final-release-acceptance.test.js`), passed — both standalone and
+as part of the single `FA23_FULL_REGRESSION` run above.
 
-**One pre-existing, out-of-scope failure**: `tests/r4d-final-release-
-acceptance.test.js` fails its `GOV-01` assertion
-(`R4-D status is IMPLEMENTATION COMPLETE / GPT QA PENDING`) because
-`docs/MASTER-CONTROL-V2.md` now records `POST-S11-R4-D` as
-`CLOSED / ACCEPTED` following the separate, already-completed R4
-FINAL governance closure (commit `5cc91ba`) earlier in this session.
-This is a stale literal-string assertion in a pre-existing test file,
-unrelated to and predating this RC1.1 stage; per the RC1.1 file-scope
-rules this stage does not modify `tests/r4d-final-release-
-acceptance.test.js`. It is reported here rather than silently fixed
-or hidden.
+**R1 fix**: `tests/r4d-final-release-acceptance.test.js`'s `GOV-01`
+assertion was stale — it still expected R4-D's pre-closure wording
+(`IMPLEMENTATION COMPLETE / GPT QA PENDING`) after R4-D had already
+been closed by GPT Independent QA (`CLOSED / ACCEPTED`, acceptance
+commit `4676e25`). Fixed in PB-APP-RC1.1-R1 (see Section 11) by
+updating the assertion to validate the accepted final state instead
+of the answer changing; no production file or FRG-01..FRG-08
+protection was touched.
 
 ## 9. Known Limitations
 
-- `data/app-release.json`'s `release_commit` field is a documented
-  placeholder (`PENDING_AT_RELEASE_COMMIT`) rather than this stage's
-  own commit SHA, for the self-reference reason explained in
-  Section 4.
-- The pre-existing `tests/r4d-final-release-acceptance.test.js`
-  `GOV-01` failure described in Section 8 is unresolved (out of this
-  stage's frozen scope).
 - QR payload correctness was verified programmatically
   (decode-matched); it has not yet been verified by scanning with a
   physical phone camera against the deployed GitHub Pages URLs.
-- The "Update and Restart" flow (posting `SKIP_WAITING`, listening
-  for `controllerchange`, single-shot reload) has been verified by
-  source/logic review and unit tests of its pure comparison/state
-  logic, but the live waiting-worker activation path has not yet
-  been exercised against a real second Service Worker version in a
-  browser.
+- The "Update and Restart" flow's fail-safe timeout and
+  already-activated/no-waiting-worker reload path (PB-APP-RC1.1-R1,
+  Section 11) have been verified against fake `window`/
+  `ServiceWorkerContainer` objects in Node, but not yet exercised
+  against a real second Service Worker version in a live browser.
+
+## 11. PB-APP-RC1.1-R1 — GPT Independent QA Rework
+
+GPT Independent QA returned a `REWORK` verdict on the original RC1.1
+implementation commit (`c82833b`) with exactly three required fixes,
+all completed here with no scope expansion:
+
+**R1-01 — Stale R4-D governance test.** Described above (Section 8).
+`tests/r4d-final-release-acceptance.test.js`'s `GOV-01` block now
+asserts: the `POST-S11-R4-D` block exists; its status is
+`CLOSED / ACCEPTED`; its acceptance commit `4676e25` (or the full
+SHA) is recorded; its final regression is `54 / 54 PASS`; its GPT
+Independent Final Acceptance is `PASS`; and the `PB-APP-RC1` product
+baseline (`Product Code Baseline` / `Product Release Baseline:
+FROZEN`) is still recorded frozen in `docs/MASTER-CONTROL-V2.md`.
+FRG-01 through FRG-08 above it in the same file are untouched.
+
+**R1-02 — Unreliable Update and Restart.** `sw.js`'s install handler
+calls `self.skipWaiting()` unconditionally, so a new worker can
+finish activating on its own before the user ever clicks "Update and
+Restart" — by then `registration.waiting` is already empty even
+though a real update was published, and the old code's only recourse
+was an alert telling the user to close and reopen the app.
+`js/version-update.js`'s `applyUpdateAndRestart()` now:
+1. When `registration.waiting` exists: posts `SKIP_WAITING`, listens
+   once for `controllerchange`, and reloads exactly once — with a
+   3-second fail-safe timer (`FAILSAFE_RELOAD_TIMEOUT_MS`) that also
+   reloads once if `controllerchange` never arrives.
+2. When nothing is waiting but the caller's last `checkForUpdate()`
+   result was `UPDATE_AVAILABLE` (passed in as `opts.updateAvailable`
+   by `index.html`'s UI wiring, which now tracks the last check
+   state), reloads the page directly instead of only alerting —
+   the existing network-first fetch policy (unchanged) is what
+   actually serves the newly published HTML/JS/CSS/JSON on that
+   reload.
+3. Only when neither condition holds does it fall back to telling
+   the user to close and reopen the app.
+The one-shot `sessionStorage` reload-loop guard (`clearReloadGuard()`
+on the next normal page load) is unchanged. No Cache Storage,
+IndexedDB, `localStorage`, or user record is ever cleared — verified
+both by the existing source-scan test and by seven new functional
+tests in `tests/rc1.1-version-ebook-access.test.js` (R1-02a..g):
+waiting-worker path, fail-safe-timeout path, both-triggers-fire
+exactly-once, already-activated/no-waiting-worker reload, no-update
+no-op, reload-loop prevention + guard release, and no
+storage-clearing calls in the waiting-worker flow.
+
+**R1-03 — Release placeholder.** `data/app-release.json`'s
+`release_commit` is now `c82833b77ac267a107c3fb1071b6da702a678d13`
+(the original RC1.1 implementation commit, not this R1 repair
+commit) — see Section 4. Product release, product baseline,
+governance baseline, schema/benchmark/protocol versions, and the
+Service Worker cache identifier are all unchanged
+(`PB-APP-RC1.1` / `4676e25` / `5cc91ba` / `2.3.1` / `2.1.1` / `2.2.1`
+/ `pb40-v30`).
 
 ## 10. Manual Verification Still Required
 

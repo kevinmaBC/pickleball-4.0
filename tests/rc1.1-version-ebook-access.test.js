@@ -128,6 +128,159 @@ function run() {
     assert.ok(VERSION_UPDATE_SRC.indexOf('SKIP_WAITING') !== -1, '8: uses the safe SKIP_WAITING handshake to activate the waiting worker');
   })();
 
+  // ================================================================
+  // R1-02 — applyUpdateAndRestart: waiting-worker path, already-activated/
+  // no-waiting-worker path, exactly-once reload, reload-loop prevention,
+  // and no user-storage clearing. All against fake win/serviceWorker
+  // objects — no real DOM, no real timers.
+  // ================================================================
+  function makeFakeServiceWorker() {
+    var listeners = [];
+    return {
+      addEventListener: function (type, cb) { if (type === 'controllerchange') listeners.push(cb); },
+      fire: function () { listeners.slice().forEach(function (cb) { cb(); }); }
+    };
+  }
+  function makeFakeWin(opts) {
+    opts = opts || {};
+    var store = {};
+    var reloadCalls = 0;
+    var localStorageClearCalls = 0;
+    var deleteDatabaseCalls = [];
+    var cachesDeleteCalls = [];
+    var win = {
+      location: { reload: function () { reloadCalls++; } },
+      sessionStorage: {
+        getItem: function (k) { return Object.prototype.hasOwnProperty.call(store, k) ? store[k] : null; },
+        setItem: function (k, v) { store[k] = v; },
+        removeItem: function (k) { delete store[k]; }
+      },
+      localStorage: { clear: function () { localStorageClearCalls++; } },
+      indexedDB: { deleteDatabase: function (name) { deleteDatabaseCalls.push(name); } },
+      caches: { delete: function (k) { cachesDeleteCalls.push(k); return Promise.resolve(true); } },
+      navigator: opts.serviceWorker ? { serviceWorker: opts.serviceWorker } : undefined
+    };
+    return {
+      win: win,
+      reloadCalls: function () { return reloadCalls; },
+      localStorageClearCalls: function () { return localStorageClearCalls; },
+      deleteDatabaseCalls: function () { return deleteDatabaseCalls; },
+      cachesDeleteCalls: function () { return cachesDeleteCalls; }
+    };
+  }
+
+  // R1-02a: waiting-worker path — posts SKIP_WAITING, waits for
+  // controllerchange, reloads exactly once.
+  (function () {
+    var posted = [];
+    var swReg = { waiting: { postMessage: function (m) { posted.push(m); } } };
+    var sw = makeFakeServiceWorker();
+    var f = makeFakeWin({ serviceWorker: sw });
+    var p = VU.applyUpdateAndRestart({
+      swRegistration: swReg, win: f.win,
+      setTimeout: function () { return 0; }, clearTimeout: function () {}
+    });
+    sw.fire(); // simulate the browser promoting the new worker
+    return p.then(function (reloaded) {
+      assert.strictEqual(reloaded, true, 'R1-02a: waiting-worker path resolves reloaded=true');
+      assert.deepStrictEqual(posted, [{ type: 'SKIP_WAITING' }], 'R1-02a: posts SKIP_WAITING to the waiting worker');
+      assert.strictEqual(f.reloadCalls(), 1, 'R1-02a: reload happens exactly once');
+    });
+  })();
+
+  // R1-02b: fail-safe timeout — if controllerchange never arrives, a short
+  // fail-safe timeout still reloads once.
+  (function () {
+    var swReg = { waiting: { postMessage: function () {} } };
+    var f = makeFakeWin({}); // no navigator.serviceWorker -> controllerchange can never fire
+    var timeoutCb;
+    var p = VU.applyUpdateAndRestart({
+      swRegistration: swReg, win: f.win,
+      setTimeout: function (cb, ms) { timeoutCb = cb; assert.ok(ms > 0 && ms <= 5000, 'R1-02b: fail-safe timeout is short'); return 1; },
+      clearTimeout: function () {}
+    });
+    assert.strictEqual(typeof timeoutCb, 'function', 'R1-02b: a fail-safe timer is armed');
+    timeoutCb();
+    return p.then(function (reloaded) {
+      assert.strictEqual(reloaded, true, 'R1-02b: fail-safe timeout triggers the reload');
+      assert.strictEqual(f.reloadCalls(), 1);
+    });
+  })();
+
+  // R1-02c: both controllerchange and the fail-safe timer firing must still
+  // reload exactly once (settle-once guard inside applyUpdateAndRestart).
+  (function () {
+    var swReg = { waiting: { postMessage: function () {} } };
+    var sw = makeFakeServiceWorker();
+    var f = makeFakeWin({ serviceWorker: sw });
+    var timeoutCb;
+    var p = VU.applyUpdateAndRestart({
+      swRegistration: swReg, win: f.win,
+      setTimeout: function (cb) { timeoutCb = cb; return 1; }, clearTimeout: function () {}
+    });
+    sw.fire();
+    if (timeoutCb) timeoutCb();
+    return p.then(function () {
+      assert.strictEqual(f.reloadCalls(), 1, 'R1-02c: reload happens exactly once even if both triggers fire');
+    });
+  })();
+
+  // R1-02d: already-activated / no-waiting-worker path — when the update
+  // check already returned UPDATE_AVAILABLE, reload directly instead of
+  // only telling the user to close and reopen the app.
+  (function () {
+    var f = makeFakeWin({});
+    var swReg = {}; // no .waiting
+    return VU.applyUpdateAndRestart({ swRegistration: swReg, win: f.win, updateAvailable: true }).then(function (reloaded) {
+      assert.strictEqual(reloaded, true, 'R1-02d: no waiting worker + updateAvailable -> reload');
+      assert.strictEqual(f.reloadCalls(), 1);
+    });
+  })();
+
+  // R1-02e: no waiting worker and no known pending update -> nothing unsafe
+  // is attempted (caller falls back to the close-and-reopen message).
+  (function () {
+    var f = makeFakeWin({});
+    var swReg = {};
+    return VU.applyUpdateAndRestart({ swRegistration: swReg, win: f.win, updateAvailable: false }).then(function (reloaded) {
+      assert.strictEqual(reloaded, false, 'R1-02e: nothing to activate and no known update -> no reload');
+      assert.strictEqual(f.reloadCalls(), 0);
+    });
+  })();
+
+  // R1-02f: reload-loop prevention — the one-shot sessionStorage flag blocks
+  // a second reload, and clearReloadGuard() releases it again for next time.
+  (function () {
+    var f = makeFakeWin({});
+    f.win.sessionStorage.setItem('pb40_update_reload_once', '1');
+    var swReg = {};
+    return VU.applyUpdateAndRestart({ swRegistration: swReg, win: f.win, updateAvailable: true }).then(function (reloaded) {
+      assert.strictEqual(reloaded, false, 'R1-02f: reload-loop guard blocks a second reload');
+      assert.strictEqual(f.reloadCalls(), 0);
+      VU.clearReloadGuard(f.win);
+      assert.strictEqual(f.win.sessionStorage.getItem('pb40_update_reload_once'), null,
+        'R1-02f: clearReloadGuard releases the one-shot flag for the next update');
+    });
+  })();
+
+  // R1-02g: no user-storage clearing anywhere in the waiting-worker flow —
+  // functional check on top of the source-scan in test 8 above.
+  (function () {
+    var sw = makeFakeServiceWorker();
+    var f = makeFakeWin({ serviceWorker: sw });
+    var swReg = { waiting: { postMessage: function () {} } };
+    var p = VU.applyUpdateAndRestart({
+      swRegistration: swReg, win: f.win,
+      setTimeout: function () { return 1; }, clearTimeout: function () {}
+    });
+    sw.fire();
+    return p.then(function () {
+      assert.strictEqual(f.localStorageClearCalls(), 0, 'R1-02g: never calls localStorage.clear');
+      assert.strictEqual(f.deleteDatabaseCalls().length, 0, 'R1-02g: never calls indexedDB.deleteDatabase');
+      assert.strictEqual(f.cachesDeleteCalls().length, 0, 'R1-02g: never calls caches.delete');
+    });
+  })();
+
   // sw.js: message handler only ever calls self.skipWaiting(), never touches
   // Cache Storage / IndexedDB / localStorage.
   (function () {

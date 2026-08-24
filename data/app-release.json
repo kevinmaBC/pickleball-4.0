@@ -2,7 +2,7 @@
   "product_release": "PB-APP-RC1.1",
   "product_baseline": "4676e25",
   "governance_baseline": "5cc91ba",
-  "release_commit": "PENDING_AT_RELEASE_COMMIT",
+  "release_commit": "c82833b77ac267a107c3fb1071b6da702a678d13",
   "sw_cache": "pb40-v30",
   "schema_version": "2.3.1",
   "benchmark_version": "2.1.1",

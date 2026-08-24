@@ -186,16 +186,27 @@ function run() {
   })();
 
   // ================================================================
-  // R4-D governance — this stage itself stops short of self-declaring
-  // acceptance; only GPT Independent QA may close R4-D.
+  // R4-D governance — R4-D was subsequently closed by GPT Independent QA
+  // (acceptance commit 4676e25); this gate now validates that accepted
+  // final state verbatim, rather than the pre-closure PENDING wording it
+  // originally asserted. FRG-01..FRG-08 above are untouched by this fix.
   // ================================================================
   (function () {
     var r4d = masterBlock('POST-S11-R4-D');
     assert.ok(r4d, 'GOV-01: POST-S11-R4-D block present in MASTER CONTROL');
-    assert.ok(r4d.indexOf('IMPLEMENTATION COMPLETE / GPT QA PENDING') !== -1, 'GOV-01: R4-D status is IMPLEMENTATION COMPLETE / GPT QA PENDING');
-    assert.strictEqual(MASTER.indexOf('R4-D CLOSED'), -1, 'GOV-02: MASTER CONTROL never declares R4-D CLOSED');
-    assert.strictEqual(MASTER.indexOf('R4-D ACCEPTED'), -1, 'GOV-02: MASTER CONTROL never declares R4-D ACCEPTED');
-    assert.strictEqual(MASTER.indexOf('RELEASE ACCEPTED'), -1, 'GOV-02: MASTER CONTROL never declares RELEASE ACCEPTED');
+    assert.ok(r4d.indexOf('CLOSED / ACCEPTED') !== -1, 'GOV-01: R4-D status is CLOSED / ACCEPTED');
+    assert.ok(r4d.indexOf('4676e256f534dcef68ac6f0db52eb40ba578fbfd') !== -1 || r4d.indexOf('4676e25') !== -1,
+      'GOV-01: R4-D acceptance commit 4676e25 (or full SHA) is recorded');
+    assert.ok(r4d.indexOf('54 / 54 PASS') !== -1, 'GOV-01: R4-D final regression is 54 / 54 PASS');
+    assert.ok(r4d.indexOf('GPT Independent Final Acceptance:') !== -1 && r4d.indexOf('PASS') !== -1,
+      'GOV-01: R4-D GPT Independent Final Acceptance is PASS');
+
+    // PB-APP-RC1 product baseline must remain frozen at the same commit R4-D accepted.
+    assert.ok(MASTER.indexOf('Product Code Baseline:\n4676e256f534dcef68ac6f0db52eb40ba578fbfd') !== -1,
+      'GOV-02: PB-APP-RC1 Product Code Baseline remains 4676e25');
+    assert.ok(MASTER.indexOf('Product Release Baseline:\nFROZEN') !== -1,
+      'GOV-02: PB-APP-RC1 Product Release Baseline remains FROZEN');
+
     var r4c = masterBlock('POST-S11-R4-C');
     assert.ok(r4c && r4c.indexOf('CLOSED / ACCEPTED') !== -1, 'GOV-03: POST-S11-R4-C recorded CLOSED / ACCEPTED');
     assert.ok(r4c.indexOf('70435196e6a06ee006374de4fb19d7b721a03813') !== -1 || r4c.indexOf('7043519') !== -1, 'GOV-03: R4-C acceptance commit recorded');
