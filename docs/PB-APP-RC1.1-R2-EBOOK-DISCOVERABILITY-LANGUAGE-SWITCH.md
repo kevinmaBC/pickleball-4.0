@@ -1,7 +1,7 @@
 # PB-APP-RC1.1-R2 — Homepage E-Book Entry & Language Switch Enhancement
 
 Stage: `PB-APP-RC1.1-R2`
-Status: `IMPLEMENTED / GPT QA PENDING`
+Status: `CLOSED / ACCEPTED / RELEASE FROZEN`
 Entry Branch: `app-v2-alpha`
 Entry HEAD: `5bd538bc0df1d0d6129b17386806641082c81d86` (`5bd538b`)
 Current APP Baseline: `PB-APP-RC1.1`
@@ -136,7 +136,15 @@ node tests/pre-s7-ui-regression.test.js
 pre-s7-ui-regression.test.js: all assertions passed
 
 node tests/s10-final-acceptance.test.js   (FA23_FULL_REGRESSION gate)
-<result recorded in final report>
+s10-final-acceptance.test.js: all gates passed — FA02, FA15, FA20_AND_INVARIANTS,
+FA03_FA05_SOURCE_OF_TRUTH, FA04, FA09_JOURNEY_STEP1_S9, FA09_JOURNEY_STEP2_WORKFLOW_SESSION,
+FA09_JOURNEY_STEP3_NON_EVIDENCE_STATES, FA09_JOURNEY_STEP4_CYCLE_EVIDENCE,
+FA07_FA13_FA14_PROGRESS_BASELINE, FA12_FA19_TRAINING_MATCH_SEPARATION,
+FA09_JOURNEY_STEP5_REASSESSMENT_READY, FA08_FA18_REAL_MATCH_REASSESSMENT, FA17_IDEMPOTENCY,
+FA21_FA22_METHODOLOGY, FA24_NO_S11_WORK, FA23_FULL_REGRESSION
+Full Regression Result: 57 / 57 test suites PASS (56 suites spawned by the
+FA23_FULL_REGRESSION gate, all passed, plus s10-final-acceptance.test.js itself)
+0 failures
 ```
 
 Manual responsive verification (headless browser, real
@@ -158,14 +166,16 @@ re-applied, no new storage key created).
 ```
 Entry Branch: app-v2-alpha
 Entry HEAD: 5bd538bc0df1d0d6129b17386806641082c81d86
-Implementation Commit: <recorded post-commit — see final report>
+Implementation Commit: a634bd687270b254d3c44793650111a2ea7e86fa
 Production Business Logic Changed: NO
 E-Book Word/PDF/Reader/Vendor Content Changed: NO
 QR Payloads Changed: NO
 GitHub Pages Configuration Changed: NO
 DB_VERSION: 5 (unchanged)
 Stores: 18 / 18 (unchanged)
-Status: IMPLEMENTED / GPT QA PENDING
+GPT Independent QA: PASS
+Kevin Manual UAT: PASS
+Status: CLOSED / ACCEPTED / RELEASE FROZEN
 ```
 
 ## 9. Known Limitations
@@ -184,6 +194,7 @@ Status: IMPLEMENTED / GPT QA PENDING
   `PB-EBOOK-RC1.1-R1` reader corrections (`c39c092` / `5bd538b`) —
   see `docs/MASTER-CONTROL-V2.md`.
 
-This stage has **not** been marked `CLOSED`, `ACCEPTED`, or
-`RELEASE FROZEN` — GPT Independent QA and Kevin's manual UAT are
-still pending.
+This stage is marked `CLOSED / ACCEPTED / RELEASE FROZEN`. GPT
+Independent QA and Kevin's manual UAT both returned PASS against
+Implementation Commit `a634bd687270b254d3c44793650111a2ea7e86fa`. See
+Governance Closure record in `docs/MASTER-CONTROL-V2.md`.

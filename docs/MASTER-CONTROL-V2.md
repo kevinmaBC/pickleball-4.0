@@ -517,9 +517,13 @@ PB-APP-RC1.1-R2
 Name:
 Homepage E-Book Entry & Language Switch Enhancement
 Status:
-IMPLEMENTED / GPT QA PENDING
+CLOSED / ACCEPTED / RELEASE FROZEN
 Entry HEAD:
 5bd538bc0df1d0d6129b17386806641082c81d86
+Accepted Implementation Commit:
+a634bd6
+Full SHA:
+a634bd687270b254d3c44793650111a2ea7e86fa
 Scope:
 UX/discoverability patch only: added one prominent homepage E-Book
 entry card (#home-ebook-entry, linking to the permanent ./ebook/ URL,
@@ -542,12 +546,16 @@ tests/ebook-embedded-reader.test.js — all assertions passed
 tests/sw-cache.test.js — all assertions passed
 tests/pre-s7-ui-regression.test.js — all assertions passed
 Full Regression:
-see docs/PB-APP-RC1.1-R2-EBOOK-DISCOVERABILITY-LANGUAGE-SWITCH.md
+57 / 57 test suites PASS (FA23_FULL_REGRESSION gate: 56/56 spawned
+suites PASS, plus s10-final-acceptance.test.js itself PASS)
+0 failures
 Database:
 DB_VERSION = 5
 Stores = 18 / 18
 GPT Independent QA:
-PENDING
+PASS
+Kevin Manual UAT:
+PASS
 ```
 
 ## Product Release Baseline
