@@ -422,6 +422,50 @@ DB_VERSION = 5
 Stores = 18 / 18
 GPT Independent QA:
 PENDING
+
+PB-EBOOK-RC1.1
+Name:
+Embedded Web Reader Correction
+Status:
+IMPLEMENTED / GPT QA PENDING
+Entry HEAD:
+d2c5330644e6f0493b94057d57fa7a411fd9a0c2
+E-Book Content Baseline:
+PB-EBOOK-RC1
+Scope:
+Reader-integration correction only: the "Open" buttons on
+ebook/index.html linked directly to the frozen PDFs, so browsers set
+to download PDFs broke the reading path. Added a site-hosted PDF.js
+embedded reader (ebook/reader/ + vendored ebook/vendor/pdfjs/, PDF.js
+6.2.108, official npm registry, SHA-1/SHA-512 verified, Apache-2.0
+license retained). "Open" buttons now route to
+reader/?edition=zh-CN|en-CA; "Download" buttons unchanged (direct
+PDF link, download attribute). Reader accepts only the two frozen
+editions (hasOwnProperty-guarded literal map), never any other URL
+or user input, and renders one page at a time onto a single reused
+canvas (in-flight render cancelled before the next). sw.js CACHE
+bumped pb40-v30 -> pb40-v31 (CORE gained reader.js/reader.css/
+vendored PDF.js runtime files only; neither PDF added to CORE);
+data/app-release.json and js/version-update.js sw_cache mirrored to
+pb40-v31 to keep the existing Check-for-Update mechanism consistent.
+No assessment/scoring/recommendation/training/match/progress/
+reassessment/journey logic changed, no DB migration, no store
+added/removed/renamed, no PDF content/filename change, no GitHub
+Pages configuration change. DB_VERSION unchanged (5), stores
+unchanged (18/18). See
+docs/PB-EBOOK-RC1.1-EMBEDDED-WEB-READER-CORRECTION.md for the full
+record.
+Targeted Tests:
+tests/ebook-embedded-reader.test.js — all assertions passed
+tests/rc1.1-version-ebook-access.test.js — all assertions passed
+tests/sw-cache.test.js — all assertions passed
+Full Regression:
+see docs/PB-EBOOK-RC1.1-EMBEDDED-WEB-READER-CORRECTION.md
+Database:
+DB_VERSION = 5
+Stores = 18 / 18
+GPT Independent QA:
+PENDING
 ```
 
 ## Product Release Baseline

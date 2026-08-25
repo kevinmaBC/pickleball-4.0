@@ -18,7 +18,7 @@
   // the fetched, possibly-newer, published copy of that same file).
   var RUNNING_RELEASE = {
     product_release: 'PB-APP-RC1.1',
-    sw_cache: 'pb40-v30',
+    sw_cache: 'pb40-v31',
     schema_version: '2.3.1',
     benchmark_version: '2.1.1',
     protocol_version: '2.2.1'

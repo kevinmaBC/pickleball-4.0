@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#12302B">
+<title>PB-EBOOK-RC1 — Embedded Reader</title>
+<link rel="icon" type="image/png" sizes="192x192" href="../../icon-192.png">
+<link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+<link rel="stylesheet" href="../../css/app.css">
+<link rel="stylesheet" href="./reader.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="topbar">
+    <div class="brand">
+      <div class="ball"></div>
+      <h1 id="rd-brand-title">E-Book Reader<small>PB-EBOOK-RC1</small></h1>
+    </div>
+  </div>
+</header>
+
+<main class="rd-wrap">
+
+  <div id="rd-toolbar" class="rd-toolbar" hidden>
+    <button id="rd-prev" class="btn" type="button">Previous</button>
+    <span id="rd-page-indicator" class="rd-page-indicator"></span>
+    <button id="rd-next" class="btn" type="button">Next</button>
+    <button id="rd-zoom-out" class="btn" type="button">Zoom Out</button>
+    <button id="rd-zoom-in" class="btn" type="button">Zoom In</button>
+    <button id="rd-fit-width" class="btn" type="button">Fit Width</button>
+  </div>
+
+  <div id="rd-loading" class="rd-status" hidden>Loading…</div>
+
+  <div id="rd-error" class="rd-status" hidden>
+    <div id="rd-error-msg"></div>
+    <button id="rd-retry" class="btn solid" type="button">Retry</button>
+  </div>
+
+  <div id="rd-viewer" hidden>
+    <div id="rd-canvas-wrap" class="rd-canvas-wrap">
+      <canvas id="rd-canvas"></canvas>
+    </div>
+  </div>
+
+  <div id="rd-invalid" class="rd-invalid" hidden>
+    <h2 id="rd-invalid-title"></h2>
+    <p id="rd-invalid-msg"></p>
+    <a id="rd-invalid-back" class="btn solid" href="../">Back</a>
+  </div>
+
+  <div class="rd-bottom-actions">
+    <a id="rd-download" class="btn" href="#" download>Download PDF</a>
+    <a id="rd-back" class="btn" href="../">Back to E-Book Home</a>
+    <a id="rd-open-app" class="btn solid" href="#">Open Official App</a>
+  </div>
+
+</main>
+
+<script type="module" src="./reader.js"></script>
+</body>
+</html>

@@ -36,7 +36,7 @@ function run() {
     var meta;
     assert.doesNotThrow(function () { meta = JSON.parse(raw); }, '1: data/app-release.json must be valid JSON');
     assert.strictEqual(meta.product_release, 'PB-APP-RC1.1', '2: release identity is PB-APP-RC1.1');
-    assert.strictEqual(meta.sw_cache, 'pb40-v30', '3: metadata cache identity is pb40-v30');
+    assert.strictEqual(meta.sw_cache, 'pb40-v31', '3: metadata cache identity is pb40-v31');
     assert.strictEqual(meta.schema_version, '2.3.1');
     assert.strictEqual(meta.benchmark_version, '2.1.1');
     assert.strictEqual(meta.protocol_version, '2.2.1');
@@ -47,14 +47,14 @@ function run() {
     // identity fields exactly, or a freshly-deployed app would immediately
     // report UPDATE_AVAILABLE against itself.
     assert.strictEqual(VU.RUNNING_RELEASE.product_release, 'PB-APP-RC1.1');
-    assert.strictEqual(VU.RUNNING_RELEASE.sw_cache, 'pb40-v30', '3: running cache identity is pb40-v30');
+    assert.strictEqual(VU.RUNNING_RELEASE.sw_cache, 'pb40-v31', '3: running cache identity is pb40-v31');
     assert.strictEqual(VU.compareReleases(VU.RUNNING_RELEASE, meta), VU.STATES.LATEST,
       'RUNNING_RELEASE must be in sync with data/app-release.json');
 
     // sw.js CACHE constant must match too (single source of truth for the cache name).
     var cacheMatch = /const\s+CACHE\s*=\s*'([^']+)'/.exec(SW_SRC);
     assert.ok(cacheMatch, 'sw.js must declare CACHE');
-    assert.strictEqual(cacheMatch[1], 'pb40-v30', '3: sw.js CACHE is pb40-v30');
+    assert.strictEqual(cacheMatch[1], 'pb40-v31', '3: sw.js CACHE is pb40-v31');
   })();
 
   // 4. Version comparison returns LATEST correctly.
@@ -347,15 +347,18 @@ function run() {
     assert.ok(EBOOK_HTML.indexOf('102 pages') !== -1, 'EB-2: English edition shows 102 pages');
   })();
 
-  // EB-3. Four reading/download entry points exist, each pointing at the
-  // correct edition's frozen PDF (relative href, as shipped on the page).
+  // EB-3. Four reading/download entry points exist. PB-EBOOK-RC1.1: the
+  // "Open" entries route through the embedded reader (not the raw PDF);
+  // only the "Download" entries link directly to the frozen PDF.
   (function () {
-    var cnHref = RELEASE_MANIFEST.editions['zh-CN'].file.replace(/^releases\//, 'releases/');
+    var cnHref = RELEASE_MANIFEST.editions['zh-CN'].file;
     var enHref = RELEASE_MANIFEST.editions['en-CA'].file;
     var cnLinkRe = new RegExp('<a[^>]+href="' + cnHref.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"', 'g');
     var enLinkRe = new RegExp('<a[^>]+href="' + enHref.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"', 'g');
-    assert.strictEqual((EBOOK_HTML.match(cnLinkRe) || []).length, 2, 'EB-3: exactly 2 links (open + download) to the Chinese PDF');
-    assert.strictEqual((EBOOK_HTML.match(enLinkRe) || []).length, 2, 'EB-3: exactly 2 links (open + download) to the English PDF');
+    assert.strictEqual((EBOOK_HTML.match(cnLinkRe) || []).length, 1, 'EB-3: exactly 1 direct link (download only) to the Chinese PDF');
+    assert.strictEqual((EBOOK_HTML.match(enLinkRe) || []).length, 1, 'EB-3: exactly 1 direct link (download only) to the English PDF');
+    assert.ok(EBOOK_HTML.indexOf('href="' + RELEASE_MANIFEST.reader.chinese + '"') !== -1, 'EB-3: "Open Chinese Edition" routes to the embedded reader');
+    assert.ok(EBOOK_HTML.indexOf('href="' + RELEASE_MANIFEST.reader.english + '"') !== -1, 'EB-3: "Open English Edition" routes to the embedded reader');
     assert.ok(EBOOK_HTML.indexOf('Open Chinese Edition') !== -1, 'EB-3: "Open Chinese Edition" entry point exists');
     assert.ok(EBOOK_HTML.indexOf('Download Chinese PDF') !== -1, 'EB-3: "Download Chinese PDF" entry point exists');
     assert.ok(EBOOK_HTML.indexOf('Open English Edition') !== -1, 'EB-3: "Open English Edition" entry point exists');

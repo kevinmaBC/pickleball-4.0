@@ -59,18 +59,28 @@
  *       SKIP_WAITING，激活等待中的 Service Worker；不改变既有 fetch 缓存
  *       策略。无判定/评分/处方/训练/比赛/进度/复测/Journey 逻辑改动，无新增
  *       /删除/重命名 store，DB_VERSION 保持不变）。
+ *   -> pb40-v31（PB-EBOOK-RC1.1：新增 ebook/reader/reader.js、
+ *       ebook/reader/reader.css 与本地 vendored PDF.js 运行文件
+ *       （ebook/vendor/pdfjs/pdf.min.mjs、pdf.worker.min.mjs）加入 CORE
+ *       预缓存，使站内 PDF 阅读器可离线可用。两份冻结 PDF（体积较大）刻意
+ *       不加入 CORE，也不做预缓存——PDF 请求继续走既有网络访问；
+ *       ebook/reader/index.html 与 ebook/index.html 一样，不在 CORE 中，
+ *       依赖既有通用 network-first 导航处理。不清除任何用户数据，不改变
+ *       DB_VERSION/Stores，不改变 message/SKIP_WAITING 逻辑，无 reload
+ *       loop）。
  * 策略（见 docs/SW-CACHE-POLICY.md 完整说明）：
  *   - 导航(HTML) 与 代码/数据资源(js/css/json)：network-first
  *     （在线时始终取最新；离线才回退缓存 —— 陈旧内容不会被静默长期提供）。
  *   - 其它静态资源（图标等，内容极少变化）：stale-while-revalidate。
  *   - activate 阶段清除所有非当前 CACHE 版本（陈旧缓存自动移除）。 */
-const CACHE='pb40-v30';
+const CACHE='pb40-v31';
 const CORE=[
   './','./index.html','./manifest.json',
   './css/app.css',
   './js/i18n.js','./js/namespace.js','./js/config-loader.js','./js/version-update.js','./js/storage.js','./js/metrics.js','./js/review-engine.js','./js/trend-engine.js','./js/retest-engine.js','./js/match-observation-engine.js','./js/performance-analysis-engine.js','./js/diagnosis-engine.js','./js/recommendation-priority-engine.js','./js/training-prescription-engine.js','./js/dashboard-integration-engine.js','./js/workflow-integration-engine.js','./js/prescription-workflow-engine.js','./js/session-evidence-engine.js','./js/session-evidence-persistence.js','./js/cycle-baseline-engine.js','./js/progress-tracking-engine.js','./js/reassessment-engine.js','./js/progress-reassessment-persistence.js','./js/assessment-journey-bridge.js','./js/product-journey-orchestrator.js','./js/home-dashboard-adapter.js','./js/home-priority-dashboard-ui.js','./js/guided-training-action-controller.js','./js/guided-training-ui.js','./js/progress-reassessment-adapter.js','./js/progress-reassessment-ui.js','./js/history-explainability-adapter.js','./js/history-explainability-ui.js','./js/decision-cycle-registration-controller.js','./js/review-ui.js','./js/session-execution-engine.js','./js/training-readiness-engine.js','./js/training-ui.js','./js/preview.js','./js/app.js','./js/assessment.js',
   './data/versions.json','./data/test_definitions_v2_3_1.json','./data/assessment_tiers_v2_3_1.json','./data/level_gates_v2_3_1.json','./data/evidence_confidence_v2_3_1.json','./data/app-release.json',
-  './icon-192.png','./icon-512.png','./icon-maskable-512.png','./apple-touch-icon.png'
+  './icon-192.png','./icon-512.png','./icon-maskable-512.png','./apple-touch-icon.png',
+  './ebook/reader/reader.css','./ebook/reader/reader.js','./ebook/vendor/pdfjs/pdf.min.mjs','./ebook/vendor/pdfjs/pdf.worker.min.mjs'
 ];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).catch(()=>{}));});
 self.addEventListener('activate',e=>{e.waitUntil((async()=>{const ks=await caches.keys();await Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)));await self.clients.claim();})());});

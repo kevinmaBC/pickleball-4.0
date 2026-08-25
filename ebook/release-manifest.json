@@ -28,5 +28,12 @@
     "cn_en_paired": true,
     "app_ebook_paired": true,
     "future_changes_require_new_version": true
+  },
+  "integration_revision": "PB-EBOOK-RC1.1",
+  "reader": {
+    "type": "PDF.js",
+    "chinese": "reader/?edition=zh-CN",
+    "english": "reader/?edition=en-CA",
+    "direct_download_retained": true
   }
 }
