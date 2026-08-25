@@ -63,6 +63,47 @@ var MIN_SCALE = 0.4;
 var MAX_SCALE = 3.0;
 var SCALE_STEP = 0.2;
 
+// PB-EBOOK-RC1.1-R1 — High-DPI Canvas Rendering Correction.
+// Decouples the Canvas's CSS display size (still driven only by the
+// existing zoom/Fit Width `scale`, unchanged) from its *internal* pixel
+// buffer, which is boosted by devicePixelRatio (capped) so text stays
+// crisp on Retina/high-DPI/Windows-125-150% displays — while enforcing
+// hard dimension/pixel-budget ceilings so no single page can allocate an
+// unbounded canvas. Pure function (no DOM/PDF.js dependency) so its
+// boundary conditions can be unit-tested directly.
+var MIN_OUTPUT_SCALE = 1;
+var MAX_OUTPUT_SCALE = 2;
+var MAX_CANVAS_DIMENSION = 4096;
+var MAX_CANVAS_PIXELS = 12000000;
+
+function computeOutputScale(viewportWidth, viewportHeight, devicePixelRatio) {
+  var raw = Number(devicePixelRatio);
+  if (!isFinite(raw) || raw <= 0) { raw = 1; }
+  var requestedScale = Math.min(Math.max(raw, MIN_OUTPUT_SCALE), MAX_OUTPUT_SCALE);
+
+  var vw = Number(viewportWidth);
+  if (!isFinite(vw) || vw <= 0) { vw = 0; }
+  var vh = Number(viewportHeight);
+  if (!isFinite(vh) || vh <= 0) { vh = 0; }
+
+  var effectiveScale = requestedScale;
+  if (vw > 0 && vh > 0) {
+    // Never crop — only ever scale the whole page down uniformly to fit
+    // both the per-edge pixel cap and the total-pixel-budget cap.
+    var dimFactor = Math.min(1, MAX_CANVAS_DIMENSION / (vw * requestedScale), MAX_CANVAS_DIMENSION / (vh * requestedScale));
+    var pxFactor = Math.min(1, Math.sqrt(MAX_CANVAS_PIXELS / (vw * requestedScale * vh * requestedScale)));
+    var limitFactor = Math.min(dimFactor, pxFactor);
+    effectiveScale = requestedScale * limitFactor;
+  }
+
+  return {
+    requestedScale: requestedScale,
+    effectiveScale: effectiveScale,
+    physicalWidth: Math.floor(vw * effectiveScale),
+    physicalHeight: Math.floor(vh * effectiveScale)
+  };
+}
+
 function getRequestedEdition() {
   var params = new URLSearchParams(window.location.search);
   var raw = params.get('edition');
@@ -150,10 +191,19 @@ function createReader(edition, labels) {
     rendering = true;
     pdfDoc.getPage(pageNum).then(function (page) {
       var viewport = page.getViewport({ scale: scale });
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
+      var dpr = window.devicePixelRatio || 1;
+      var output = computeOutputScale(viewport.width, viewport.height, dpr);
+      // CSS display size stays exactly at the existing zoom/Fit Width
+      // viewport size — only the internal pixel buffer grows.
+      canvas.style.width = Math.floor(viewport.width) + 'px';
+      canvas.style.height = Math.floor(viewport.height) + 'px';
+      canvas.width = output.physicalWidth;
+      canvas.height = output.physicalHeight;
+      var transform = output.effectiveScale !== 1
+        ? [output.effectiveScale, 0, 0, output.effectiveScale, 0, 0]
+        : null;
       if (renderTask) { renderTask.cancel(); }
-      renderTask = page.render({ canvasContext: ctx, viewport: viewport });
+      renderTask = page.render({ canvasContext: ctx, viewport: viewport, transform: transform });
       return renderTask.promise;
     }).then(function () {
       rendering = false;

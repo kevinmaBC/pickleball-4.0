@@ -33,6 +33,27 @@ var EN_SHA256 = 'f3c325ad1372f7979f475479bf7fdc92949868bf9c171c5d769ac0e19c96afa
 var CN_PDF_PATH_FROM_READER = '../releases/PB-EBOOK-RC1/PB_EBOOK_S4R2-R3_CN_Landscape_Release_Candidate_PB-APP-RC1.1_v1.0.pdf';
 var EN_PDF_PATH_FROM_READER = '../releases/PB-EBOOK-RC1/PB_EBOOK_S4R2-R3_EN-CA_Landscape_Release_Candidate_PB-APP-RC1.1_v1.0.pdf';
 
+// PB-EBOOK-RC1.1-R1: computeOutputScale() in reader.js is a pure function
+// (no DOM/PDF.js dependency) — extract its real source text (constants +
+// function body) straight out of reader.js and reconstruct it here with
+// `new Function`, so its boundary conditions are verified against the
+// actual shipped code, not a re-implementation that could drift from it.
+function extractBalancedBlock(src, markerIndex) {
+  var braceStart = src.indexOf('{', markerIndex);
+  var depth = 0;
+  for (var i = braceStart; i < src.length; i++) {
+    if (src[i] === '{') { depth++; }
+    else if (src[i] === '}') { depth--; if (depth === 0) { return src.slice(markerIndex, i + 1); } }
+  }
+  throw new Error('unbalanced braces starting at index ' + markerIndex);
+}
+var DPI_CONSTANTS_START = READER_JS.indexOf('var MIN_OUTPUT_SCALE');
+var DPI_FUNC_START = READER_JS.indexOf('function computeOutputScale');
+assert.ok(DPI_CONSTANTS_START !== -1 && DPI_FUNC_START !== -1, 'reader.js must declare the High-DPI constants and computeOutputScale()');
+var DPI_CONSTANTS_SRC = READER_JS.slice(DPI_CONSTANTS_START, READER_JS.indexOf(';', READER_JS.lastIndexOf('var MAX_CANVAS_PIXELS', DPI_FUNC_START)) + 1);
+var DPI_FUNC_SRC = extractBalancedBlock(READER_JS, DPI_FUNC_START);
+var computeOutputScale = new Function(DPI_CONSTANTS_SRC + '\n' + DPI_FUNC_SRC + '\nreturn computeOutputScale;')();
+
 function run() {
 
   // Extract the exact <a ...> tag for the Open/Download entries on the
@@ -241,6 +262,160 @@ function run() {
   (function () {
     assert.ok(/'zh-CN':\s*\{[\s\S]*?htmlLang:\s*'zh-CN'/.test(READER_JS), 'zh-CN label set declares htmlLang zh-CN');
     assert.ok(/'en-CA':\s*\{[\s\S]*?htmlLang:\s*'en-CA'/.test(READER_JS), 'en-CA label set declares htmlLang en-CA');
+  })();
+
+  // ================================================================
+  // PB-EBOOK-RC1.1-R1 — High-DPI Canvas Rendering Correction.
+  // computeOutputScale() reconstructed from reader.js's own source above.
+  // ================================================================
+
+  // DPI-1. DPR=1: physical size equals the CSS viewport size (no boost).
+  (function () {
+    var r = computeOutputScale(860, 664, 1);
+    assert.strictEqual(r.requestedScale, 1, 'DPI-1: requestedScale is 1 at DPR=1');
+    assert.strictEqual(r.effectiveScale, 1, 'DPI-1: effectiveScale is 1 at DPR=1');
+    assert.strictEqual(r.physicalWidth, 860, 'DPI-1: physical width equals viewport width at DPR=1');
+    assert.strictEqual(r.physicalHeight, 664, 'DPI-1: physical height equals viewport height at DPR=1');
+  })();
+
+  // DPI-2. DPR=1.25: internal resolution increases; source confirms CSS
+  // width is set independently of devicePixelRatio (checked in DPI-11/12).
+  (function () {
+    var r = computeOutputScale(860, 664, 1.25);
+    assert.strictEqual(r.effectiveScale, 1.25, 'DPI-2: effectiveScale is 1.25 at DPR=1.25');
+    assert.ok(r.physicalWidth > 860, 'DPI-2: internal resolution increases above the CSS viewport width');
+    assert.strictEqual(r.physicalWidth, Math.floor(860 * 1.25), 'DPI-2: physical width is floor(viewport * 1.25)');
+  })();
+
+  // DPI-3. DPR=1.5: internal resolution increases further.
+  (function () {
+    var r = computeOutputScale(860, 664, 1.5);
+    assert.strictEqual(r.effectiveScale, 1.5, 'DPI-3: effectiveScale is 1.5 at DPR=1.5');
+    assert.strictEqual(r.physicalWidth, Math.floor(860 * 1.5), 'DPI-3: physical width is floor(viewport * 1.5)');
+  })();
+
+  // DPI-4. DPR=2: internal width is exactly 2x the CSS width.
+  (function () {
+    var r = computeOutputScale(860, 664, 2);
+    assert.strictEqual(r.effectiveScale, 2, 'DPI-4: effectiveScale is 2 at DPR=2');
+    assert.strictEqual(r.physicalWidth, 1720, 'DPI-4: physical width is exactly 2x the 860px CSS width');
+    assert.strictEqual(r.physicalHeight, 1328, 'DPI-4: physical height is exactly 2x the 664px CSS height');
+  })();
+
+  // DPI-5. DPR>2 is capped at 2 (e.g. 3, and an unusually high 4).
+  (function () {
+    assert.strictEqual(computeOutputScale(860, 664, 3).requestedScale, 2, 'DPI-5: DPR=3 capped at requestedScale 2');
+    assert.strictEqual(computeOutputScale(860, 664, 4).requestedScale, 2, 'DPI-5: DPR=4 capped at requestedScale 2');
+  })();
+
+  // DPI-6. Untrusted/invalid devicePixelRatio values fall back safely to 1.
+  (function () {
+    [0, NaN, Infinity, -Infinity, -2, 'not-a-number', undefined, null].forEach(function (bad) {
+      var r = computeOutputScale(860, 664, bad);
+      assert.strictEqual(r.requestedScale, 1, 'DPI-6: DPR=' + bad + ' falls back to requestedScale 1');
+      assert.ok(isFinite(r.effectiveScale) && r.effectiveScale > 0, 'DPI-6: DPR=' + bad + ' still yields a finite positive effectiveScale');
+    });
+  })();
+
+  // DPI-7. Physical dimension never exceeds 4096 on either edge, even for
+  // a very large viewport at max DPR.
+  (function () {
+    var r = computeOutputScale(3000, 2000, 2);
+    assert.ok(r.physicalWidth <= 4096, 'DPI-7: physicalWidth <= 4096');
+    assert.ok(r.physicalHeight <= 4096, 'DPI-7: physicalHeight <= 4096');
+  })();
+
+  // DPI-8. Total pixel budget never exceeds 12,000,000, even when neither
+  // edge alone would trip the 4096 cap.
+  (function () {
+    var r = computeOutputScale(2000, 2000, 2);
+    assert.ok(r.physicalWidth * r.physicalHeight <= 12000000, 'DPI-8: total physical pixels <= 12,000,000');
+  })();
+
+  // DPI-9. When a cap is hit, effectiveScale is reduced proportionally
+  // (never left at the uncapped requestedScale).
+  (function () {
+    var r = computeOutputScale(3000, 2000, 2);
+    assert.ok(r.effectiveScale < r.requestedScale, 'DPI-9: effectiveScale is reduced below requestedScale when a cap is hit');
+    assert.ok(r.effectiveScale > 0, 'DPI-9: effectiveScale stays positive');
+  })();
+
+  // DPI-10. No cropping — width and height are always scaled by the exact
+  // same effectiveScale, so aspect ratio is preserved even when capped.
+  (function () {
+    var vw = 3000, vh = 2000;
+    var r = computeOutputScale(vw, vh, 2);
+    var expectedH = Math.floor(vh * r.effectiveScale);
+    assert.strictEqual(r.physicalHeight, expectedH, 'DPI-10: height uses the same effectiveScale as width (no independent crop)');
+    var originalRatio = vw / vh, physicalRatio = r.physicalWidth / r.physicalHeight;
+    assert.ok(Math.abs(originalRatio - physicalRatio) < 0.01, 'DPI-10: aspect ratio is preserved (uniform scale, not a crop)');
+  })();
+
+  // DPI-11/12. CSS width/height are never multiplied by DPR/outputScale —
+  // sourced only from the (unchanged) zoom/Fit Width viewport size.
+  (function () {
+    assert.ok(/canvas\.style\.width\s*=\s*Math\.floor\(viewport\.width\)\s*\+\s*'px'/.test(READER_JS),
+      'DPI-11: canvas.style.width is set from viewport.width only, never multiplied by DPR/outputScale');
+    assert.ok(/canvas\.style\.height\s*=\s*Math\.floor\(viewport\.height\)\s*\+\s*'px'/.test(READER_JS),
+      'DPI-12: canvas.style.height is set from viewport.height only, never multiplied by DPR/outputScale');
+    assert.strictEqual(/canvas\.style\.(width|height)\s*=[^;]*(devicePixelRatio|dpr|outputScale|output\.effectiveScale)/.test(READER_JS), false,
+      'DPI-11/12: CSS size expressions never reference devicePixelRatio/outputScale');
+  })();
+
+  // DPI-13. The render transform is built from output.effectiveScale.
+  (function () {
+    assert.ok(/var transform = output\.effectiveScale !== 1[\s\S]{0,80}\[output\.effectiveScale, 0, 0, output\.effectiveScale, 0, 0\]/.test(READER_JS),
+      'DPI-13: render transform matrix uses output.effectiveScale');
+    assert.ok(/page\.render\(\{\s*canvasContext:\s*ctx,\s*viewport:\s*viewport,\s*transform:\s*transform\s*\}\)/.test(READER_JS),
+      'DPI-13: page.render() is called with the computed transform');
+  })();
+
+  // DPI-14. Still only ever renders the current page onto the single
+  // reused canvas (reaffirms embedded-reader test 14 under the new code path).
+  (function () {
+    var canvasTags = READER_HTML.match(/<canvas\b/g) || [];
+    assert.strictEqual(canvasTags.length, 1, 'DPI-14: still exactly one <canvas> element (no per-page canvases)');
+    assert.strictEqual(/for\s*\(\s*var\s+\w+\s*=\s*1;[^)]*numPages/.test(READER_JS), false, 'DPI-14: still no loop rendering every page at once');
+  })();
+
+  // DPI-15. The prior in-flight renderTask is always cancelled before a
+  // new one starts — avoids "Cannot use the same canvas during multiple
+  // render() operations".
+  (function () {
+    assert.ok(/if \(renderTask\) \{ renderTask\.cancel\(\); \}/.test(READER_JS),
+      'DPI-15: an in-flight renderTask is cancelled before the next page.render() call');
+    var renderCurrentPageBlock = extractBalancedBlock(READER_JS, READER_JS.indexOf('function renderCurrentPage'));
+    var cancelIdx = renderCurrentPageBlock.indexOf('renderTask.cancel()');
+    var newRenderIdx = renderCurrentPageBlock.indexOf('renderTask = page.render(');
+    assert.ok(cancelIdx !== -1 && newRenderIdx !== -1 && cancelIdx < newRenderIdx,
+      'DPI-15: cancellation happens before the new renderTask is assigned');
+  })();
+
+  // DPI-16. Fit Width's visual scale computation is unchanged — it derives
+  // only from container/page width, never from devicePixelRatio.
+  (function () {
+    var fitWidthBlock = extractBalancedBlock(READER_JS, READER_JS.indexOf('function fitWidth'));
+    assert.strictEqual(/devicePixelRatio|outputScale|effectiveScale/.test(fitWidthBlock), false,
+      'DPI-16: fitWidth()\'s scale computation does not reference DPR/outputScale (visual width unchanged)');
+    assert.ok(/containerWidth \/ base\.width/.test(fitWidthBlock), 'DPI-16: fitWidth() still computes scale from containerWidth/base.width only');
+  })();
+
+  // DPI-17. Both frozen PDF path mappings are unchanged by this revision.
+  (function () {
+    assert.ok(READER_JS.indexOf("'zh-CN': '" + CN_PDF_PATH_FROM_READER + "'") !== -1, 'DPI-17: zh-CN PDF path unchanged');
+    assert.ok(READER_JS.indexOf("'en-CA': '" + EN_PDF_PATH_FROM_READER + "'") !== -1, 'DPI-17: en-CA PDF path unchanged');
+  })();
+
+  // DPI-18. Vendored PDF.js is still pinned at 6.2.108 (untouched by this revision).
+  (function () {
+    var pdfLib = readSrc('ebook/vendor/pdfjs/pdf.min.mjs');
+    assert.ok(/6\.2\.108/.test(pdfLib), 'DPI-18: vendored PDF.js is still version 6.2.108');
+  })();
+
+  // DPI-19/20. Frozen PDF byte hashes are unchanged.
+  (function () {
+    assert.strictEqual(sha256('ebook/' + RELEASE_MANIFEST.editions['zh-CN'].file), CN_SHA256, 'DPI-19: Chinese PDF SHA-256 unchanged');
+    assert.strictEqual(sha256('ebook/' + RELEASE_MANIFEST.editions['en-CA'].file), EN_SHA256, 'DPI-20: English PDF SHA-256 unchanged');
   })();
 
   console.log('ebook-embedded-reader.test.js: all assertions passed');

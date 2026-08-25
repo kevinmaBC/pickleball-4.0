@@ -466,6 +466,52 @@ DB_VERSION = 5
 Stores = 18 / 18
 GPT Independent QA:
 PENDING
+
+PB-EBOOK-RC1.1-R1
+Name:
+High-DPI Canvas Rendering Correction
+Status:
+IMPLEMENTED / GPT QA PENDING
+Entry HEAD:
+c39c0925141ec67f13188f918fa9174e0ccce361
+E-Book Content Baseline:
+PB-EBOOK-RC1
+Scope:
+Rendering-fidelity fix only: the reader's Canvas internal pixel buffer
+was sized to the CSS-space PDF.js viewport with no accounting for
+devicePixelRatio, so text appeared blurred on Retina/high-DPI phones
+and Windows 125%/150% scaling. Added computeOutputScale() (pure
+function, inline in ebook/reader/reader.js, no new file) decoupling
+CSS display size (unchanged, still driven only by the existing zoom/
+Fit Width scale) from the Canvas's internal resolution, which is now
+boosted by devicePixelRatio clamped to [1,2], further capped so no
+edge exceeds 4096 physical pixels and no page exceeds 12,000,000
+physical pixels (uniform proportional scale-down, never a crop).
+Render transform passed to page.render() uses the resulting
+effectiveScale. Still exactly one canvas, still exactly one page
+rendered at a time, still cancels any in-flight renderTask before the
+next render. sw.js/data/app-release.json/js/version-update.js were
+NOT modified — reader.js is already served network-first for .js
+resources under the existing (unchanged) Service Worker policy, so no
+cache-version bump was functionally required for the fix to reach
+users. No assessment/scoring/recommendation/training/match/progress/
+reassessment/journey logic changed, no DB migration, no store change,
+no PDF content/filename/path change, no change to the vendored PDF.js
+version (still 6.2.108), no GitHub Pages configuration change.
+DB_VERSION unchanged (5), stores unchanged (18/18). See the "R1" section
+of docs/PB-EBOOK-RC1.1-EMBEDDED-WEB-READER-CORRECTION.md for the full
+record.
+Targeted Tests:
+tests/ebook-embedded-reader.test.js (DPI-1..DPI-20) — all assertions passed
+tests/rc1.1-version-ebook-access.test.js — all assertions passed
+tests/sw-cache.test.js — all assertions passed
+Full Regression:
+see docs/PB-EBOOK-RC1.1-EMBEDDED-WEB-READER-CORRECTION.md
+Database:
+DB_VERSION = 5
+Stores = 18 / 18
+GPT Independent QA:
+PENDING
 ```
 
 ## Product Release Baseline

@@ -5,6 +5,111 @@ Status: `IMPLEMENTED / GPT QA PENDING`
 Entry HEAD: `d2c5330644e6f0493b94057d57fa7a411fd9a0c2` (`d2c5330`)
 E-Book Content Baseline: `PB-EBOOK-RC1`
 
+## R1 — High-DPI Canvas Rendering Correction
+
+Revision: `PB-EBOOK-RC1.1-R1`
+Status: `IMPLEMENTED / GPT QA PENDING`
+Entry HEAD: `c39c0925141ec67f13188f918fa9174e0ccce361` (`c39c092`, the
+PB-EBOOK-RC1.1 implementation commit above)
+
+**Root Cause**: `renderCurrentPage()` set the Canvas's internal pixel
+buffer (`canvas.width`/`canvas.height`) to exactly the CSS-space PDF.js
+viewport size, with no accounting for `window.devicePixelRatio`. On
+Retina/high-DPI phones and Windows 125%/150% display scaling, the
+browser then stretches that lower-resolution buffer to fill more
+physical device pixels than it contains, so rendered text and line art
+appear blurred/soft — a bug in Canvas *resolution*, not in the PDF
+content, the layout, or PDF.js itself.
+
+**DPR Strategy**: the CSS display size (still driven only by the
+existing zoom/Fit Width `scale`, unchanged) is decoupled from the
+Canvas's internal pixel buffer. A new pure function,
+`computeOutputScale(viewportWidth, viewportHeight, devicePixelRatio)`
+(added directly inside `ebook/reader/reader.js`, no new file, no DOM/
+PDF.js dependency so its boundary conditions are directly unit-testable
+— see `tests/ebook-embedded-reader.test.js`), computes:
+```
+requestedScale  = devicePixelRatio, sanitized and clamped to [1, 2]
+effectiveScale  = requestedScale, reduced (never increased) only far
+                  enough to satisfy the two hard caps below — uniformly
+                  on both axes, so the page is scaled down, never cropped
+physicalWidth   = floor(viewportWidth  * effectiveScale)
+physicalHeight  = floor(viewportHeight * effectiveScale)
+```
+`renderCurrentPage()` sets `canvas.style.width`/`height` from the
+unchanged CSS viewport size, sets `canvas.width`/`height` from
+`physicalWidth`/`physicalHeight`, and passes
+`transform: [effectiveScale,0,0,effectiveScale,0,0]` (or `null` when
+`effectiveScale === 1`) to `page.render()` — exactly the pattern
+PDF.js's own reference viewer uses for high-DPI output.
+
+**Maximum DPR**: `MAX_OUTPUT_SCALE = 2` (minimum `MIN_OUTPUT_SCALE = 1`).
+Any raw `devicePixelRatio` that is non-finite, `<= 0`, or otherwise not
+a usable number (`0`, `NaN`, `Infinity`, `-Infinity`, negative, wrong
+type) safely falls back to `1` rather than propagating an invalid
+scale into a canvas allocation.
+
+**Maximum dimension**: `MAX_CANVAS_DIMENSION = 4096` physical pixels
+per edge. **Maximum pixels**: `MAX_CANVAS_PIXELS = 12,000,000` total
+physical pixels per page. Both caps are enforced by uniformly reducing
+`effectiveScale` (never by cropping — width and height are always
+scaled by the identical factor, so aspect ratio is preserved even when
+a very large page at max DPR would otherwise exceed a cap).
+
+**Memory protection**: still exactly one `<canvas>` element on the
+reader page, still exactly one page rendered at a time — this revision
+only changes how many physical pixels that one page's buffer occupies,
+bounded by the two caps above, never the number of pages held in
+memory simultaneously.
+
+**Render cancellation**: unchanged, reaffirmed — `renderTask.cancel()`
+is still called (and completes, per PDF.js's cancellation contract)
+before the next `page.render()` call is issued on the same canvas,
+preventing "Cannot use the same canvas during multiple render()
+operations" regardless of the new internal-resolution logic.
+
+**Service Worker**: not modified. `ebook/reader/reader.js` is served
+via the existing network-first policy for `.js` resources (unchanged
+from PB-EBOOK-RC1.1) — a returning visitor with an installed PWA
+already gets the freshly updated `reader.js` content on next online
+load (network-first always fetches fresh when online; the cache is
+only an offline fallback and is transparently refreshed on each
+successful fetch). No `CACHE` version bump was functionally required,
+so `sw.js`, `data/app-release.json`, and `js/version-update.js` were
+left untouched this revision — no new/removed/renamed precache entry,
+no change to install/activate/message handling, no reload-loop risk,
+and Update-and-Restart is unaffected.
+
+**Tests**: `tests/ebook-embedded-reader.test.js` gained 20
+High-DPI-specific assertions (`DPI-1`..`DPI-20`), covering DPR=1 /
+1.25 / 1.5 / 2 / >2-capped / invalid-input fallback, the 4096-pixel
+and 12,000,000-pixel caps, proportional (non-cropping) scale-down, CSS
+size never multiplied by DPR, the render `transform` using
+`effectiveScale`, single-page/single-canvas rendering preserved,
+render-task cancellation ordering, `fitWidth()`'s visual-width
+computation left untouched, both PDF path mappings unchanged, the
+vendored PDF.js version unchanged (`6.2.108`), and both frozen PDFs'
+SHA-256 unchanged. `computeOutputScale` itself is extracted directly
+out of `reader.js`'s real source text (constants + function body) and
+reconstructed with `new Function` before being exercised — so these
+tests verify the actual shipped code, not a parallel re-implementation
+that could silently drift from it.
+
+**Full regression**: see Section 9 below (updated) / final report.
+
+**Frozen PDF hashes** (re-verified unchanged by this revision):
+```
+Chinese Edition SHA-256: 04fcc0ccd9a2027463ce63b2995096d32884c68706b25e2ab92db77d5112d64f
+English Edition SHA-256: f3c325ad1372f7979f475479bf7fdc92949868bf9c171c5d769ac0e19c96afa7
+```
+
+```
+Production Business Logic Changed: NO
+Frozen E-book Contents Changed: NO
+GitHub Pages Configuration Changed: NO
+Status: IMPLEMENTED / GPT QA PENDING
+```
+
 ## 1. Root Cause
 
 `PB-EBOOK-RC1`'s "阅读中文版 / Open Chinese Edition" and "Open English
