@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "release": "PB-EBOOK-RC1",
+  "status": "RELEASED",
+  "release_date": "2026-08-23",
+  "app_baseline": "PB-APP-RC1.1",
+  "design_baseline": "EBOOK-S4R2-R3",
+  "editions": {
+    "zh-CN": {
+      "status": "RELEASED",
+      "file": "releases/PB-EBOOK-RC1/PB_EBOOK_S4R2-R3_CN_Landscape_Release_Candidate_PB-APP-RC1.1_v1.0.pdf",
+      "pages": 144,
+      "sha256": "04fcc0ccd9a2027463ce63b2995096d32884c68706b25e2ab92db77d5112d64f"
+    },
+    "en-CA": {
+      "status": "RELEASED",
+      "file": "releases/PB-EBOOK-RC1/PB_EBOOK_S4R2-R3_EN-CA_Landscape_Release_Candidate_PB-APP-RC1.1_v1.0.pdf",
+      "pages": 102,
+      "sha256": "f3c325ad1372f7979f475479bf7fdc92949868bf9c171c5d769ac0e19c96afa7"
+    }
+  },
+  "word_masters": {
+    "public_download": false,
+    "zh-CN_sha256": "161da509669cc7dfa5a15bb2d3ced5ba9c83e125597d7e685430b6ed423b960a",
+    "en-CA_sha256": "09510c74c0caa9736c94262ca3f72ca250c59fd83f8cd44ecf643f54bed0898f"
+  },
+  "sync_control": {
+    "cn_en_paired": true,
+    "app_ebook_paired": true,
+    "future_changes_require_new_version": true
+  }
+}

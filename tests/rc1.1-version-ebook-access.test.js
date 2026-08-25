@@ -12,6 +12,7 @@
 var assert = require('assert');
 var fs = require('fs');
 var path = require('path');
+var crypto = require('crypto');
 
 var ROOT = path.join(__dirname, '..');
 function readSrc(rel) { return fs.readFileSync(path.join(ROOT, rel), 'utf8'); }
@@ -319,11 +320,104 @@ function run() {
     });
   })();
 
-  // 12. No broken PDF download link is presented (both editions are "In Preparation").
+  // 12. PB-EBOOK-RC1: both editions are published — no stale "In Preparation"
+  // placeholder remains, and each edition links to its actual frozen PDF.
   (function () {
-    assert.strictEqual(/href\s*=\s*"[^"]*\.pdf"/i.test(EBOOK_HTML), false, '12: no .pdf href on the e-book page');
-    assert.ok(EBOOK_HTML.indexOf('正在装配中') !== -1 && EBOOK_HTML.indexOf('In Preparation') !== -1,
-      '12: both editions are explicitly marked In Preparation, not a fabricated ready state');
+    assert.strictEqual(EBOOK_HTML.indexOf('正在装配中') === -1 && EBOOK_HTML.indexOf('In Preparation') === -1, true,
+      '12: no "正在装配中 / In Preparation" placeholder remains on the e-book page');
+    assert.strictEqual(EBOOK_HTML.indexOf('尚无发布说明') === -1 && EBOOK_HTML.indexOf('No release notes yet') === -1, true,
+      '12: no "no release notes yet" placeholder remains');
+    assert.ok(/href\s*=\s*"[^"]*\.pdf"/i.test(EBOOK_HTML), '12: e-book page now links directly to PDF files');
+  })();
+
+  // PB-EBOOK-RC1 — publication integration.
+  var RELEASE_MANIFEST = JSON.parse(readSrc('ebook/release-manifest.json'));
+  var CN_PDF_REL = 'ebook/' + RELEASE_MANIFEST.editions['zh-CN'].file;
+  var EN_PDF_REL = 'ebook/' + RELEASE_MANIFEST.editions['en-CA'].file;
+
+  // EB-1. Release identity strings appear on the e-book page.
+  (function () {
+    assert.ok(EBOOK_HTML.indexOf('PB-EBOOK-RC1') !== -1, 'EB-1: e-book page shows PB-EBOOK-RC1');
+    assert.ok(EBOOK_HTML.indexOf('PB-APP-RC1.1') !== -1, 'EB-1: e-book page shows the paired APP baseline PB-APP-RC1.1');
+  })();
+
+  // EB-2. Page count is correct per edition (144 CN / 102 EN).
+  (function () {
+    assert.ok(EBOOK_HTML.indexOf('144 pages') !== -1, 'EB-2: Chinese edition shows 144 pages');
+    assert.ok(EBOOK_HTML.indexOf('102 pages') !== -1, 'EB-2: English edition shows 102 pages');
+  })();
+
+  // EB-3. Four reading/download entry points exist, each pointing at the
+  // correct edition's frozen PDF (relative href, as shipped on the page).
+  (function () {
+    var cnHref = RELEASE_MANIFEST.editions['zh-CN'].file.replace(/^releases\//, 'releases/');
+    var enHref = RELEASE_MANIFEST.editions['en-CA'].file;
+    var cnLinkRe = new RegExp('<a[^>]+href="' + cnHref.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"', 'g');
+    var enLinkRe = new RegExp('<a[^>]+href="' + enHref.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"', 'g');
+    assert.strictEqual((EBOOK_HTML.match(cnLinkRe) || []).length, 2, 'EB-3: exactly 2 links (open + download) to the Chinese PDF');
+    assert.strictEqual((EBOOK_HTML.match(enLinkRe) || []).length, 2, 'EB-3: exactly 2 links (open + download) to the English PDF');
+    assert.ok(EBOOK_HTML.indexOf('Open Chinese Edition') !== -1, 'EB-3: "Open Chinese Edition" entry point exists');
+    assert.ok(EBOOK_HTML.indexOf('Download Chinese PDF') !== -1, 'EB-3: "Download Chinese PDF" entry point exists');
+    assert.ok(EBOOK_HTML.indexOf('Open English Edition') !== -1, 'EB-3: "Open English Edition" entry point exists');
+    assert.ok(EBOOK_HTML.indexOf('Download English PDF') !== -1, 'EB-3: "Download English PDF" entry point exists');
+  })();
+
+  // EB-4. Both PDF files exist on disk and are non-zero.
+  (function () {
+    var cnStat = fs.statSync(path.join(ROOT, CN_PDF_REL));
+    var enStat = fs.statSync(path.join(ROOT, EN_PDF_REL));
+    assert.ok(cnStat.size > 0, 'EB-4: Chinese PDF exists and is non-zero');
+    assert.ok(enStat.size > 0, 'EB-4: English PDF exists and is non-zero');
+  })();
+
+  // EB-5. Actual on-disk SHA-256 of both PDFs matches the release manifest
+  // (the frozen hashes must never drift from what was authorized).
+  (function () {
+    function sha256(rel) {
+      return crypto.createHash('sha256').update(fs.readFileSync(path.join(ROOT, rel))).digest('hex');
+    }
+    assert.strictEqual(sha256(CN_PDF_REL), RELEASE_MANIFEST.editions['zh-CN'].sha256, 'EB-5: Chinese PDF SHA-256 matches manifest');
+    assert.strictEqual(sha256(EN_PDF_REL), RELEASE_MANIFEST.editions['en-CA'].sha256, 'EB-5: English PDF SHA-256 matches manifest');
+    assert.strictEqual(RELEASE_MANIFEST.editions['zh-CN'].sha256, '04fcc0ccd9a2027463ce63b2995096d32884c68706b25e2ab92db77d5112d64f', 'EB-5: Chinese SHA-256 matches the frozen authorized value');
+    assert.strictEqual(RELEASE_MANIFEST.editions['en-CA'].sha256, 'f3c325ad1372f7979f475479bf7fdc92949868bf9c171c5d769ac0e19c96afa7', 'EB-5: English SHA-256 matches the frozen authorized value');
+  })();
+
+  // EB-6. Manifest parses and both editions are RELEASED.
+  (function () {
+    assert.strictEqual(RELEASE_MANIFEST.release, 'PB-EBOOK-RC1', 'EB-6: manifest release id is PB-EBOOK-RC1');
+    assert.strictEqual(RELEASE_MANIFEST.status, 'RELEASED', 'EB-6: manifest status is RELEASED');
+    assert.strictEqual(RELEASE_MANIFEST.editions['zh-CN'].status, 'RELEASED', 'EB-6: zh-CN edition is RELEASED');
+    assert.strictEqual(RELEASE_MANIFEST.editions['en-CA'].status, 'RELEASED', 'EB-6: en-CA edition is RELEASED');
+  })();
+
+  // EB-7. Sync-control flags.
+  (function () {
+    assert.strictEqual(RELEASE_MANIFEST.sync_control.cn_en_paired, true, 'EB-7: cn_en_paired is true');
+    assert.strictEqual(RELEASE_MANIFEST.sync_control.app_ebook_paired, true, 'EB-7: app_ebook_paired is true');
+  })();
+
+  // EB-8. Word masters are never publicly downloadable.
+  (function () {
+    assert.strictEqual(RELEASE_MANIFEST.word_masters.public_download, false, 'EB-8: word_masters.public_download is false');
+    assert.strictEqual(/\.docx?["\s]/i.test(EBOOK_HTML), false, 'EB-8: no Word master file is linked from the e-book page');
+  })();
+
+  // EB-9. Service Worker never precaches the (large) PDF release files.
+  (function () {
+    var coreMatch = /const\s+CORE\s*=\s*\[([\s\S]*?)\];/.exec(SW_SRC);
+    assert.ok(coreMatch, 'EB-9: sw.js must declare a CORE precache list');
+    assert.strictEqual(/\.pdf/i.test(coreMatch[1]), false, 'EB-9: sw.js CORE precache list must not reference any .pdf file');
+  })();
+
+  // EB-10. APP QR payload/target is unchanged by this release.
+  (function () {
+    assert.ok(EBOOK_HTML.indexOf('src="../assets/qr/qr-app.svg"') !== -1, 'EB-10: e-book page still renders the APP QR (qr-app.svg)');
+    assert.ok(EBOOK_HTML.indexOf(APP_URL) !== -1, 'EB-10: APP QR caption/URL is still the exact permanent APP URL');
+  })();
+
+  // EB-11. The e-book page still offers a way back to the APP.
+  (function () {
+    assert.ok(EBOOK_HTML.indexOf('href="' + APP_URL + '"') !== -1, 'EB-11: e-book page still links back to the APP');
   })();
 
   // 13. Required CN/EN labels exist (verbatim, per PB-APP-RC1.1 spec section 5).

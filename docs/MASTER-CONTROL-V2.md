@@ -385,6 +385,43 @@ GPT Independent QA:
 PASS
 Kevin Manual UAT:
 PASS
+
+PB-EBOOK-RC1
+Name:
+APP Publication Integration
+Status:
+IMPLEMENTED / GPT QA PENDING
+Entry HEAD:
+f99632a3e464cfd58697dd59bc456364acacdced
+APP Baseline:
+PB-APP-RC1.1
+E-Book Design Baseline:
+EBOOK-S4R2-R3
+Scope:
+Publication/distribution integration only: moved the two formally
+frozen PB-EBOOK-RC1.1 PDFs (Chinese/English-CA) into
+ebook/releases/PB-EBOOK-RC1/ byte-for-byte unchanged (SHA-256
+verified identical before and after the move), added
+ebook/release-manifest.json, and updated ebook/index.html to replace
+the "In Preparation" placeholder with published status, metadata, and
+four read/download entry points per edition. sw.js unmodified (CORE
+precache already excluded ebook/ and PDFs; no cache-version bump
+needed). No assessment/scoring/recommendation/training/match/
+progress/reassessment/journey logic changed, no DB migration, no
+store added/removed/renamed, no PDF content/filename change, no Word
+master exposure, no GitHub Pages configuration change. DB_VERSION
+unchanged (5), stores unchanged (18/18). See
+docs/PB-EBOOK-RC1-APP-PUBLICATION-INTEGRATION.md for the full record.
+Targeted Tests:
+tests/rc1.1-version-ebook-access.test.js — all assertions passed
+tests/sw-cache.test.js — all assertions passed
+Full Regression:
+see docs/PB-EBOOK-RC1-APP-PUBLICATION-INTEGRATION.md
+Database:
+DB_VERSION = 5
+Stores = 18 / 18
+GPT Independent QA:
+PENDING
 ```
 
 ## Product Release Baseline
