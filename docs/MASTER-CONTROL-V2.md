@@ -512,6 +512,42 @@ DB_VERSION = 5
 Stores = 18 / 18
 GPT Independent QA:
 PENDING
+
+PB-APP-RC1.1-R2
+Name:
+Homepage E-Book Entry & Language Switch Enhancement
+Status:
+IMPLEMENTED / GPT QA PENDING
+Entry HEAD:
+5bd538bc0df1d0d6129b17386806641082c81d86
+Scope:
+UX/discoverability patch only: added one prominent homepage E-Book
+entry card (#home-ebook-entry, linking to the permanent ./ebook/ URL,
+current window, no download/target) before S11-B Priority Dashboard,
+and enlarged the header's small "中 / EN" control into a segmented
+中文 | ENGLISH control (#lang-switch-group) reusing the existing
+setLang()/LANG/pb40_lang mechanism unchanged. index.html/css/app.css/
+js/i18n.js modified (presentation only); existing About/Version
+E-Book entry, QR SVGs, permanent URLs, PDF/Word/reader/vendor files,
+DB schema, and all business logic untouched. sw.js/data/app-release.json/
+js/version-update.js not modified — index.html/css/js already served
+network-first, no cache bump needed. DB_VERSION unchanged (5), stores
+unchanged (18/18). See
+docs/PB-APP-RC1.1-R2-EBOOK-DISCOVERABILITY-LANGUAGE-SWITCH.md for the
+full record.
+Targeted Tests:
+tests/rc1.1-r2-ebook-discoverability-language-switch.test.js — all assertions passed
+tests/rc1.1-version-ebook-access.test.js — all assertions passed
+tests/ebook-embedded-reader.test.js — all assertions passed
+tests/sw-cache.test.js — all assertions passed
+tests/pre-s7-ui-regression.test.js — all assertions passed
+Full Regression:
+see docs/PB-APP-RC1.1-R2-EBOOK-DISCOVERABILITY-LANGUAGE-SWITCH.md
+Database:
+DB_VERSION = 5
+Stores = 18 / 18
+GPT Independent QA:
+PENDING
 ```
 
 ## Product Release Baseline

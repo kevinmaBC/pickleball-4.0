@@ -109,8 +109,18 @@
     document.querySelectorAll('[data-i18n-html]').forEach(function (e) { e.innerHTML = t(e.getAttribute('data-i18n-html')); });
     document.querySelectorAll('[data-i18n-ph]').forEach(function (e) { e.setAttribute('placeholder', t(e.getAttribute('data-i18n-ph'))); });
     document.documentElement.lang = LANG === 'en' ? 'en' : 'zh-CN';
-    var btn = document.getElementById('lang-btn');
-    if (btn) btn.innerHTML = LANG === 'en' ? '<b>EN</b> / 中' : '中 / <b>EN</b>';
+    // PB-APP-RC1.1-R2: segmented 中文 | ENGLISH control — sync active class
+    // and aria-pressed on both options (presentation only; LANG/t()/storage
+    // logic above is unchanged).
+    var zhBtn = document.getElementById('lang-btn-zh');
+    var enBtn = document.getElementById('lang-btn-en');
+    if (zhBtn && enBtn) {
+      var isEn = LANG === 'en';
+      zhBtn.classList.toggle('active', !isEn);
+      enBtn.classList.toggle('active', isEn);
+      zhBtn.setAttribute('aria-pressed', isEn ? 'false' : 'true');
+      enBtn.setAttribute('aria-pressed', isEn ? 'true' : 'false');
+    }
   }
 
   function refreshDynamic() {

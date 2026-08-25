@@ -22,7 +22,10 @@
       <div class="ball"></div>
       <h1>Drills Path from 3.0 to 5.0<small>PICKLEBALL · BY KEVIN MA</small></h1>
     </div>
-    <button class="lang-switch" id="lang-btn" onclick="toggleLang()">中 / <b>EN</b></button>
+    <div class="lang-switch-group" id="lang-switch-group" role="group" aria-label="Language / 语言">
+      <button type="button" class="lang-opt" id="lang-btn-zh" onclick="setLang('zh')" aria-pressed="true">中文</button>
+      <button type="button" class="lang-opt" id="lang-btn-en" onclick="setLang('en')" aria-pressed="false">ENGLISH</button>
+    </div>
   </div>
 </header>
 
@@ -39,6 +42,17 @@
         <button onclick="go('drill')"><span class="cn">练</span><span class="en2">Drill</span></button>
         <button onclick="go('measure')"><span class="cn">测</span><span class="en2">Measure</span></button>
         <button onclick="go('compete')"><span class="cn">赛</span><span class="en2">Compete</span></button>
+      </div>
+    </div>
+
+    <!-- ===== PB-APP-RC1.1-R2 · Homepage E-Book Entry ===== -->
+    <div class="card home-ebook-card" id="home-ebook-entry" style="margin:14px 0 18px;text-align:center">
+      <div class="eyebrow" style="margin-bottom:6px">官方电子书 / OFFICIAL E-BOOK</div>
+      <p style="font-weight:800;font-size:16px;margin-bottom:4px">Pickleball 3.0–5.0 Training System</p>
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:10px">中文版 · English Edition — Canada / North America</p>
+      <span class="home-ebook-badge">最新版 / LATEST RELEASE</span>
+      <div style="margin-top:12px">
+        <a class="home-ebook-btn" id="home-ebook-open-btn" href="./ebook/">📖 打开电子书 / OPEN E-BOOK</a>
       </div>
     </div>
 
